@@ -71,7 +71,7 @@
 ---
 
 <p align="center">
-    <img src="https://kounter.tk/badge/sys41x4.github_hullkaDM?label=&color=23262a&style=for-the-badge&cntSuffix= HullkaDM Repository Views" alt="sys41x4/hullkaDM GitHub Repo View Count" vertical-align="middle"/>
+    <img src="https://kounter.tk/badge/sys41x4.github_hullkaDM?label=&color=23262a&style=for-the-badge&cntSuffix=%20Hullka%20DM%20Repository%20Views" alt="hullkaDM GitHub Repo View Count" vertical-align="middle"></img>
 </p>
   
 ---
