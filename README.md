@@ -63,15 +63,27 @@
 ---
 *Desc:* Halka DM is a TUI Desktop Manager build with an intention of simplicity and security in mind, consuming minimal system resource to support low resource bounded systems.
 
-** Currently in continuous Development **
+** Currently in Development **
 ---
 
+Current Project status:<br>
+***<[branch/dev]<--->[branch/testing]>***-->[branch/alpha]-->[branch/beta]--><[branch/stable]<-->[branch/main]>
 
+PR's are welcome at **dev** Branch
+
+
+Branches : 
+[branch/main](https://github.com/sys41x4/halkaDM/tree/main) | 
+[branch/stable](https://github.com/sys41x4/halkaDM/tree/stable) | 
+[branch/beta](https://github.com/sys41x4/halkaDM/tree/beta) | 
+[branch/alpha](https://github.com/sys41x4/halkaDM/tree/alpha) | 
+[branch/testing](https://github.com/sys41x4/halkaDM/tree/testing) | 
+[branch/dev](https://github.com/sys41x4/halkaDM/tree/dev)
 
 ---
 
 <p align="center">
-    <img src="https://kounter.tk/badge/sys41x4.github_halkaDM?label=&color=23262a&style=for-the-badge&cntSuffix=%20Hullka%20DM%20Repository%20Views" alt="halkaDM GitHub Repo View Count" vertical-align="middle"></img>
+    <img src="https://kounter.tk/badge/sys41x4.github_halkaDM?label=&color=23262a&style=for-the-badge&cntSuffix=%20Halka%20DM%20Repository%20Views" alt="halkaDM GitHub Repo View Count" vertical-align="middle"></img>
 </p>
   
 ---
