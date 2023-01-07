@@ -1,0 +1,14 @@
+--------
+ ISSUES
+--------
+
+[branch/dev]
+    ISSUE-1 : /source/micro/halkaDM.micro.cpp suffers from memory allocation issues, causing segmentation fault in long run.
+
+[branch/testing]
+
+[branch/alpha]
+
+[branch/beta]
+
+[branch/stable] && [branch/main]

@@ -21,16 +21,20 @@ int asciiColors[] = {
     COLOR_CYAN
 };
 
+int totalRandomizedColors = 10; // Must be loaded from the config file
+int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
+int totalManualColors = 8;
 /*
 
 // COLORS MAPOUT //
 
 0: [1-8] : size:8 | Pre Setup Colours
-1: [COLOR_BLACK, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_WHITE, COLOR_MAGENTA, COLOR_BLUE, COLOR_CYAN] : size:8 | Exclude the following for directly calling them in any case
-2: [username visibility colourmap] : size:3
-3: [userpass visibility colourmap] : size:3
-4: [Profile Pic] : size:(Relative)maxX*maxY | 1D-array
-5: [Login Randomization colourMap] : size:(Relative)maxX*maxY | 1D-array
+1: [9-16] | [COLOR_BLACK, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_WHITE, COLOR_MAGENTA, COLOR_BLUE, COLOR_CYAN] : size:8 | Exclude the following for directly calling them in any case
+2: [<totalRandomizedColors>] | <randomize <totalRandomizedColors> colors> : size <totalRandomizedColors> | Randomization will be done only once on initial loading of the executable, to reduce memory consumption
+2: [<totalRandomizedColors>+3] | [username visibility colourmap] : size:3
+3: [<<totalRandomizedColors>+3>+3] | [userpass visibility colourmap] : size:3
+4: [Profile Pic] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors><totalRandomizedColors>
+5: [Login Randomization colourMap] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors>+<totalRandomizedColors>
 
 
 */
@@ -95,7 +99,7 @@ char masked_userpass[50];
 
 
 int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
-int userpassVisibilityConf[3] = {0, 0, 0}; // Default userpass_visibility_config
+int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
 
 WINDOW *loginColourMatrixWin;
 int loginColourMatrixConf[] = {}; // {COORDINATE-Y, COORDINATE-X, HEIGHT, WIDTH}
@@ -118,12 +122,62 @@ void delete_window(WINDOW *win){
     free(win);
 }
 
+void initColor(){
+   // must be called after initializing the frames
+
+   /*
+
+// COLORS MAPOUT //
+
+0: [1-8] | [COLOR_BLACK, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_WHITE, COLOR_MAGENTA, COLOR_BLUE, COLOR_CYAN] : size:8 | Exclude the following for directly calling them in any case
+1: [9-16/X] : size:8 | Pre Setup Colours | will be loaded from config file | minSize=8 | maxSize=USER_PREFERENCE
+2: [<totalRandomizedColors>] | <randomize <totalRandomizedColors> colors> : size <totalRandomizedColors> | Randomization will be done only once on initial loading of the executable, to reduce memory consumpti>
+3: [username visibility colourmap] : size:3 | will get colors from [9-16]
+4: | [userpass visibility colourmap] : size:3 | will get colors from [9-16]
+5: [Profile Pic] : size:(Relative)maxX*maxY | 1D-array | available colour : [1-8]+[9-16]+<totalRandomizedColors>
+6: [Login Randomization colourMap] : size:(Relative)maxX*maxY | 1D-array | available colour : [1-8]+[9-16]+<totalRandomizedColors>
+
+
+*/
+
+   int fg, bg;
+   int storedColorsStartIndex = 0;
+   // int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
+   // int totalManualColors = 8;
+
+   // Default Stored Colour blocks | fg==bg
+   for(int i=1; i<=totalASCIIcolors; i++){
+       init_pair(i, asciiColors[i+storedColorsStartIndex], asciiColors[i+storedColorsStartIndex]);
+   }
+
+   // Manual Colour Setup
+   init_pair(9, COLOR_WHITE, COLOR_BLACK);
+   init_pair(10, COLOR_WHITE, COLOR_RED);
+   init_pair(11, COLOR_BLACK, COLOR_YELLOW);
+   init_pair(12, COLOR_WHITE, COLOR_GREEN);
+   init_pair(13, COLOR_BLACK, COLOR_WHITE);
+   init_pair(14, COLOR_WHITE, COLOR_MAGENTA);
+   init_pair(15, COLOR_WHITE, COLOR_BLUE);
+   init_pair(16, COLOR_BLACK, COLOR_CYAN);
+
+   // Initial Colour Randomization
+   srand(time(NULL));
+   for(int i=1; i<=totalRandomizedColors; i++){
+       fg = asciiColors[rand() % 8];
+       bg = asciiColors[rand() % 8];
+       init_pair(i+totalASCIIcolors+totalManualColors, fg, bg);
+   }
+
+
+}
+
 void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
     // Draw Random bitmap
     int randColorID=1;
+    int totalAvailableColour = totalASCIIcolors+totalManualColors+totalRandomizedColors;
     // wmove(authBox, randPos, 1);
     // wmove(win, y, x);
-    int colors[] = {
+    /*int colors[] = {
         COLOR_BLACK,
         COLOR_RED,
         COLOR_GREEN,
@@ -132,37 +186,24 @@ void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
         COLOR_MAGENTA,
         COLOR_CYAN,
         COLOR_WHITE
-    };
+    };*/
 
     srand(time(NULL));
     for (int i = y; i < h; i++) {
         wmove(win, i, x);
         for (int j = 0; j < w; j++) {
-            int fg = asciiColors[rand() % 8] + rand()%7;
-            int bg = asciiColors[rand() % 8] * rand()%15;
-            init_pair(randColorID, fg, bg);
+              randColorID = rand()%totalAvailableColour;
+   //         int fg = asciiColors[rand() % 8] + rand()%7;
+   //         int bg = asciiColors[rand() % 8] * rand()%15;
+   //         init_pair(randColorID, fg, bg);
             // wattron(win, COLOR_PAIR(color));
             wattron(win, COLOR_PAIR(randColorID));
             waddch(win, 'A' + rand() % 26);
             wattroff(win, COLOR_PAIR(randColorID));
             // wattroff(win, COLOR_PAIR(color));
-            randColorID++;
         }
     }
-}
-
-void draw_color_pixel(WINDOW *win, int y, int x, int h, int w, int fg, int bg){
-    // int randColorID = 0;
-    init_pair(1, fg+rand()%7, bg+rand()%15);
-    for (int i = y; i < h; i++) {
-        wmove(win, i, x);
-        for (int j = 0; j < w; j++) {
-            wattron(win, COLOR_PAIR(1));
-            waddch(win, ' ');
-            wattroff(win, COLOR_PAIR(1));
-            //randColorID++;
-        }
-    }
+    wrefresh(win);
 }
 
 void show_datetime(WINDOW *win, int y, int x){
@@ -212,9 +253,9 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
 
     // Draw Message Box Title
 
-    wattron(messageBoxBorderWindow, COLOR_PAIR(rand()%8));
+    wattron(messageBoxBorderWindow, COLOR_PAIR(12));
     mvwprintw(messageBoxBorderWindow, 2, (w-(sizeof(title)/sizeof(title[0])))/2, title);
-    wattroff(messageBoxBorderWindow, COLOR_PAIR(rand()%8));
+    wattroff(messageBoxBorderWindow, COLOR_PAIR(12));
 
     wrefresh(messageBoxBorderWindow);
 
@@ -276,27 +317,27 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
     int ch, titlebarCoordX, titlebarCoordY;
     int positionCoordX;
     int spacingX = 3;
-    init_pair(5, COLOR_BLACK, COLOR_WHITE);
+    // init_pair(5, COLOR_BLACK, COLOR_WHITE);
     do{
         getmaxyx(titlebar, titlebarCoordY, titlebarCoordX);
         positionCoordX=0;
 
-        if(itemID==0){wattron(titlebar, COLOR_PAIR(5));}
+        if(itemID==0){wattron(titlebar, COLOR_PAIR(13));}
         wmove(titlebar, 1, positionCoordX+spacingX);
         waddstr(titlebar,titleBarItems[0]);
-        if(itemID==0){wattroff(titlebar, COLOR_PAIR(5));}
+        if(itemID==0){wattroff(titlebar, COLOR_PAIR(13));}
 
         positionCoordX+=getStrLength(titleBarItems[0]);
 
-        if(itemID==1){wattron(titlebar, COLOR_PAIR(5));}
+        if(itemID==1){wattron(titlebar, COLOR_PAIR(13));}
         wmove(titlebar, 1, positionCoordX+spacingX);
         waddstr(titlebar, titleBarItems[1]);
-        if(itemID==1){wattroff(titlebar, COLOR_PAIR(5));}
+        if(itemID==1){wattroff(titlebar, COLOR_PAIR(13));}
 
-        if(itemID==2){wattron(titlebar, COLOR_PAIR(5));}
+        if(itemID==2){wattron(titlebar, COLOR_PAIR(13));}
         wmove(titlebar, 1, titlebarCoordX-((sizeof(titleBarItems[2])/sizeof(titleBarItems[2][0]))+spacingX));
         waddstr(titlebar, titleBarItems[2]);
-        if(itemID==2){wattroff(titlebar, COLOR_PAIR(5));}
+        if(itemID==2){wattroff(titlebar, COLOR_PAIR(13));}
 
 
         wmove(titlebar, 1, titlebarCoordX/2);
@@ -335,8 +376,8 @@ char* maskStr(int strLen, char character='*');
 
 char* maskStr(int strLen, char character){
     static char str[50];
-    // memset(suppliedArray, character, sizeof(suppliedArray));
-    for(int i=0;i<strLen;i++){str[i]=character;}
+    memset(str, character, sizeof(str[0])*strLen);
+    // for(int i=0;i<strLen;i++){str[i]=character;}
     return str;
 }
 
@@ -357,17 +398,20 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
 
     //////////////////////////
     static char str[50];
+    if(strLen>49){strLen=49;}
     //char str[strLen];
     char charT;
 
-    int chrTypeLen = sizeof(chrType)/sizeof(chrType[0]);
+    // int chrTypeLen = sizeof(chrType)/sizeof(chrType[0]);
+    int chrTypeLen = strlen(chrType);
 
+    srand(time(NULL));
     for(int i=0; i<strLen; i++){
 
-        srand(time(NULL));
-        if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
-        else{charT = chrType[0];}
-
+        // srand(time(NULL));
+        /*if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
+        else{charT = chrType[0];}*/
+        charT = chrType[rand()%chrTypeLen];
 
 
         if(((int)charT>='a') && ((int)charT<='z')){
@@ -386,7 +430,8 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
                 (((int)charT>='!') && ((int)charT<='/')) || 
                 (((int)charT>=':') && ((int)charT<='@')) || 
                 (((int)charT>='[') && ((int)charT<='`')) || 
-                (((int)charT>='{') && ((int)charT<=254))
+                (((int)charT>='{') && ((int)charT<='~'))
+                // (((int)charT>='{') && ((int)charT<=254))
         ){
         // Special Charaacter+symbol Randomization
             int specialCharType=rand()%3;
@@ -401,36 +446,40 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
                 str[i] = '['+rand()%5;
             }
             else if(specialCharType==3){
-                str[i] = '{'+rand()%164;
+                str[i] = '{'+rand()%3;
             }
         }
         else{
-            str[i] = ' ';
+            str[i] = '\0';
         }
     }
+    // str[strLen]='\0';
+
 
     return str;
 }
 
 
-char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="PLACEHOLDER");
+char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="TEST");
 
-char *mask_authInput(int authType, int *maskingConfig, const char* str){
+char *mask_authInput(int authType, int *maskingConfig, char* str){
     /* maskField: "username" | For masking the username for visibility
        maskField: "userpass" | For masking the userpass for visibility*/
-    char *maskedOutput; // const char* -> char*
+    char *maskedOutput = nullptr; // const char* -> char*
     int maskingConfigLength, strLen;
 
-    strLen = sizeof(str)/sizeof(str[0]);
+    // strLen = sizeof(str)/sizeof(str[0]);
+    strLen = strlen(str);
 
     // Mask According to masking Config
 
-    if(maskingConfig[0]>=2){strcpy(maskedOutput, " ");}
+    if(maskingConfig[0]>=2){maskedOutput = maskStr(1, '\0');}
     else if(maskingConfig[2]==0){
+
         if(maskingConfig[1]==0){
             if(maskingConfig[0]==0){
-                strcpy(maskedOutput, str);
-                // maskedOutput = str;
+                // strcpy(maskedOutput, str);
+                maskedOutput = str;
             }
             else if(maskingConfig[0]==1){
                 maskedOutput = maskStr(strLen, '*');
@@ -446,7 +495,7 @@ char *mask_authInput(int authType, int *maskingConfig, const char* str){
         }
     }
     else if(maskingConfig[2]==1){
-        srand(time(NULL));
+        // srand(time(NULL));
         // strLen = rand()%(strLen+5);
 
         if(maskingConfig[1]==0){
@@ -516,32 +565,34 @@ void user_pass_visibility(WINDOW *win, int y, int x){
     wmove(win, y, x);
 
     for(int i=0; i<sizeof(userpassVisibilityConf)/sizeof(userpassVisibilityConf[0]); i++){
-        wattron(win, COLOR_PAIR(asciiColors[userpassVisibilityConf[i]]));
+        wattron(win, COLOR_PAIR(userpassVisibilityConf[i]+1));
         waddch(win, userpassVisibilityConf[i]);
-        wattroff(win, COLOR_PAIR(asciiColors[userpassVisibilityConf[i]]));
+        wattroff(win, COLOR_PAIR(userpassVisibilityConf[i]+1));
 
     }
+    wrefresh(win);
 
 }
 
 void genProfilePicture(int h, int w, int y, int x){
     // Draw Random bitmap
     int randColorID=1;
+    int totalAvailableColour = totalASCIIcolors+totalManualColors+totalRandomizedColors;
     // wmove(win, y, x);
 
     srand(time(NULL));
     for (int i = y; i < h; i++) {
         wmove(accountPicBox, i, x);
         for (int j = 0; j < w; j++) {
-            int fg = asciiColors[rand() % 8] + rand()%7;
-            int bg = asciiColors[rand() % 8] * rand()%15;
-            init_pair(randColorID, fg, bg);
+           randColorID = rand()%totalAvailableColour;
+        //    int fg = asciiColors[rand() % 8] + rand()%7;
+        //    int bg = asciiColors[rand() % 8] * rand()%15;
+        //    init_pair(randColorID, fg, bg);
             // wattron(win, COLOR_PAIR(color));
             wattron(accountPicBox, COLOR_PAIR(randColorID));
             waddch(accountPicBox, 'A' + rand() % 26);
             wattroff(accountPicBox, COLOR_PAIR(randColorID));
             // wattroff(win, COLOR_PAIR(color));
-            randColorID++;
         }
     }
     wrefresh(accountPicBox);
@@ -552,6 +603,7 @@ void login_passField(WINDOW *win, int y, int x){
     int userpassChrCount = 0;
     int userpassLengthMax = sizeof(userpass)/sizeof(userpass[0]);
     int ch;
+    char* visible_userpass;
     // int finish=0;
     // cbreak();
     noecho();
@@ -561,7 +613,7 @@ void login_passField(WINDOW *win, int y, int x){
         // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
-            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             //finish=1;
             break;
         }
@@ -581,13 +633,15 @@ void login_passField(WINDOW *win, int y, int x){
                 userpass[userpassChrCount] = ch;
                 userpassChrCount++;
             }
-            // wmove(win, y, x);
+            wmove(win, y, x);
 
             /*for(int i=0; i<userpassChrCount; i++){
                 waddch(win, userpass[i]);
             }*/
-            char* visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
-            mvwprintw(win, y, x, visible_userpass);
+            if(userpassVisibilityConf[0]!=2){
+                visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
+                wprintw(win, visible_userpass);
+            }
 
             wrefresh(win);
             // show_datetime(titlebar, 1, (titlebarCoordX/2)-16);
@@ -602,6 +656,7 @@ void login_userField(WINDOW *win, int y, int x){
     int usernameChrCount = 0;
     int usernameLengthMax = sizeof(username)/sizeof(username[0]);
     int ch;
+    char* visible_username;
     // cbreak();
     noecho();
     keypad(win, TRUE);
@@ -610,7 +665,7 @@ void login_userField(WINDOW *win, int y, int x){
         // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if((ch == '\n') || (ch == '\t')){ // If Enter is pressed
-            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             break;
         }
         else if((usernameChrCount==0) && (ch == KEY_BACKSPACE)){}
@@ -619,7 +674,7 @@ void login_userField(WINDOW *win, int y, int x){
             // genProfilePicture(accountPicBoxMaxH-4, accountPicBoxMaxW-4, accountPicBoxMaxY+2, accountPicBoxMaxX+2);
             // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
-                usernameChrCount--;
+                usernameChrCount-=1;
                 username[usernameChrCount] = '\0';
                 // wmove(win, y, x+usernameChrCount);
                 // waddch(win, ' ');
@@ -629,10 +684,13 @@ void login_userField(WINDOW *win, int y, int x){
                 username[usernameChrCount] = ch;
                 usernameChrCount++;
             }
-            // wmove(win, y, x);
+            wmove(win, y, x);
 
-            char* visible_username = mask_authInput(0, usernameVisibilityConf, username);
-            mvwprintw(win, y, x, visible_username);
+            if(usernameVisibilityConf[0]!=2){
+                visible_username = mask_authInput(0, usernameVisibilityConf, username);
+                wprintw(win, visible_username);
+            }
+            // mvwprintw(win, y, x, username);
 
             wrefresh(win);
         }
@@ -683,16 +741,9 @@ int main(int argc, char **argv)
     int loginBoxMaxX, loginBoxMaxY;*/
     initscr();
 
-
-    // Default starting static Colour index
-    init_pair(1, COLOR_WHITE, COLOR_BLACK);
-    init_pair(2, COLOR_WHITE, COLOR_RED);
-    init_pair(3, COLOR_BLACK, COLOR_YELLOW);
-    init_pair(4, COLOR_WHITE, COLOR_GREEN);
-    init_pair(5, COLOR_BLACK, COLOR_WHITE);
-    init_pair(6, COLOR_WHITE, COLOR_MAGENTA);
-    init_pair(7, COLOR_WHITE, COLOR_BLUE);
-    init_pair(8, COLOR_BLACK, COLOR_CYAN);
+    start_color();
+    // Setup Colours
+    initColor();
 
 
     getmaxyx(stdscr, winMaxY, winMaxX);
@@ -760,7 +811,8 @@ int main(int argc, char **argv)
     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "CPU Status", "mpstat -P ALL");
     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "Calender", "cal");
     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "Network Status", "tcpdump --list-interfaces");
-
+    // messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "ProfilePic ASCII ART", "jp2a --width="+msgBoxMaxW-6+" --height="+msgBoxMaxH-4+" ~/profilePic.jpg"");
+    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "ProfilePic ASCII ART", "jp2a --width=50 --height=25 ~/profilePic.jpg");
 
     // Login dialog box
     // mvwprintw(authBox, winMaxY*0.75, (winMaxX/2)-10, "USER : ");
@@ -773,7 +825,7 @@ int main(int argc, char **argv)
     mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, "LOGIN");*/
 
 
-    start_color();
+    // start_color();
 
     //// UserName Visibility colorMap
     user_pass_visibility(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10);
