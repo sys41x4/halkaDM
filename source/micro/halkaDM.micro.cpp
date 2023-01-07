@@ -99,7 +99,7 @@ char masked_userpass[50];
 
 
 int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
-int userpassVisibilityConf[3] = {0, 0, 0}; // Default userpass_visibility_config
+int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
 
 WINDOW *loginColourMatrixWin;
 int loginColourMatrixConf[] = {}; // {COORDINATE-Y, COORDINATE-X, HEIGHT, WIDTH}
@@ -203,22 +203,8 @@ void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
             // wattroff(win, COLOR_PAIR(color));
         }
     }
+    wrefresh(win);
 }
-
-/*void draw_color_pixel(WINDOW *win, int y, int x, int h, int w, int fg, int bg){
-    // int randColorID = 0;
-    init_pair(1, fg+rand()%7, bg+rand()%15);
-    for (int i = y; i < h; i++) {
-        wmove(win, i, x);
-        for (int j = 0; j < w; j++) {
-            wattron(win, COLOR_PAIR(1));
-            waddch(win, ' ');
-            wattroff(win, COLOR_PAIR(1));
-            //randColorID++;
-        }
-    }
-}
-*/
 
 void show_datetime(WINDOW *win, int y, int x){
     wmove(win, y, x);
@@ -390,8 +376,8 @@ char* maskStr(int strLen, char character='*');
 
 char* maskStr(int strLen, char character){
     static char str[50];
-    // memset(suppliedArray, character, sizeof(suppliedArray));
-    for(int i=0;i<strLen;i++){str[i]=character;}
+    memset(str, character, sizeof(str[0])*strLen);
+    // for(int i=0;i<strLen;i++){str[i]=character;}
     return str;
 }
 
@@ -412,17 +398,20 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
 
     //////////////////////////
     static char str[50];
+    if(strLen>49){strLen=49;}
     //char str[strLen];
     char charT;
 
-    int chrTypeLen = sizeof(chrType)/sizeof(chrType[0]);
+    // int chrTypeLen = sizeof(chrType)/sizeof(chrType[0]);
+    int chrTypeLen = strlen(chrType);
 
+    srand(time(NULL));
     for(int i=0; i<strLen; i++){
 
-        srand(time(NULL));
-        if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
-        else{charT = chrType[0];}
-
+        // srand(time(NULL));
+        /*if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
+        else{charT = chrType[0];}*/
+        charT = chrType[rand()%chrTypeLen];
 
 
         if(((int)charT>='a') && ((int)charT<='z')){
@@ -441,7 +430,8 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
                 (((int)charT>='!') && ((int)charT<='/')) || 
                 (((int)charT>=':') && ((int)charT<='@')) || 
                 (((int)charT>='[') && ((int)charT<='`')) || 
-                (((int)charT>='{') && ((int)charT<=254))
+                (((int)charT>='{') && ((int)charT<='~'))
+                // (((int)charT>='{') && ((int)charT<=254))
         ){
         // Special Charaacter+symbol Randomization
             int specialCharType=rand()%3;
@@ -456,36 +446,40 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
                 str[i] = '['+rand()%5;
             }
             else if(specialCharType==3){
-                str[i] = '{'+rand()%164;
+                str[i] = '{'+rand()%3;
             }
         }
         else{
-            str[i] = ' ';
+            str[i] = '\0';
         }
     }
+    // str[strLen]='\0';
+
 
     return str;
 }
 
 
-char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="PLACEHOLDER");
+char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="TEST");
 
-char *mask_authInput(int authType, int *maskingConfig, const char* str){
+char *mask_authInput(int authType, int *maskingConfig, char* str){
     /* maskField: "username" | For masking the username for visibility
        maskField: "userpass" | For masking the userpass for visibility*/
-    char *maskedOutput; // const char* -> char*
+    char *maskedOutput = nullptr; // const char* -> char*
     int maskingConfigLength, strLen;
 
-    strLen = sizeof(str)/sizeof(str[0]);
+    // strLen = sizeof(str)/sizeof(str[0]);
+    strLen = strlen(str);
 
     // Mask According to masking Config
 
-    if(maskingConfig[0]>=2){strcpy(maskedOutput, " ");}
+    if(maskingConfig[0]>=2){maskedOutput = maskStr(1, '\0');}
     else if(maskingConfig[2]==0){
+
         if(maskingConfig[1]==0){
             if(maskingConfig[0]==0){
-                strcpy(maskedOutput, str);
-                // maskedOutput = str;
+                // strcpy(maskedOutput, str);
+                maskedOutput = str;
             }
             else if(maskingConfig[0]==1){
                 maskedOutput = maskStr(strLen, '*');
@@ -501,7 +495,7 @@ char *mask_authInput(int authType, int *maskingConfig, const char* str){
         }
     }
     else if(maskingConfig[2]==1){
-        srand(time(NULL));
+        // srand(time(NULL));
         // strLen = rand()%(strLen+5);
 
         if(maskingConfig[1]==0){
@@ -571,11 +565,12 @@ void user_pass_visibility(WINDOW *win, int y, int x){
     wmove(win, y, x);
 
     for(int i=0; i<sizeof(userpassVisibilityConf)/sizeof(userpassVisibilityConf[0]); i++){
-        wattron(win, COLOR_PAIR(asciiColors[userpassVisibilityConf[i]]));
+        wattron(win, COLOR_PAIR(userpassVisibilityConf[i]+1));
         waddch(win, userpassVisibilityConf[i]);
-        wattroff(win, COLOR_PAIR(asciiColors[userpassVisibilityConf[i]]));
+        wattroff(win, COLOR_PAIR(userpassVisibilityConf[i]+1));
 
     }
+    wrefresh(win);
 
 }
 
@@ -608,6 +603,7 @@ void login_passField(WINDOW *win, int y, int x){
     int userpassChrCount = 0;
     int userpassLengthMax = sizeof(userpass)/sizeof(userpass[0]);
     int ch;
+    char* visible_userpass;
     // int finish=0;
     // cbreak();
     noecho();
@@ -617,7 +613,7 @@ void login_passField(WINDOW *win, int y, int x){
         // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
-            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             //finish=1;
             break;
         }
@@ -637,13 +633,15 @@ void login_passField(WINDOW *win, int y, int x){
                 userpass[userpassChrCount] = ch;
                 userpassChrCount++;
             }
-            // wmove(win, y, x);
+            wmove(win, y, x);
 
             /*for(int i=0; i<userpassChrCount; i++){
                 waddch(win, userpass[i]);
             }*/
-            char* visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
-            mvwprintw(win, y, x, visible_userpass);
+            if(userpassVisibilityConf[0]!=2){
+                visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
+                wprintw(win, visible_userpass);
+            }
 
             wrefresh(win);
             // show_datetime(titlebar, 1, (titlebarCoordX/2)-16);
@@ -658,6 +656,7 @@ void login_userField(WINDOW *win, int y, int x){
     int usernameChrCount = 0;
     int usernameLengthMax = sizeof(username)/sizeof(username[0]);
     int ch;
+    char* visible_username;
     // cbreak();
     noecho();
     keypad(win, TRUE);
@@ -666,7 +665,7 @@ void login_userField(WINDOW *win, int y, int x){
         // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if((ch == '\n') || (ch == '\t')){ // If Enter is pressed
-            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             break;
         }
         else if((usernameChrCount==0) && (ch == KEY_BACKSPACE)){}
@@ -675,7 +674,7 @@ void login_userField(WINDOW *win, int y, int x){
             // genProfilePicture(accountPicBoxMaxH-4, accountPicBoxMaxW-4, accountPicBoxMaxY+2, accountPicBoxMaxX+2);
             // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
-                usernameChrCount--;
+                usernameChrCount-=1;
                 username[usernameChrCount] = '\0';
                 // wmove(win, y, x+usernameChrCount);
                 // waddch(win, ' ');
@@ -685,10 +684,13 @@ void login_userField(WINDOW *win, int y, int x){
                 username[usernameChrCount] = ch;
                 usernameChrCount++;
             }
-            // wmove(win, y, x);
+            wmove(win, y, x);
 
-            char* visible_username = mask_authInput(0, usernameVisibilityConf, username);
-            mvwprintw(win, y, x, visible_username);
+            if(usernameVisibilityConf[0]!=2){
+                visible_username = mask_authInput(0, usernameVisibilityConf, username);
+                wprintw(win, visible_username);
+            }
+            // mvwprintw(win, y, x, username);
 
             wrefresh(win);
         }
@@ -809,7 +811,8 @@ int main(int argc, char **argv)
     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "CPU Status", "mpstat -P ALL");
     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "Calender", "cal");
     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "Network Status", "tcpdump --list-interfaces");
-
+    // messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "ProfilePic ASCII ART", "jp2a --width="+msgBoxMaxW-6+" --height="+msgBoxMaxH-4+" ~/profilePic.jpg"");
+    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "ProfilePic ASCII ART", "jp2a --width=50 --height=25 ~/profilePic.jpg");
 
     // Login dialog box
     // mvwprintw(authBox, winMaxY*0.75, (winMaxX/2)-10, "USER : ");

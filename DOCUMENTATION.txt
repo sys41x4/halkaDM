@@ -1,11 +1,25 @@
 [COMPILATION]
 
 --[halkaDM:micro]--
+
 gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses
 
-[Software Dependency]
+---------------------------------------------------
+
+--[Software Dependencies]--
+
 date [/usr/bin/date]
 calender [/usr/bin/cal]
 cpu status [/usr/bin/mpstat]
 network status [/usr/sbin/tcpdump]
 available desktop environment [/usr/share/xsessions]
+jpg->ASCII ART [/usr/bin/jp2a]
+
+----------------------------------------------------
+[Testing]
+
+Currently it is being testing in
+    Distributor ID: Ubuntu
+    Description:    Ubuntu 20.04.4 LTS
+    Release:        20.04
+    Codename:       focal
