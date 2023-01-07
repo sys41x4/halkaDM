@@ -61,13 +61,20 @@
 ---
 **Author & Developer :** <a href="https://github.com/Arijit-Bhowmick">ARIJIT BHOWMICK</a> [<a href="https://github.com/sys41x4">sys41x4</a>]
 ---
-*Desc:* Halka DM is a TUI Desktop Manager build with an intention of simplicity and security in mind, consuming minimal system resource to support low resource bounded systems.
+*Desc:* Halka DM is a Desktop Manager build with an intention of simplicity and security in mind, consuming minimal system resource to support low resource bounded systems.
 
 ** Currently in Development **
 ---
 
+| S.No. | package | type | source |
+| - | - | - | - |
+| 1 | halkaDM:gui | GUI | /source/gui/* |
+| 2 | halkaDM:micro | TUI | /source/micro/* |
+| 3 | halkaDM:nano | TUI | /source/nano/* |
+
+
 Current Project status:<br>
-***<[branch/dev]<--->[branch/testing]>***-->[branch/alpha]-->[branch/beta]--><[branch/stable]<-->[branch/main]>
+`<[branch/dev]<--->[branch/testing]>`*-->[branch/alpha]-->[branch/beta]--><[branch/stable]<-->[branch/main]>*
 
 PR's are welcome at **dev** Branch
 

@@ -3,7 +3,7 @@
 --------
 
 [branch/dev]
-    ISSUE-1 : /source/halkaDM.cpp suffers from memory allocation issues, causing segmentation fault in long run.
+    ISSUE-1 : /source/micro/halkaDM.micro.cpp suffers from memory allocation issues, causing segmentation fault in long run.
 
 [branch/testing]
 
