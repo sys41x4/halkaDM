@@ -72,7 +72,11 @@ char titleBarItems[][12] = {
 
 };
 
+int titleBarItemTree[2];
 
+char commandList[][30]={
+
+};
 
 /*
 // TitleBar Item ID List
@@ -88,8 +92,8 @@ int availableDesktopManagerCount;
 
 char desktopManagerSubItems[1][20];
 
-WINDOW *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
-
+WINDOW *mainScreenWin, *subItemListWindow, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
+WINDOW *messageBoxBorderWindow, *messageBox_msg;
 int winMaxX, winMaxY;
 int accountPicBoxMaxX, accountPicBoxMaxY, accountPicBoxMaxW, accountPicBoxMaxH;
 int msgBoxMaxX, msgBoxMaxY, msgBoxMaxW, msgBoxMaxH;
@@ -246,43 +250,73 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
 //     WINDOW *subItemListWindow;
 
     if ((maxY != 0) && (maxX != 0)){
-    int ch;
-    maxY+=2;
-    maxX+=2;
+        int ch='\0';
+        maxY+=2;
+        maxX+=2;
+        noecho();
+        //keypad(subItemListWindow, TRUE);
 
-    WINDOW *subItemListWindow = newwin(maxY, maxX, minY, minX);
-    noecho();
-    keypad(subItemListWindow, TRUE);
+    // WINDOW *subItemListWindow = newwin(maxY, maxX, minY, minX);
+        /*for(int i=0; i<1; i=0){
+            if(ch=='\n'){break;};*/
+        do{
+        subItemListWindow = newwin(maxY, maxX, minY, minX);
+        keypad(subItemListWindow, TRUE);
+    /*noecho();
+    keypad(subItemListWindow, TRUE);*/
 
-    box(subItemListWindow, 0, 0);
+        box(subItemListWindow, 0, 0);
 
+        /*for(int i=0; i<1; i=0){
+            if(ch=='\n'){break;};*/
+            for(int i=0; i<(maxY-2); i++){
+                if(i==titleBarItemTree[1]){wattron(subItemListWindow, COLOR_PAIR(13));}
+                mvwprintw(subItemListWindow, i+1, 1, charArray[i]);
+                if(i==titleBarItemTree[1]){wattroff(subItemListWindow, COLOR_PAIR(13));}
 
-    for(int i=0; i<(maxY-2); i++){
-
-        mvwprintw(subItemListWindow, i+1, 1, charArray[i]);
-
-    }
-
-
-    wrefresh(subItemListWindow);
-
-
-    do{
-        ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
-        if((ch == KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
-            for (int i = 0; i < maxY-2; i++) {
-                free(charArray[i]);
             }
-            free(charArray);
-            wclear(subItemListWindow);
-            delwin(subItemListWindow);
-            break;
-        }
-        else if(ch == '\t'){
-            // login_passField(win, (loginBoxMaxY/2), (loginBoxMaxX/4)+14);
-        }
-        else{}
-    }while(1);
+
+
+            wrefresh(subItemListWindow);
+
+
+            //do{
+                // if(ch=='\n'){break;};
+                ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
+                if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
+                    for (int i = 0; i < maxY-2; i++) {
+                        free(charArray[i]);
+                    }
+                    free(charArray);
+            // werase(subItemListWindow);
+                    wclear(subItemListWindow);
+                    werase(subItemListWindow);
+                    wrefresh(subItemListWindow);
+                   // delwin(subItemListWindow);
+                    break;
+                }
+                else if((ch == '\n') || (ch==KEY_RIGHT) || (ch == 'd')){
+                    // Execute Message Window
+
+                }
+                else if((ch == '\t') || (ch==KEY_DOWN) || (ch == 's')){
+                    wclear(subItemListWindow);
+                    werase(subItemListWindow);
+
+                    if(titleBarItemTree[1]>=(maxY-3)){titleBarItemTree[1]=0;}
+                    else{titleBarItemTree[1]++;}
+                }
+                else if((ch == KEY_BACKSPACE) || (ch==KEY_UP) || (ch == 'w')){
+                    wclear(subItemListWindow);
+                    werase(subItemListWindow);
+
+                    if(titleBarItemTree[1]<=0){titleBarItemTree[1]=(maxY-3);}
+                    else{titleBarItemTree[1]--;}
+
+                }
+                else{}
+            }while(1);
+        //}
     }
 
 }
@@ -293,7 +327,7 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
       else if is_cmd==0, then the message will directly be printed in the message box
    */
 
-    WINDOW *messageBoxBorderWindow, *messageBox_msg;
+    // WINDOW *messageBoxBorderWindow, *messageBox_msg;
     FILE *pp;
     int ch;
 
@@ -336,8 +370,20 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
     do{
         ch = wgetch(messageBox_msg);     /* refresh, accept single keystroke of input */
         if((ch == KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
-            delwin(messageBox_msg);
-            delwin(messageBoxBorderWindow);
+
+            wclear(messageBox_msg);
+            werase(messageBox_msg);
+            // delwin(messageBox_msg);
+
+            wclear(messageBoxBorderWindow);
+            werase(messageBoxBorderWindow);
+            // delwin(messageBoxBorderWindow);
+
+            wrefresh(messageBox_msg);
+            wrefresh(messageBoxBorderWindow);
+
+            // delwin(messageBox_msg);
+            // delwin(messageBoxBorderWindow);
             break;
         }
         else if(ch == '\t'){
@@ -369,27 +415,32 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
     int ch, titlebarCoordX, titlebarCoordY;
     int positionCoordX;
     int spacingX = 3;
+    int titleBarItemCount = sizeof(titleBarItems)/sizeof(titleBarItems[0]);
+    noecho();
+    titleBarItemTree[0]=itemID;
     // init_pair(5, COLOR_BLACK, COLOR_WHITE);
     do{
+        // titleBarItemTree[0]=itemID;
+        keypad(titlebar, TRUE);
         getmaxyx(titlebar, titlebarCoordY, titlebarCoordX);
         positionCoordX=0;
 
-        if(itemID==0){wattron(titlebar, COLOR_PAIR(13));}
+        if(titleBarItemTree[0]==0){wattron(titlebar, COLOR_PAIR(13));}
         wmove(titlebar, 1, positionCoordX+spacingX);
         waddstr(titlebar,titleBarItems[0]);
-        if(itemID==0){wattroff(titlebar, COLOR_PAIR(13));}
+        if(titleBarItemTree[0]==0){wattroff(titlebar, COLOR_PAIR(13));}
 
         positionCoordX+=getStrLength(titleBarItems[0]);
 
-        if(itemID==1){wattron(titlebar, COLOR_PAIR(13));}
+        if(titleBarItemTree[0]==1){wattron(titlebar, COLOR_PAIR(13));}
         wmove(titlebar, 1, positionCoordX+spacingX);
         waddstr(titlebar, titleBarItems[1]);
-        if(itemID==1){wattroff(titlebar, COLOR_PAIR(13));}
+        if(titleBarItemTree[0]==1){wattroff(titlebar, COLOR_PAIR(13));}
 
-        if(itemID==2){wattron(titlebar, COLOR_PAIR(13));}
+        if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(13));}
         wmove(titlebar, 1, titlebarCoordX-((sizeof(titleBarItems[2])/sizeof(titleBarItems[2][0]))+spacingX));
         waddstr(titlebar, titleBarItems[2]);
-        if(itemID==2){wattroff(titlebar, COLOR_PAIR(13));}
+        if(titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(13));}
 
 
         wmove(titlebar, 1, titlebarCoordX/2);
@@ -399,14 +450,72 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
 
         ///////////////////////////
 
-        if(itemID==-1){break;}
-        ch = wgetch(titlebar);
-        if(itemID==0){
-            if(ch=='\t'){
-                itemID=1;
-            }
-            else if(ch=='\n'){
+        if(titleBarItemTree[0]==-1){break;}
 
+        ch = wgetch(titlebar);
+        if((ch=='w') || (ch=='q') || (ch==KEY_UP)){
+            titleBarItemTree[0]=-1;
+        }
+        else if((ch=='\t') || (ch==KEY_RIGHT) || (ch==' ') || (ch=='d')){
+                if(titleBarItemTree[0]>=(titleBarItemCount-1)){titleBarItemTree[0]=0;}
+                else{titleBarItemTree[0]++;}
+        }
+        else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a')){
+                if(titleBarItemTree[0]<=0){titleBarItemTree[0]=titleBarItemCount-1;}
+                else{titleBarItemTree[0]--;}
+        }
+        else if((ch=='\n') || (ch==KEY_DOWN) || (ch=='s')){
+            if(titleBarItemTree[0]==0){
+                titleBarItemTree[1]=0;
+                int rows = sizeof(powerSubItems)/sizeof(powerSubItems[0]);
+                int cols = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
+                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+
+                for (int i = 0; i < rows; i++) {
+                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
+                    for (int j = 0; j < cols; j++) {
+                        arr[i][j] = powerSubItems[i][j];
+                    }
+                }
+
+                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+
+
+                /*for (int i = 0; i < rows; i++) {
+                    free(arr[i]);
+                }
+                free(arr);*/
+                // wrefresh(titlebar);
+            }
+            else if(titleBarItemTree[0]==1){
+                titleBarItemTree[1]=0;
+                int rows = sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
+                int cols = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
+                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+
+                for (int i = 0; i < rows; i++) {
+                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
+                    for (int j = 0; j < cols; j++) {
+                        arr[i][j] = utilitiesSubItems[i][j];
+                    }
+                }
+
+                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+                // wrefresh(titlebar);
+            }
+            else if(titleBarItemTree[0]==1){
+            }
+        }
+
+
+
+
+        /*if(titleBarItemTree[0]==0){
+            /*if(ch=='\t' || (ch==KEY_RIGHT) || (ch=='d')){
+                titleBarItemTree[0]++;
+            }
+            if((ch=='\n') || (ch==KEY_DOWN) || (ch=='s')){
+                titleBarItemTree[1]=0;
                 int rows = sizeof(powerSubItems)/sizeof(powerSubItems[0]);
                 int cols = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
                 char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
@@ -424,15 +533,16 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 /*for (int i = 0; i < rows; i++) {
                     free(arr[i]);
                 }
-                free(arr);*/
+                free(arr);
                 wrefresh(titlebar);
             }
         }
-        else if(itemID==1){
-            if(ch=='\t'){
-                itemID=2;
+        else if(titleBarItemTree[0]==1){
+            /*if(ch=='\t'){
+                titleBarItemTree[0]++;
             }
-            else if(ch=='\n'){
+            if(ch=='\n'){
+                titleBarItemTree[1]=0;
                 int rows = sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
                 int cols = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
                 char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
@@ -448,11 +558,11 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 wrefresh(titlebar);
             }
         }
-        else if(itemID==2){
-            if(ch=='\t'){
-                itemID=-1;
-            }
-        }
+        else if(titleBarItemTree[0]==2){
+            /*if(ch=='\t'){
+                titleBarItemTree[0]=-1;
+            }*/
+        //}
 
 
     }while(1);
@@ -711,11 +821,12 @@ void login_passField(WINDOW *win, int y, int x){
             gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
             // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
-          if(ch == KEY_BACKSPACE){ // If backspace is pressed
-                userpassChrCount--;
+            if(ch == KEY_BACKSPACE){ // If backspace is pressed
+                userpassChrCount-=1;
                 userpass[userpassChrCount] = '\0';
                 // wmove(win, y, x+userpassChrCount);
                 // waddch(win, ' ');
+                // mvwaddch(win, y, x+userpassChrCount, ' ');
                 mvwprintw(win, y, x+userpassChrCount, " ");
             }
             else{
@@ -854,9 +965,9 @@ int main(int argc, char **argv)
     // with height = 15 and width = 10
     // also with start x axis 10 and start y axis = 20
     // WINDOW *win = newwin(15, 17, 2, 10);
-    WINDOW *win, *messageBox, *messageBox_msg;
-    win = newwin(winMaxY, winMaxX, 0, 0);
-    accountPicBox = subwin(win, accountPicBoxMaxH, accountPicBoxMaxW, accountPicBoxMaxY, accountPicBoxMaxX); // Account Picture Box
+    WINDOW *messageBox, *messageBox_msg;
+    mainScreenWin = newwin(winMaxY, winMaxX, 0, 0);
+    accountPicBox = subwin(mainScreenWin, accountPicBoxMaxH, accountPicBoxMaxW, accountPicBoxMaxY, accountPicBoxMaxX); // Account Picture Box
     // messageBox = subwin(win, msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX);
     messageBox = newwin(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX);
 
@@ -865,8 +976,8 @@ int main(int argc, char **argv)
     // messageBox_msg = subwin(messageBox, msgBoxMaxY-2, msgBoxMaxX-4, 1, 2);
     // messageBox_msg = subwin(win, msgBoxMaxH-6, msgBoxMaxW-4, msgBoxMaxY+4, msgBoxMaxX+2);
     messageBox_msg = newwin(msgBoxMaxH-6, msgBoxMaxW-4, msgBoxMaxY+4, msgBoxMaxX+2);
-    authBox = subwin(win, winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
-    titleBar_subwin = subwin(win, 3, winMaxX,0,0);
+    authBox = subwin(mainScreenWin, winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
+    titleBar_subwin = subwin(mainScreenWin, 3, winMaxX,0,0);
 
     getmaxyx(authBox, loginBoxMaxY, loginBoxMaxX);
     //authBox = newwin(winMaxY*0.75, winMaxX/2,0,0);
@@ -879,7 +990,7 @@ int main(int argc, char **argv)
     box(accountPicBox, 0, 0);
     // box(messageBox, 0, 0);
     // box(messageBox_msg, 0, -2);
-    box(win, 0, 0);
+    box(mainScreenWin, 0, 0);
     // move and print in window
     /*mvwprintw(titleBar_subwin, 1, 1, "Shutdown");
     mvwprintw(titleBar_subwin, 1, 12, "Restart");
@@ -932,7 +1043,7 @@ int main(int argc, char **argv)
     drawAuthBox(winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
 
     // refreshing the window
-    wrefresh(win);
+    wrefresh(mainScreenWin);
     wrefresh(titleBar_subwin);
     wrefresh(accountPicBox);
     // wrefresh(authBox);
