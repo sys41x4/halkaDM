@@ -51,6 +51,8 @@ init_pair(8, COLOR_BLACK, COLOR_CYAN);*/
 
 int currentTitleID = 0;
 
+int maxSubItemElementLen=16;
+
 char powerSubItems[][10] = {
     "Sleep",
     "Restart",
@@ -63,12 +65,14 @@ char utilitiesSubItems[][15] = {
     "Network Status"
 };
 
-char titleBarItems[][16] = {
+char titleBarItems[][12] = {
     "POWER",
     "Utilities",
     "Environment"
 
 };
+
+
 
 /*
 // TitleBar Item ID List
@@ -235,6 +239,54 @@ static void finish(int sig)
     exit(0);
 }
 
+
+void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
+    // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
+
+//     WINDOW *subItemListWindow;
+
+    if ((maxY != 0) && (maxX != 0)){
+    int ch;
+    maxY+=2;
+    maxX+=2;
+
+    WINDOW *subItemListWindow = newwin(maxY, maxX, minY, minX);
+    noecho();
+    keypad(subItemListWindow, TRUE);
+
+    box(subItemListWindow, 0, 0);
+
+
+    for(int i=0; i<(maxY-2); i++){
+
+        mvwprintw(subItemListWindow, i+1, 1, charArray[i]);
+
+    }
+
+
+    wrefresh(subItemListWindow);
+
+
+    do{
+        ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
+        if((ch == KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
+            for (int i = 0; i < maxY-2; i++) {
+                free(charArray[i]);
+            }
+            free(charArray);
+            wclear(subItemListWindow);
+            delwin(subItemListWindow);
+            break;
+        }
+        else if(ch == '\t'){
+            // login_passField(win, (loginBoxMaxY/2), (loginBoxMaxX/4)+14);
+        }
+        else{}
+    }while(1);
+    }
+
+}
+
 void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title, const char* msg){
 
    /* If is_cmd==1,  then the supplied char array, will be eecuted and the output will be printed in the message box
@@ -353,10 +405,47 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
             if(ch=='\t'){
                 itemID=1;
             }
+            else if(ch=='\n'){
+
+                int rows = sizeof(powerSubItems)/sizeof(powerSubItems[0]);
+                int cols = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
+                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+
+                for (int i = 0; i < rows; i++) {
+                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
+                    for (int j = 0; j < cols; j++) {
+                        arr[i][j] = powerSubItems[i][j];
+                    }
+                }
+
+                subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+
+
+                /*for (int i = 0; i < rows; i++) {
+                    free(arr[i]);
+                }
+                free(arr);*/
+                wrefresh(titlebar);
+            }
         }
         else if(itemID==1){
             if(ch=='\t'){
                 itemID=2;
+            }
+            else if(ch=='\n'){
+                int rows = sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
+                int cols = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
+                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+
+                for (int i = 0; i < rows; i++) {
+                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
+                    for (int j = 0; j < cols; j++) {
+                        arr[i][j] = utilitiesSubItems[i][j];
+                    }
+                }
+
+                subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+                wrefresh(titlebar);
             }
         }
         else if(itemID==2){

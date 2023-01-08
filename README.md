@@ -63,14 +63,14 @@
 ---
 *Desc:* Halka DM is a Desktop Manager build with an intention of simplicity and security in mind, consuming minimal system resource to support low resource bounded systems.
 
-** Currently in Development **
+**halkaDM:micro : Currently in Development<-->Testing Phase**
 ---
 
-| S.No. | package | type | source |
-| - | - | - | - |
-| 1 | halkaDM:gui | GUI | /source/gui/* |
-| 2 | halkaDM:micro | TUI | /source/micro/* |
-| 3 | halkaDM:nano | TUI | /source/nano/* |
+| S.No. | package | type | source | status
+| - | - | - | - | - |
+| 1 | halkaDM:gui | GUI | /source/gui/* | - |
+| 2 | halkaDM:micro | TUI | /source/micro/* | under-development |
+| 3 | halkaDM:nano | TUI | /source/nano/* | - |
 
 
 Current Project status:<br>
