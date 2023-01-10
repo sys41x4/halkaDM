@@ -71,10 +71,14 @@ char utilitiesSubItems[][15] = {
     "Network Status"
 };
 
-char titleBarItems[][12] = {
+char desktopEnvironmentsSubItems[30][30];
+
+// ENV: DEFAULT
+
+char titleBarItems[][30] = {
     "POWER",
     "Utilities",
-    "Environment"
+    "ENV: DEFAULT"
 
 };
 
@@ -90,7 +94,7 @@ char utilitiesSubItemsCmd[][40] = {
     "/usr/sbin/tcpdump --list-interfaces"
 };*/
 
-char subItemsCmd[][3][55] = {
+char subItemsCmd[][10][55] = {
     {
         "echo Sleep_clked",
         "sudo shutdown -r now",
@@ -102,7 +106,7 @@ char subItemsCmd[][3][55] = {
         "/usr/sbin/tcpdump --list-interfaces"
     },
     {
-        "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev",
+        "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev"
     }
 
 };
@@ -137,6 +141,8 @@ char commandTitle[][30]={
 
 */
 
+
+
 int availableDesktopManagerCount;
 
 char desktopManagerSubItems[1][20];
@@ -151,8 +157,9 @@ int loginBoxMaxX, loginBoxMaxY;
 char username[32];
 char userpass[255]; // no password limit
 
-char masked_username[32];
-char masked_userpass[50];
+/*char maskedUsername[50]; // Masked Username
+char maskedUserpass[50]; // Masked Userpass
+*/
 
 
 int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
@@ -292,6 +299,51 @@ static void finish(int sig)
     exit(0);
 }
 
+
+void drawOSName(WINDOW *win, int y, int x){
+    // wmove(win, y, x);
+    FILE *pp;
+    cbreak();
+    int strLen;
+
+    if ((pp = popen("uname -n -o", "r")) != 0) {
+        char buffer[BUFSIZ];
+        //strLen = strlen(buffer);
+        // wmove(win, y, x-(strlen(buffer)/2));
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+            wmove(win, y, x-(strlen(buffer)/2));
+            wattron(win, COLOR_PAIR(13));
+            waddstr(win, buffer);
+            wattroff(win, COLOR_PAIR(13));
+        }
+        pclose(pp);
+    }
+}
+
+
+
+void updateRequestedUSRENV(){
+    // wmove(win, y, x);
+    FILE *pp;
+    cbreak();
+    char defaultEnv[] = "Default";
+    char cmd[100] = "sudo cat /var/lib/AccountsService/users/";
+    strcat(cmd, username);
+    strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
+    if ((pp = popen(cmd, "r")) != 0) {
+        char buffer[BUFSIZ];
+        //strLen = strlen(buffer);
+        // wmove(win, y, x-(strlen(buffer)/2));
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+            for(int i=5; i<strlen(buffer)+4; i++){titleBarItems[2][i]=buffer[i-5];};
+            // titleBarItems[2][i+2]='\0';
+            // wrefresh(titleBar_subwin);
+        }
+        pclose(pp);
+    }
+//    else{for(int i=5; i<strlen(defaultEnv); i++){titleBarItems[2][i]=defaultEnv[i-5];}}
+}
+
 void genProfilePicture(int h, int w, int y, int x){
     // Draw Random bitmap
     int randColorID=1;
@@ -391,15 +443,32 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
     }while(1);
 }
 
+
+
 void list_available_desktop_environments(WINDOW *win, int y, int x){
     wmove(win, y, x);
     FILE *pp;
     cbreak();
 
-    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev", "r")) != 0) {
+    int i=0;
+    int j=0;
+
+    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            waddstr(win, buffer);
+            // waddstr(win, buffer);
+
+            /*if(buffer=='\n'){
+                i++;
+                j=0;
+            }*/
+            for(int k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
+                if(buffer[k]=='\7'){i++;k++;j=0;}
+                else if(buffer[k]=='\0'){break;}
+                desktopEnvironmentsSubItems[i][j] = buffer[k];
+                j++;
+            }
+            // j++;
         }
         pclose(pp);
     }
@@ -484,6 +553,7 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
 
 }
 
+// void draw_titlebar(WINDO *titlebar=titleBar_subwin, int itemID=-1);
 
 void draw_titlebar(WINDOW *titlebar, int itemID=-1)
 {
@@ -514,7 +584,7 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
         if(titleBarItemTree[0]==1){wattroff(titlebar, COLOR_PAIR(13));}
 
         if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(13));}
-        wmove(titlebar, 1, titlebarCoordX-((sizeof(titleBarItems[2])/sizeof(titleBarItems[2][0]))+spacingX));
+        wmove(titlebar, 1, titlebarCoordX-(strlen(titleBarItems[2])+spacingX));
         waddstr(titlebar, titleBarItems[2]);
         if(titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(13));}
 
@@ -577,69 +647,23 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 }
 
                  subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
-                // wrefresh(titlebar);
             }
-            else if(titleBarItemTree[0]==1){
-            }
-        }
-
-
-
-
-        /*if(titleBarItemTree[0]==0){
-            /*if(ch=='\t' || (ch==KEY_RIGHT) || (ch=='d')){
-                titleBarItemTree[0]++;
-            }
-            if((ch=='\n') || (ch==KEY_DOWN) || (ch=='s')){
+            else if(titleBarItemTree[0]==2){
                 titleBarItemTree[1]=0;
-                int rows = sizeof(powerSubItems)/sizeof(powerSubItems[0]);
-                int cols = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
+                int rows = sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]);
+                int cols = sizeof(desktopEnvironmentsSubItems[0])/sizeof(desktopEnvironmentsSubItems[0][0]);
                 char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
 
                 for (int i = 0; i < rows; i++) {
                     arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
                     for (int j = 0; j < cols; j++) {
-                        arr[i][j] = powerSubItems[i][j];
+                        arr[i][j] = desktopEnvironmentsSubItems[i][j];
                     }
                 }
 
-                subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
-
-
-                /*for (int i = 0; i < rows; i++) {
-                    free(arr[i]);
-                }
-                free(arr);
-                wrefresh(titlebar);
+                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
             }
         }
-        else if(titleBarItemTree[0]==1){
-            /*if(ch=='\t'){
-                titleBarItemTree[0]++;
-            }
-            if(ch=='\n'){
-                titleBarItemTree[1]=0;
-                int rows = sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
-                int cols = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
-                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
-
-                for (int i = 0; i < rows; i++) {
-                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
-                    for (int j = 0; j < cols; j++) {
-                        arr[i][j] = utilitiesSubItems[i][j];
-                    }
-                }
-
-                subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
-                wrefresh(titlebar);
-            }
-        }
-        else if(titleBarItemTree[0]==2){
-            /*if(ch=='\t'){
-                titleBarItemTree[0]=-1;
-            }*/
-        //}
-
 
     }while(1);
 }
@@ -651,8 +675,8 @@ char* maskStr(int strLen, char character='*');
 
 char* maskStr(int strLen, char character){
     static char str[50];
-    memset(str, character, sizeof(str[0])*strLen);
-    // for(int i=0;i<strLen;i++){str[i]=character;}
+    // memset(str, character, sizeof(str[0])*strLen);
+    for(int i=0; i<strLen; i++){str[i]=character;}
     return str;
 }
 
@@ -740,7 +764,7 @@ char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, 
 char *mask_authInput(int authType, int *maskingConfig, char* str){
     /* maskField: "username" | For masking the username for visibility
        maskField: "userpass" | For masking the userpass for visibility*/
-    char *maskedOutput = nullptr; // const char* -> char*
+    char *maskedOutput; // const char* -> char*
     int maskingConfigLength, strLen;
 
     // strLen = sizeof(str)/sizeof(str[0]);
@@ -838,11 +862,12 @@ void user_pass_visibility(WINDOW *win, int y, int x){
     */
 
     wmove(win, y, x);
-
+    int j=1;
     for(int i=0; i<sizeof(userpassVisibilityConf)/sizeof(userpassVisibilityConf[0]); i++){
-        wattron(win, COLOR_PAIR(userpassVisibilityConf[i]+1));
+        wattron(win, COLOR_PAIR(userpassVisibilityConf[i]+j));
         waddch(win, userpassVisibilityConf[i]);
-        wattroff(win, COLOR_PAIR(userpassVisibilityConf[i]+1));
+        wattroff(win, COLOR_PAIR(userpassVisibilityConf[i]+j));
+        j+=2;
 
     }
     wrefresh(win);
@@ -862,6 +887,14 @@ void login_passField(WINDOW *win, int y, int x){
     keypad(win, TRUE);
 
     do{
+         wmove(win, y, x);
+
+        if(userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
+            visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
+            wprintw(win, visible_userpass);
+            userpassChrCount=strlen(userpass);
+        }
+        wrefresh(win);
         // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
@@ -886,17 +919,15 @@ void login_passField(WINDOW *win, int y, int x){
                 userpass[userpassChrCount] = ch;
                 userpassChrCount++;
             }
-            wmove(win, y, x);
+            /*wmove(win, y, x);
 
-            /*for(int i=0; i<userpassChrCount; i++){
-                waddch(win, userpass[i]);
-            }*/
             if(userpassVisibilityConf[0]!=2){
                 visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
                 wprintw(win, visible_userpass);
             }
 
-            wrefresh(win);
+            wrefresh(win);*/
+
             // show_datetime(titlebar, 1, (titlebarCoordX/2)-16);
             // free(visible_userpass);
             /* process the command keystroke */
@@ -916,9 +947,21 @@ void login_userField(WINDOW *win, int y, int x){
 
     do{
         // wmove(win, y, x);
+        wmove(win, y, x);
+
+        if(usernameVisibilityConf[0]!=2){
+            visible_username = mask_authInput(0, usernameVisibilityConf, username);
+            wprintw(win, visible_username);
+            usernameChrCount=strlen(username);
+        }
+            // mvwprintw(win, y, x, username);
+
+        wrefresh(win);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if((ch == '\n') || (ch == '\t')){ // If Enter is pressed
             genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            updateRequestedUSRENV();
+            draw_titlebar(titleBar_subwin, -1);
             break;
         }
         else if((usernameChrCount==0) && (ch == KEY_BACKSPACE)){}
@@ -937,7 +980,7 @@ void login_userField(WINDOW *win, int y, int x){
                 username[usernameChrCount] = ch;
                 usernameChrCount++;
             }
-            wmove(win, y, x);
+            /*wmove(win, y, x);
 
             if(usernameVisibilityConf[0]!=2){
                 visible_username = mask_authInput(0, usernameVisibilityConf, username);
@@ -945,7 +988,7 @@ void login_userField(WINDOW *win, int y, int x){
             }
             // mvwprintw(win, y, x, username);
 
-            wrefresh(win);
+            wrefresh(win);*/
         }
 
         /* process the command keystroke */
@@ -985,6 +1028,78 @@ void drawAuthBox(int maxY, int maxX, int minY, int minX){
 
 
 
+void initWindow(){
+    // Allocate Memory Space
+
+    // initscr(); // Initialize Curses Screen Base
+
+    getmaxyx(stdscr, winMaxY, winMaxX);
+
+
+    // Account Pic coordinate and oeiention settings
+    accountPicBoxMaxH = winMaxY*0.375;
+    accountPicBoxMaxW = winMaxX/4;
+    accountPicBoxMaxY = winMaxY/8;
+    accountPicBoxMaxX = winMaxX*0.375;
+
+    msgBoxMaxY=winMaxY/4; // Message Box Coordinates Y
+    msgBoxMaxX=winMaxX/4; // Message Box Coordinates X
+    msgBoxMaxH=winMaxY/2; //  Message Box Length H
+    msgBoxMaxW=winMaxX/2; // Message Box Length W
+
+    // Allocate Windows and subWindows //
+    // Create Main Window
+    mainScreenWin = newwin(winMaxY, winMaxX, 0, 0);
+    accountPicBox = subwin(mainScreenWin, accountPicBoxMaxH, accountPicBoxMaxW, accountPicBoxMaxY, accountPicBoxMaxX); // Account Picture Box
+    messageBox_msg = newwin(msgBoxMaxH-6, msgBoxMaxW-4, msgBoxMaxY+4, msgBoxMaxX+2);
+    authBox = subwin(mainScreenWin, winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
+    titleBar_subwin = subwin(mainScreenWin, 3, winMaxX,0,0);
+
+    getmaxyx(authBox, loginBoxMaxY, loginBoxMaxX);
+
+
+    // Setup Colours
+    start_color();
+    initColor();
+
+    wattron(mainScreenWin, COLOR_PAIR(13));
+    mvwprintw(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), package);
+    wattroff(mainScreenWin, COLOR_PAIR(13));
+
+    drawOSName(mainScreenWin, winMaxY/2, winMaxX/2);
+
+    refresh();
+
+    box(titleBar_subwin, 0, 0);
+    box(mainScreenWin, 0, 0);
+
+    draw_titlebar(titleBar_subwin, -1);
+
+    // List Available Desktop Managers
+    list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
+
+    //// UserName Visibility colorMap
+    user_pass_visibility(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10);
+
+    //// UserPass Visibility colorMap
+    user_pass_visibility(authBox, (loginBoxMaxY/2), loginBoxMaxX-10);
+
+
+    // Set Login Matrix Config
+    setLoginMatrixWindow(authBox); // The LoginMatrix to be shown in the provided window
+    loginMatrixSetConfig(1, 1, loginBoxMaxY-1, (loginBoxMaxX/4)-2);
+
+
+    // Draw Auth Box
+    drawAuthBox(winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
+
+    // refreshing the window
+    wrefresh(mainScreenWin);
+    wrefresh(titleBar_subwin);
+    wrefresh(accountPicBox);
+
+}
+
 int main(int argc, char **argv)
 {
     int bg, fg;
@@ -993,11 +1108,8 @@ int main(int argc, char **argv)
     int msgBoxMaxX, msgBoxMaxY, msgBoxMaxW, msgBoxMaxH;
     int loginBoxMaxX, loginBoxMaxY;*/
     initscr();
-
-/*    // Setup Colours
-    start_color();
-    initColor();
-*/
+    initWindow();
+/*
 
     getmaxyx(stdscr, winMaxY, winMaxX);
 
@@ -1011,32 +1123,32 @@ int main(int argc, char **argv)
     msgBoxMaxX=winMaxX/4; // Message Box Coordinates X
     msgBoxMaxH=winMaxY/2; //  Message Box Length H
     msgBoxMaxW=winMaxX/2; // Message Box Length W
-
-    char msgBoxTitle[msgBoxMaxW-4];
+*/
+    // char msgBoxTitle[msgBoxMaxW-4];
 
     // creating a window;
     // with height = 15 and width = 10
     // also with start x axis 10 and start y axis = 20
     // WINDOW *win = newwin(15, 17, 2, 10);
-    WINDOW *messageBox, *messageBox_msg;
-    mainScreenWin = newwin(winMaxY, winMaxX, 0, 0);
+    // WINDOW *messageBox, *messageBox_msg;
+    // mainScreenWin = newwin(winMaxY, winMaxX, 0, 0);
     // accountPicBox = newwin(accountPicBoxMaxH, accountPicBoxMaxW, accountPicBoxMaxY, accountPicBoxMaxX); // Account Picture Box
-    accountPicBox = subwin(mainScreenWin, accountPicBoxMaxH, accountPicBoxMaxW, accountPicBoxMaxY, accountPicBoxMaxX); // Account Picture Box
+    // accountPicBox = subwin(mainScreenWin, accountPicBoxMaxH, accountPicBoxMaxW, accountPicBoxMaxY, accountPicBoxMaxX); // Account Picture Box
     // messageBox = subwin(win, msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX);
-    messageBox = newwin(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX);
+    // messageBox = newwin(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX);
 
     // getmaxyx(messageBox, msgBoxMaxY, msgBoxMaxX); // test 
 
     // messageBox_msg = subwin(messageBox, msgBoxMaxY-2, msgBoxMaxX-4, 1, 2);
     // messageBox_msg = subwin(win, msgBoxMaxH-6, msgBoxMaxW-4, msgBoxMaxY+4, msgBoxMaxX+2);
-    messageBox_msg = newwin(msgBoxMaxH-6, msgBoxMaxW-4, msgBoxMaxY+4, msgBoxMaxX+2);
-    authBox = subwin(mainScreenWin, winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
-    titleBar_subwin = subwin(mainScreenWin, 3, winMaxX,0,0);
+    // messageBox_msg = newwin(msgBoxMaxH-6, msgBoxMaxW-4, msgBoxMaxY+4, msgBoxMaxX+2);
+    // authBox = subwin(mainScreenWin, winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
+    // titleBar_subwin = subwin(mainScreenWin, 3, winMaxX,0,0);
 
-    getmaxyx(authBox, loginBoxMaxY, loginBoxMaxX);
+    // getmaxyx(authBox, loginBoxMaxY, loginBoxMaxX);
     //authBox = newwin(winMaxY*0.75, winMaxX/2,0,0);
 
-    // Setup Colours
+/*    // Setup Colours
     start_color();
     initColor();
 
@@ -1044,16 +1156,18 @@ int main(int argc, char **argv)
     mvwprintw(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), package);
     wattroff(mainScreenWin, COLOR_PAIR(13));
 
-    refresh();
+    drawOSName(mainScreenWin, winMaxY/2, winMaxX/2);
 
+    refresh();
+*/
     // making box border with default border styles
     // box(win, 0, 0);
     // box(authBox, 0, 0);
-    box(titleBar_subwin, 0, 0);
+    // box(titleBar_subwin, 0, 0);
     // box(accountPicBox, 0, 0);
     // box(messageBox, 0, 0);
     // box(messageBox_msg, 0, -2);
-    box(mainScreenWin, 0, 0);
+    // box(mainScreenWin, 0, 0);
     // move and print in window
     /*mvwprintw(titleBar_subwin, 1, 1, "Shutdown");
     mvwprintw(titleBar_subwin, 1, 12, "Restart");
@@ -1062,10 +1176,11 @@ int main(int argc, char **argv)
     mvwprintw(titleBar_subwin, 1, winMaxX-18, "Desktop Manager");
     */
 
-    draw_titlebar(titleBar_subwin, -1);
+/*    draw_titlebar(titleBar_subwin, -1);
 
     // List Available Desktop Managers
-    // list_available_desktop_managers(win, winMaxY/2, winMaxX/2);
+    list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
+*/
     // show_datetime(titleBar_subwin, 1, (winMaxX/2)-15);
     // show_calender(win, winMaxY/8, (winMaxX/2)-10);
     // wrefresh(messageBox);
@@ -1093,6 +1208,7 @@ int main(int argc, char **argv)
 
     // start_color();
 
+/*
     //// UserName Visibility colorMap
     user_pass_visibility(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10);
 
@@ -1114,7 +1230,7 @@ int main(int argc, char **argv)
     wrefresh(accountPicBox);
     // wrefresh(authBox);
 
-
+*/
     // messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, "Network Status", "tcpdump --list-interfaces");
 
     // wrefresh(win);
@@ -1122,12 +1238,12 @@ int main(int argc, char **argv)
 
     // generate new colour map on each input in user/password field
 
-  //  do{
+    do{
         genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
         login_userField(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX/4)+14);
         login_passField(authBox, (loginBoxMaxY/2), (loginBoxMaxX/4)+14);
         draw_titlebar(titleBar_subwin, 0);
-    //}while(1);
+    }while(1);
 
 
     // show_datetime(titleBar_subwin, 1, (winMaxX/2)-16);
