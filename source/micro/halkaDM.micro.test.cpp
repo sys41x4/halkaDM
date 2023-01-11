@@ -1,135 +1,14 @@
+#include "config/config.h"
+#include "lib/cryptography.h"
+#include "lib/security.h"
 #include <locale.h>
 #include <ncurses.h>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
-/*#include <stdlib.h>
-#include <stdio.h>*/
 
 using namespace std;
 
-char package[] = "halkaDM:nano";
-
-char KEY_ESCAPE = '\x1b';
-
-int asciiColors[] = {
-    COLOR_BLACK,
-    COLOR_RED,
-    COLOR_YELLOW,
-    COLOR_GREEN,
-    COLOR_WHITE,
-    COLOR_MAGENTA,
-    COLOR_BLUE,
-    COLOR_CYAN
-};
-
-int totalRandomizedColors = 10; // Must be loaded from the config file
-int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
-int totalManualColors = 8;
-
-
-
-
-/*
-
-// COLORS MAPOUT //
-
-0: [1-8] : size:8 | Pre Setup Colours
-1: [9-16] | [COLOR_BLACK, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_WHITE, COLOR_MAGENTA, COLOR_BLUE, COLOR_CYAN] : size:8 | Exclude the following for directly calling them in any case
-2: [<totalRandomizedColors>] | <randomize <totalRandomizedColors> colors> : size <totalRandomizedColors> | Randomization will be done only once on initial loading of the executable, to reduce memory consumption
-2: [<totalRandomizedColors>+3] | [username visibility colourmap] : size:3
-3: [<<totalRandomizedColors>+3>+3] | [userpass visibility colourmap] : size:3
-4: [Profile Pic] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors><totalRandomizedColors>
-5: [Login Randomization colourMap] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors>+<totalRandomizedColors>
-
-
-*/
-
-/*// Default starting static Colour index
-init_pair(1, COLOR_WHITE, COLOR_BLACK);
-init_pair(2, COLOR_WHITE. COLOR_RED);
-init_pair(3, COLOR_BLACK, COLOR_YELLOW);
-init_pair(4, COLOR_WHITE, COLOR_GREEN);
-init_pair(5, COLOR_BLACK, COLOR_WHITE);
-init_pair(6, COLOR_WHITE, COLOR_MAGENTA);
-init_pair(7, COLOR_WHITE, COLOR_BLUE);
-init_pair(8, COLOR_BLACK, COLOR_CYAN);*/
-
-int currentTitleID = 0;
-
-int maxSubItemElementLen=16;
-
-char powerSubItems[][10] = {
-    "Sleep",
-    "Restart",
-    "Shutdown"
-};
-
-char utilitiesSubItems[][15] = {
-    "Calender",
-    "CPU Status",
-    "Network Status"
-};
-
-char desktopEnvironmentsSubItems[30][30];
-
-// ENV: DEFAULT
-
-char titleBarItems[][30] = {
-    "POWER",
-    "Utilities",
-    "ENV: DEFAULT"
-
-};
-
-/*char powerSubItemsCmd[][40] = {
-    "echo Sleep_clked",
-    "sudo shutdown -r now",
-    "sudo /usr/sbin/shutdown -h now",
-};
-
-char utilitiesSubItemsCmd[][40] = {
-    "/usr/bin/cal",
-    "/usr/bin/mpstat -P ALL",
-    "/usr/sbin/tcpdump --list-interfaces"
-};*/
-
-char subItemsCmd[][10][55] = {
-    {
-        "echo Sleep_clked",
-        "sudo shutdown -r now",
-        "sudo /usr/sbin/shutdown -h now"
-    },
-    {
-        "/usr/bin/cal",
-        "/usr/bin/mpstat -P ALL",
-        "/usr/sbin/tcpdump --list-interfaces"
-    },
-    {
-        "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev"
-    }
-
-};
-
-int titleBarItemTree[2];
-
-/*char commandList[][55]={
-    "/usr/bin/date | tr -s '\n' ' '",
-    "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev",
-    "/usr/bin/mpstat -P ALL",
-    "/usr/bin/cal",
-    "/usr/sbin/tcpdump --list-interfaces",
-    "/usr/bin/jp2a --size=50x25 ~/profilePic.jpg"
-};
-
-char commandTitle[][30]={
-    "Date Time",
-    "Environment",
-    "CPU Status",
-    "Calender",
-    "Network Status",
-    "Profile Picture"
-}*/
 
 /*
 // TitleBar Item ID List
@@ -141,7 +20,8 @@ char commandTitle[][30]={
 
 */
 
-
+char desktopEnvironmentsSubItems[30][30];
+int titleBarItemTree[2];
 
 int availableDesktopManagerCount;
 
@@ -157,13 +37,10 @@ int loginBoxMaxX, loginBoxMaxY;
 char username[32];
 char userpass[255]; // no password limit
 
-/*char maskedUsername[50]; // Masked Username
-char maskedUserpass[50]; // Masked Userpass
-*/
 
 
-int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
-int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
+// int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
+// int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
 
 WINDOW *loginColourMatrixWin;
 int loginColourMatrixConf[] = {}; // {COORDINATE-Y, COORDINATE-X, HEIGHT, WIDTH}
@@ -273,15 +150,6 @@ void show_datetime(WINDOW *win, int y, int x){
     }
 }
 
-/*static void finish(int sig)
-{
-    endwin();
-
-    // do your non-curses wrapup here
-
-    exit(0);
-}*/
-
 
 void drawCMDStr(WINDOW *win, int y, int x, int alignX, int is_cmd, int colorID, const char* msg){
     // wmove(win, y, x);
@@ -292,10 +160,6 @@ void drawCMDStr(WINDOW *win, int y, int x, int alignX, int is_cmd, int colorID, 
           alignX==1 : centre align
           alignX==2 : right align
     */
-//    char osReleaseCMD[] = "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '";
-  //  char unameCMD[] = "uname -n -o";
-    // uname -n -o
-
 
     if(is_cmd==0){
         if(alignX==1){
@@ -333,7 +197,6 @@ void drawCMDStr(WINDOW *win, int y, int x, int alignX, int is_cmd, int colorID, 
 
 
 void updateRequestedUSRENV(){
-    // wmove(win, y, x);
     FILE *pp;
     cbreak();
     char defaultEnv[] = "Default";
@@ -342,37 +205,28 @@ void updateRequestedUSRENV(){
     strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
     if ((pp = popen(cmd, "r")) != 0) {
         char buffer[BUFSIZ];
-        //strLen = strlen(buffer);
-        // wmove(win, y, x-(strlen(buffer)/2));
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
             for(int i=5; i<strlen(buffer)+4; i++){titleBarItems[2][i]=buffer[i-5];};
-            // titleBarItems[2][i+2]='\0';
-            // wrefresh(titleBar_subwin);
         }
         pclose(pp);
     }
-//    else{for(int i=5; i<strlen(defaultEnv); i++){titleBarItems[2][i]=defaultEnv[i-5];}}
 }
 
 void genProfilePicture(int h, int w, int y, int x){
     // Draw Random bitmap
     int randColorID=1;
     int totalAvailableColour = totalASCIIcolors+totalManualColors+totalRandomizedColors;
-    // wmove(win, y, x);
+
     box(accountPicBox, 0, 0);
     srand(time(NULL));
     for (int i = y; i < h; i++) {
         wmove(accountPicBox, i, x);
         for (int j = 0; j < w; j++) {
            randColorID = rand()%totalAvailableColour;
-        //    int fg = asciiColors[rand() % 8] + rand()%7;
-        //    int bg = asciiColors[rand() % 8] * rand()%15;
-        //    init_pair(randColorID, fg, bg);
-            // wattron(win, COLOR_PAIR(color));
+
             wattron(accountPicBox, COLOR_PAIR(randColorID));
             waddch(accountPicBox, 'A' + rand() % 26);
             wattroff(accountPicBox, COLOR_PAIR(randColorID));
-            // wattroff(win, COLOR_PAIR(color));
         }
     }
     wrefresh(accountPicBox);
@@ -385,7 +239,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
       else if is_cmd==0, then the message will directly be printed in the message box
    */
 
-    // WINDOW *messageBoxBorderWindow, *messageBox_msg;
     FILE *pp;
     int ch;
 
@@ -393,7 +246,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
     messageBox_msg = newwin(h-6, w-4, y+4, x+2);
 
     box(messageBoxBorderWindow, 0, 0);
-//   box(messageBox_msg, 0, 0);
 
     // Draw Message Box Title
 
@@ -414,11 +266,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
             char buffer[BUFSIZ];
             while (fgets(buffer, sizeof(buffer), pp) != 0) {
 
-/*
-               int i=0;
-               while(buffer[i]!='\n'){i++;}
-               wmove(messageBox_msg, y, x);
-*/
                 waddstr(messageBox_msg, buffer);
             }
             wrefresh(messageBox_msg);
@@ -472,19 +319,12 @@ void list_available_desktop_environments(WINDOW *win, int y, int x){
     if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            // waddstr(win, buffer);
-
-            /*if(buffer=='\n'){
-                i++;
-                j=0;
-            }*/
             for(int k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
                 if(buffer[k]=='\7'){i++;k++;j=0;}
                 else if(buffer[k]=='\0'){break;}
                 desktopEnvironmentsSubItems[i][j] = buffer[k];
                 j++;
             }
-            // j++;
         }
         pclose(pp);
     }
@@ -494,28 +334,19 @@ void list_available_desktop_environments(WINDOW *win, int y, int x){
 void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
     // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
 
-//     WINDOW *subItemListWindow;
 
     if ((maxY != 0) && (maxX != 0)){
         int ch='\0';
         maxY+=2;
         maxX+=2;
         noecho();
-        //keypad(subItemListWindow, TRUE);
 
-    // WINDOW *subItemListWindow = newwin(maxY, maxX, minY, minX);
-        /*for(int i=0; i<1; i=0){
-            if(ch=='\n'){break;};*/
         do{
         subItemListWindow = newwin(maxY, maxX, minY, minX);
         keypad(subItemListWindow, TRUE);
-    /*noecho();
-    keypad(subItemListWindow, TRUE);*/
 
         box(subItemListWindow, 0, 0);
 
-        /*for(int i=0; i<1; i=0){
-            if(ch=='\n'){break;};*/
             for(int i=0; i<(maxY-2); i++){
                 if(i==titleBarItemTree[1]){wattron(subItemListWindow, COLOR_PAIR(13));}
                 mvwprintw(subItemListWindow, i+1, 1, charArray[i]);
@@ -527,19 +358,15 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
             wrefresh(subItemListWindow);
 
 
-            //do{
-                // if(ch=='\n'){break;};
                 ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
                 if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
                     for (int i = 0; i < maxY-2; i++) {
                         free(charArray[i]);
                     }
                     free(charArray);
-            // werase(subItemListWindow);
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
                     wrefresh(subItemListWindow);
-                   // delwin(subItemListWindow);
                     break;
                 }
                 else if((ch == '\n') || (ch==KEY_RIGHT) || (ch == 'd') || (ch=='6') || (ch=='5')){
@@ -564,7 +391,6 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
                 }
                 else{}
             }while(1);
-        //}
     }
 
 }
@@ -580,9 +406,7 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
     int titleBarItemCount = sizeof(titleBarItems)/sizeof(titleBarItems[0]);
     noecho();
     titleBarItemTree[0]=itemID;
-    // init_pair(5, COLOR_BLACK, COLOR_WHITE);
     do{
-        // titleBarItemTree[0]=itemID;
         keypad(titlebar, TRUE);
         getmaxyx(titlebar, titlebarCoordY, titlebarCoordX);
         positionCoordX=0;
@@ -595,7 +419,7 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
         positionCoordX+=strlen(titleBarItems[0]);
 
         if(titleBarItemTree[0]==1){wattron(titlebar, COLOR_PAIR(13));}
-        wmove(titlebar, 1, positionCoordX+spacingX);
+        wmove(titlebar, 1, positionCoordX+(spacingX)*2);
         waddstr(titlebar, titleBarItems[1]);
         if(titleBarItemTree[0]==1){wattroff(titlebar, COLOR_PAIR(13));}
 
@@ -643,11 +467,6 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
                  subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
 
 
-                /*for (int i = 0; i < rows; i++) {
-                    free(arr[i]);
-                }
-                free(arr);*/
-                // wrefresh(titlebar);
             }
             else if(titleBarItemTree[0]==1){
                 titleBarItemTree[1]=0;
@@ -683,180 +502,6 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
 
     }while(1);
 }
-
-
-
-/*char maskedStr[50];
-
-char* maskStr2(int strLen, char character='*');
-
-char* maskStr2(int strLen, char character){
-    //static char str[50];
-    // memset(str, character, sizeof(str[0])*strLen);
-    // for(int i=0; i<strLen; i++){str[i]=character;}
-    for(int i=0; i<strLen; i++){maskedStr[i]=character;}
-    return maskedStr;
-}
-*/
-
-void maskStr(int strLen, char character, char *arr){
-    //static char str[50];
-    // memset(arr, character, sizeof(arr[0])*strLen);
-    int i;
-    for(i=0; i<strLen; i++){arr[i]=character;}
-    arr[i++]='\0';
-}
-
-// char* generateRandomStr(int randomizeLen=0, int maxStrLen=10, const char *chrType="a");
-
-void generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType, char *visibleStrOut){
-
-    int i;
-    int strLen=maxStrLen;
-
-    if(randomizeLen!=0){
-        srand(time(NULL));
-        strLen = rand()%maxStrLen;
-    }
-    /*else{
-        strLen = maxStrLen;
-    }*/
-
-
-    //////////////////////////
-    // static char str[50];
-    if(strLen>49){strLen=49;}
-    //char str[strLen];
-    char charT;
-
-    // int chrTypeLen = sizeof(chrType)/sizeof(chrType[0]);
-    int chrTypeLen = strlen(chrType);
-
-    srand(time(NULL));
-    for(i=0; i<strLen; i++){
-
-        // srand(time(NULL));
-        /*if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
-        else{charT = chrType[0];}*/
-        charT = chrType[rand()%chrTypeLen];
-
-
-        if(((int)charT>='a') && ((int)charT<='z')){
-        // Lower Case Randomization
-            visibleStrOut[i] = 'a'+rand()%26;
-        }
-        else if(((int)charT>='A') && ((int)charT<='Z')){
-        // Upper Case Randomization
-            visibleStrOut[i] = 'A'+rand()%26;
-        }
-        else if(((int)charT>='0') && ((int)charT<='9')){
-        // Integer Randomization
-            visibleStrOut[i] = '0'+rand()%9;
-        }
-        else if(
-                (((int)charT>='!') && ((int)charT<='/')) || 
-                (((int)charT>=':') && ((int)charT<='@')) || 
-                (((int)charT>='[') && ((int)charT<='`')) || 
-                (((int)charT>='{') && ((int)charT<='~'))
-                // (((int)charT>='{') && ((int)charT<=254))
-        ){
-        // Special Charaacter+symbol Randomization
-            int specialCharType=rand()%3;
-
-            if(specialCharType==0){
-                visibleStrOut[i] = '!'+rand()%14;
-            }
-            else if(specialCharType==1){
-                visibleStrOut[i] = ':'+rand()%6;
-            }
-            else if(specialCharType==2){
-                visibleStrOut[i] = '['+rand()%5;
-            }
-            else if(specialCharType==3){
-                visibleStrOut[i] = '{'+rand()%3;
-            }
-        }
-        else{
-            visibleStrOut[i] = '\0';
-        }
-    }
-    // str[strLen]='\0';
-    visibleStrOut[i++]='\0';
-
-//    return str;
-}
-
-
-// char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="TEST");
-
-void mask_authInput(int authType, int *maskingConfig, char* str, char* visibleStrOut){
-    /* maskField: "username" | For masking the username for visibility
-       maskField: "userpass" | For masking the userpass for visibility*/
-    // int maskingConfigLength, strLen;
-
-    // strLen = sizeof(str)/sizeof(str[0]);
-    int strLen = strlen(str);
-
-    // Mask According to masking Config
-
-    if(maskingConfig[0]>=2){visibleStrOut[0]='\0';}
-    else if(maskingConfig[2]==0){
-
-        if(maskingConfig[1]==0){
-            if(maskingConfig[0]==0){
-                // strcpy(maskedOutput, str);
-                // maskedOutput = str;
-                strcpy(visibleStrOut, str);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = maskStr(strLen, '*');
-                maskStr(strLen, '*', visibleStrOut);
-            }
-        }
-        else if(maskingConfig[1]==1){
-            if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(0, strLen, "Aa0");
-                generateRandomStr(0, strLen, "Aa0", visibleStrOut);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = generateRandomStr(0, strLen, "!");
-                generateRandomStr(0, strLen, "!", visibleStrOut);
-            }
-        }
-    }
-    else if(maskingConfig[2]==1){
-        // srand(time(NULL));
-        // strLen = rand()%(strLen+5);
-
-        if(maskingConfig[1]==0){
-            if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
-                generateRandomStr(1, strLen, "Aa0", visibleStrOut);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = maskStr(strLen, '*'); // need review
-                maskStr(strLen, '*', visibleStrOut);
-            }
-        }
-        else if(maskingConfig[1]==1){
-            if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
-                generateRandomStr(1, strLen, "Aa0", visibleStrOut);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = generateRandomStr(1, strLen, "!");
-                generateRandomStr(1, strLen, "!", visibleStrOut);
-            }
-        }
-    }
-    else{
-         // maskedOutput = maskStr(strLen, '*');
-         maskStr(strLen, '*', visibleStrOut);
-    }
-
-//    return maskedOutput;
-}
-
 
 
 void user_pass_visibility(WINDOW *win, int y, int x){
@@ -929,47 +574,29 @@ void login_passField(WINDOW *win, int y, int x){
         if(userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
             // visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
             // maskStr2(visible_userpass, strlen(userpass), '*');
-            mask_authInput(0, userpassVisibilityConf, userpass, visible_userpass);
+            halkadm_security.mask_authInput(0, userpassVisibilityConf, userpass, visible_userpass);
             wprintw(win, visible_userpass);
             userpassChrCount=strlen(userpass);
         }
         wrefresh(win);
-        // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
             genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
-            //finish=1;
             break;
         }
         else if((userpassChrCount==0) && (ch == KEY_BACKSPACE)){}
         else if(((userpassChrCount>=0) && (userpassChrCount<userpassLengthMax)) || ((userpassChrCount == userpassLengthMax) && (ch == KEY_BACKSPACE))){
             gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
-            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
                 userpassChrCount-=1;
                 userpass[userpassChrCount] = '\0';
-                // wmove(win, y, x+userpassChrCount);
-                // waddch(win, ' ');
-                // mvwaddch(win, y, x+userpassChrCount, ' ');
                 mvwprintw(win, y, x+userpassChrCount, " ");
             }
             else{
                 userpass[userpassChrCount] = ch;
                 userpassChrCount++;
             }
-            /*wmove(win, y, x);
-
-            if(userpassVisibilityConf[0]!=2){
-                visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
-                wprintw(win, visible_userpass);
-            }
-
-            wrefresh(win);*/
-
-            // show_datetime(titlebar, 1, (titlebarCoordX/2)-16);
-            // free(visible_userpass);
-            /* process the command keystroke */
         }
     }while (1);
 }
@@ -981,21 +608,17 @@ void login_userField(WINDOW *win, int y, int x){
     int ch;
 //    char* visible_username;
     char visible_username[50]={'\0'};
-    // cbreak();
     noecho();
     keypad(win, TRUE);
 
     do{
-        // wmove(win, y, x);
         wmove(win, y, x);
 
         if(usernameVisibilityConf[0]!=2 && strlen(username)>0){
-            // visible_username = mask_authInput(0, usernameVisibilityConf, username);
-            mask_authInput(0, usernameVisibilityConf, username, visible_username);
+            halkadm_security.mask_authInput(0, usernameVisibilityConf, username, visible_username);
             wprintw(win, visible_username);
             usernameChrCount=strlen(username);
         }
-            // mvwprintw(win, y, x, username);
 
         wrefresh(win);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
