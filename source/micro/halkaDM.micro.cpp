@@ -670,20 +670,32 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
 
 
 
+/*char maskedStr[50];
 
-char* maskStr(int strLen, char character='*');
+char* maskStr2(int strLen, char character='*');
 
-char* maskStr(int strLen, char character){
-    static char str[50];
+char* maskStr2(int strLen, char character){
+    //static char str[50];
     // memset(str, character, sizeof(str[0])*strLen);
-    for(int i=0; i<strLen; i++){str[i]=character;}
-    return str;
+    // for(int i=0; i<strLen; i++){str[i]=character;}
+    for(int i=0; i<strLen; i++){maskedStr[i]=character;}
+    return maskedStr;
+}
+*/
+
+void maskStr(int strLen, char character, char *arr){
+    //static char str[50];
+    // memset(arr, character, sizeof(arr[0])*strLen);
+    int i;
+    for(i=0; i<strLen; i++){arr[i]=character;}
+    arr[i++]='\0';
 }
 
-char* generateRandomStr(int randomizeLen=0, int maxStrLen=10, const char *chrType="a");
+// char* generateRandomStr(int randomizeLen=0, int maxStrLen=10, const char *chrType="a");
 
-char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
+void generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType, char *visibleStrOut){
 
+    int i;
     int strLen=maxStrLen;
 
     if(randomizeLen!=0){
@@ -696,7 +708,7 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
 
 
     //////////////////////////
-    static char str[50];
+    // static char str[50];
     if(strLen>49){strLen=49;}
     //char str[strLen];
     char charT;
@@ -705,7 +717,7 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
     int chrTypeLen = strlen(chrType);
 
     srand(time(NULL));
-    for(int i=0; i<strLen; i++){
+    for(i=0; i<strLen; i++){
 
         // srand(time(NULL));
         /*if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
@@ -715,15 +727,15 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
 
         if(((int)charT>='a') && ((int)charT<='z')){
         // Lower Case Randomization
-            str[i] = 'a'+rand()%26;
+            visibleStrOut[i] = 'a'+rand()%26;
         }
         else if(((int)charT>='A') && ((int)charT<='Z')){
         // Upper Case Randomization
-            str[i] = 'A'+rand()%26;
+            visibleStrOut[i] = 'A'+rand()%26;
         }
         else if(((int)charT>='0') && ((int)charT<='9')){
         // Integer Randomization
-            str[i] = '0'+rand()%9;
+            visibleStrOut[i] = '0'+rand()%9;
         }
         else if(
                 (((int)charT>='!') && ((int)charT<='/')) || 
@@ -736,35 +748,35 @@ char* generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType){
             int specialCharType=rand()%3;
 
             if(specialCharType==0){
-                str[i] = '!'+rand()%14;
+                visibleStrOut[i] = '!'+rand()%14;
             }
             else if(specialCharType==1){
-                str[i] = ':'+rand()%6;
+                visibleStrOut[i] = ':'+rand()%6;
             }
             else if(specialCharType==2){
-                str[i] = '['+rand()%5;
+                visibleStrOut[i] = '['+rand()%5;
             }
             else if(specialCharType==3){
-                str[i] = '{'+rand()%3;
+                visibleStrOut[i] = '{'+rand()%3;
             }
         }
         else{
-            str[i] = '\0';
+            visibleStrOut[i] = '\0';
         }
     }
     // str[strLen]='\0';
+    visibleStrOut[i++]='\0';
 
-
-    return str;
+//    return str;
 }
 
 
-char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="TEST");
+// char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="TEST");
 
-char *mask_authInput(int authType, int *maskingConfig, char* str){
+void mask_authInput(int authType, int *maskingConfig, char* str, char* visibleStrOut){
     /* maskField: "username" | For masking the username for visibility
        maskField: "userpass" | For masking the userpass for visibility*/
-    char *maskedOutput; // const char* -> char*
+    // char *maskedOutput; // const char* -> char*
     int maskingConfigLength, strLen;
 
     // strLen = sizeof(str)/sizeof(str[0]);
@@ -772,24 +784,28 @@ char *mask_authInput(int authType, int *maskingConfig, char* str){
 
     // Mask According to masking Config
 
-    if(maskingConfig[0]>=2){maskedOutput = maskStr(1, '\0');}
+    if(maskingConfig[0]>=2){visibleStrOut[0]='\0';}
     else if(maskingConfig[2]==0){
 
         if(maskingConfig[1]==0){
             if(maskingConfig[0]==0){
                 // strcpy(maskedOutput, str);
-                maskedOutput = str;
+                // maskedOutput = str;
+                strcpy(visibleStrOut, str);
             }
             else if(maskingConfig[0]==1){
-                maskedOutput = maskStr(strLen, '*');
+                // maskedOutput = maskStr(strLen, '*');
+                maskStr(strLen, '*', visibleStrOut);
             }
         }
         else if(maskingConfig[1]==1){
             if(maskingConfig[0]==0){
-                maskedOutput = generateRandomStr(0, strLen, "Aa0");
+                // maskedOutput = generateRandomStr(0, strLen, "Aa0");
+                generateRandomStr(0, strLen, "Aa0", visibleStrOut);
             }
             else if(maskingConfig[0]==1){
-                maskedOutput = generateRandomStr(0, strLen, "!");
+                // maskedOutput = generateRandomStr(0, strLen, "!");
+                generateRandomStr(0, strLen, "!", visibleStrOut);
             }
         }
     }
@@ -799,26 +815,31 @@ char *mask_authInput(int authType, int *maskingConfig, char* str){
 
         if(maskingConfig[1]==0){
             if(maskingConfig[0]==0){
-                maskedOutput = generateRandomStr(1, strLen, "Aa0");
+                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
+                generateRandomStr(1, strLen, "Aa0", visibleStrOut);
             }
             else if(maskingConfig[0]==1){
-                maskedOutput = maskStr(strLen, '*'); // need review
+                // maskedOutput = maskStr(strLen, '*'); // need review
+                maskStr(strLen, '*', visibleStrOut);
             }
         }
         else if(maskingConfig[1]==1){
             if(maskingConfig[0]==0){
-                maskedOutput = generateRandomStr(1, strLen, "Aa0");
+                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
+                generateRandomStr(1, strLen, "Aa0", visibleStrOut);
             }
             else if(maskingConfig[0]==1){
-                maskedOutput = generateRandomStr(1, strLen, "!");
+                // maskedOutput = generateRandomStr(1, strLen, "!");
+                generateRandomStr(1, strLen, "!", visibleStrOut);
             }
         }
     }
     else{
-         maskedOutput = maskStr(strLen, '*');
+         // maskedOutput = maskStr(strLen, '*');
+         maskStr(strLen, '*', visibleStrOut);
     }
 
-    return maskedOutput;
+//    return maskedOutput;
 }
 
 
@@ -880,7 +901,8 @@ void login_passField(WINDOW *win, int y, int x){
     int userpassChrCount = 0;
     int userpassLengthMax = sizeof(userpass)/sizeof(userpass[0]);
     int ch;
-    char* visible_userpass;
+    // char* visible_userpass;
+    char visible_userpass[50]={'\0'};
     // int finish=0;
     // cbreak();
     noecho();
@@ -890,7 +912,9 @@ void login_passField(WINDOW *win, int y, int x){
          wmove(win, y, x);
 
         if(userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
-            visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
+            // visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
+            // maskStr2(visible_userpass, strlen(userpass), '*');
+            mask_authInput(0, userpassVisibilityConf, userpass, visible_userpass);
             wprintw(win, visible_userpass);
             userpassChrCount=strlen(userpass);
         }
@@ -940,7 +964,8 @@ void login_userField(WINDOW *win, int y, int x){
     int usernameChrCount = 0;
     int usernameLengthMax = sizeof(username)/sizeof(username[0]);
     int ch;
-    char* visible_username;
+//    char* visible_username;
+    char visible_username[50]={'\0'};
     // cbreak();
     noecho();
     keypad(win, TRUE);
@@ -949,8 +974,9 @@ void login_userField(WINDOW *win, int y, int x){
         // wmove(win, y, x);
         wmove(win, y, x);
 
-        if(usernameVisibilityConf[0]!=2){
-            visible_username = mask_authInput(0, usernameVisibilityConf, username);
+        if(usernameVisibilityConf[0]!=2 && strlen(username)>0){
+            // visible_username = mask_authInput(0, usernameVisibilityConf, username);
+            mask_authInput(0, usernameVisibilityConf, username, visible_username);
             wprintw(win, visible_username);
             usernameChrCount=strlen(username);
         }
