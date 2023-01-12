@@ -3,6 +3,7 @@
 #include "lib/security.h"
 #include <locale.h>
 #include <ncurses.h>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
@@ -20,7 +21,8 @@ using namespace std;
 
 */
 
-char desktopEnvironmentsSubItems[30][30];
+// char desktopEnvironmentsSubItems[30][30];
+char** desktopEnvironmentsSubItems;
 int *titleBarItemTree;
 
 int availableDesktopManagerCount;
@@ -328,6 +330,52 @@ void list_available_desktop_environments(WINDOW *win, int y, int x){
 }
 
 
+void fill_available_desktop_environments(){
+    FILE *pp;
+    // Should be initiated only once during initial Memory allocation setup
+    int rows=1, cols=0;
+    int i=0, j=0;
+    int k;
+
+    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
+        char buffer[BUFSIZ];
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+
+            for(k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
+                if(buffer[k]=='\7'){
+                    rows++;k++;
+                    if(j>cols){cols=j;}
+                    j=0;
+                }
+                else if(buffer[k]=='\0'){
+                    if(buffer[k-1]!='\7'){rows++;}
+                    if(j>cols){cols=j;}
+                    break;
+                }
+                j++;
+            }
+
+            desktopEnvironmentsSubItems = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+            for (int a = 0; a<rows; a++) {
+                desktopEnvironmentsSubItems[a] = static_cast<char*>(std::malloc(cols * sizeof(char)));
+                desktopEnvironmentsSubItems[a][0] = '\0';
+
+                for(int b=0;b<cols;b++){
+
+                    if(buffer[i]=='\7'||buffer[i]=='\0'){desktopEnvironmentsSubItems[a][b++]='\0';break;}
+                    else{
+                        desktopEnvironmentsSubItems[a][b] = buffer[i];
+                    }
+                    i++;
+                }
+                i++;
+            }
+
+        }
+        pclose(pp);
+    }
+}
+
 void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
     // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
 
@@ -482,18 +530,26 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
             }
             else if(titleBarItemTree[0]==2){
                 titleBarItemTree[1]=0;
-                int rows = sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]);
+                //int rows = sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]);
                 int cols = sizeof(desktopEnvironmentsSubItems[0])/sizeof(desktopEnvironmentsSubItems[0][0]);
-                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+                //int rows = distance(desktopEnvironmentsSubItems, desktopEnvironmentsSubItems + sizeof(desktopEnvironmentsSubItems) / sizeof(desktopEnvironmentsSubItems[0]));
+
+                int rows = 0;
+    
+                for (int i = 0; desktopEnvironmentsSubItems[i][0] != '\0'; i++) {
+                    rows++;
+                }
+                
+                /*char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
 
                 for (int i = 0; i < rows; i++) {
                     arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
                     for (int j = 0; j < cols; j++) {
                         arr[i][j] = desktopEnvironmentsSubItems[i][j];
                     }
-                }
+                }*/
 
-                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+                 subItemListWin(rows, cols, titlebarCoordY, spacingX, desktopEnvironmentsSubItems);
             }
         }
 
@@ -691,6 +747,12 @@ void freeMemory(){
     // TitleBar Item Tree Depth | Free Allocated Storage Space
     free(titleBarItemTree);
 
+    // Free Allocated Space of The Environment Names in 2d char Array
+    for (int i = 0; i < sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]); i++) {
+        free(desktopEnvironmentsSubItems[i]);
+    }
+    free(desktopEnvironmentsSubItems);
+
 }
 
 void allocateMemory(){
@@ -708,6 +770,9 @@ void allocateMemory(){
 
     // TitleBar Item Tree Depth | Storage Space Allocation
     titleBarItemTree = static_cast<int*>(std::malloc(maxTitleBarItemTreeDepth * sizeof(int)));
+
+    // Allocate & Fill Space For Environment Names
+    fill_available_desktop_environments();
 }
 
 
@@ -759,7 +824,7 @@ void initWindow(){
     draw_titlebar(titleBar_subwin, -1);
 
     // List Available Desktop Managers
-    list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
+//     list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
 
     //// UserName Visibility colorMap
     user_pass_visibility(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10);
