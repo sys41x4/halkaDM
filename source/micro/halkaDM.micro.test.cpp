@@ -21,7 +21,7 @@ using namespace std;
 */
 
 char desktopEnvironmentsSubItems[30][30];
-int titleBarItemTree[2];
+int *titleBarItemTree;
 
 int availableDesktopManagerCount;
 
@@ -29,18 +29,15 @@ char desktopManagerSubItems[1][20];
 
 WINDOW *mainScreenWin, *subItemListWindow, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
 WINDOW *messageBoxBorderWindow, *messageBox_msg;
+
 int winMaxX, winMaxY;
 int accountPicBoxMaxX, accountPicBoxMaxY, accountPicBoxMaxW, accountPicBoxMaxH;
 int msgBoxMaxX, msgBoxMaxY, msgBoxMaxW, msgBoxMaxH;
 int loginBoxMaxX, loginBoxMaxY;
 
-char username[32];
-char userpass[255]; // no password limit
+char *username, *visible_username;
+char *userpass, *visible_userpass;
 
-
-
-// int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
-// int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
 
 WINDOW *loginColourMatrixWin;
 int loginColourMatrixConf[] = {}; // {COORDINATE-Y, COORDINATE-X, HEIGHT, WIDTH}
@@ -562,7 +559,7 @@ void login_passField(WINDOW *win, int y, int x){
     int userpassLengthMax = sizeof(userpass)/sizeof(userpass[0]);
     int ch;
     // char* visible_userpass;
-    char visible_userpass[50]={'\0'};
+    // char visible_userpass[50]={'\0'};
     // int finish=0;
     // cbreak();
     noecho();
@@ -606,8 +603,7 @@ void login_userField(WINDOW *win, int y, int x){
     int usernameChrCount = 0;
     int usernameLengthMax = sizeof(username)/sizeof(username[0]);
     int ch;
-//    char* visible_username;
-    char visible_username[50]={'\0'};
+    // char visible_username[50]={'\0'};
     noecho();
     keypad(win, TRUE);
 
@@ -681,9 +677,44 @@ void drawAuthBox(int maxY, int maxX, int minY, int minX){
 }
 
 
+void freeMemory(){
+
+    // This function must be called before exiting the program to clear the system allocated memory space
+
+    // Free Username Space
+    free(username);
+    free(visible_userpass);
+    // Free Userpass Space
+    free(userpass);
+    free(visible_userpass);
+
+    // TitleBar Item Tree Depth | Free Allocated Storage Space
+    free(titleBarItemTree);
+
+}
+
+void allocateMemory(){
+    // Allocate Username Space
+    username = static_cast<char*>(std::malloc(maxUsernameLen * sizeof(char)));
+    visible_username = static_cast<char*>(std::malloc(visibleAuthStrLen * sizeof(char)));
+    username[0] = '\0';
+    visible_username[0] = '\0';
+
+    // Allocate Userpass Space
+    userpass = static_cast<char*>(std::malloc(maxUserpassLen * sizeof(char)));
+    visible_userpass = static_cast<char*>(std::malloc(visibleAuthStrLen * sizeof(char)));
+    userpass[0] = '\0';
+    visible_userpass[0] = '\0';
+
+    // TitleBar Item Tree Depth | Storage Space Allocation
+    titleBarItemTree = static_cast<int*>(std::malloc(maxTitleBarItemTreeDepth * sizeof(int)));
+}
+
 
 void initWindow(){
     // Allocate Memory Space
+
+    allocateMemory();
 
     // initscr(); // Initialize Curses Screen Base
 
@@ -766,5 +797,6 @@ int main(int argc, char **argv)
 
     getch();
     endwin();
+    freeMemory();
     return 0;
 }

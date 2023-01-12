@@ -82,6 +82,14 @@ char subItemsCmd[][10][55] = {
 
 };
 
+int maxTitleBarItemTreeDepth = 2;
+
 int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
 int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
+
+int maxUsernameLen = 32;
+int maxUserpassLen = 255;
+
+int visibleAuthStrLen = 50;
+
 #endif
