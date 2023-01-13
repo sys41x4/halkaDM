@@ -26,9 +26,9 @@ char KEY_ESCAPE = '\x1b';
 
 int asciiColors[] = {
     COLOR_BLACK,
+    COLOR_GREEN,
     COLOR_RED,
     COLOR_YELLOW,
-    COLOR_GREEN,
     COLOR_WHITE,
     COLOR_MAGENTA,
     COLOR_BLUE,
@@ -53,7 +53,9 @@ char powerSubItems[][10] = {
 char utilitiesSubItems[][15] = {
     "Calender",
     "CPU Status",
-    "Network Status"
+    "Network Status",
+    "Refresh",
+    "Exit"
 };
 
 // ENV: DEFAULT
@@ -84,8 +86,8 @@ char subItemsCmd[][10][55] = {
 
 int maxTitleBarItemTreeDepth = 2;
 
-int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
-int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
+int usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
+int userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
 
 int maxUsernameLen = 32;
 int maxUserpassLen = 255;

@@ -27,9 +27,9 @@ int *titleBarItemTree;
 
 int availableDesktopManagerCount;
 
-char desktopManagerSubItems[1][20];
+// char desktopManagerSubItems[1][20];
 
-WINDOW *mainScreenWin, *subItemListWindow, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
+WINDOW *mainScreenWin, *subItemListWindow, *loginColourMatrixWin, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
 WINDOW *messageBoxBorderWindow, *messageBox_msg;
 
 int winMaxX, winMaxY;
@@ -40,9 +40,17 @@ int loginBoxMaxX, loginBoxMaxY;
 char *username, *visible_username;
 char *userpass, *visible_userpass;
 
+int *loginColourMatrixConf;
 
-WINDOW *loginColourMatrixWin;
-int loginColourMatrixConf[] = {}; // {COORDINATE-Y, COORDINATE-X, HEIGHT, WIDTH}
+
+
+
+
+
+
+
+
+
 
 
 void setLoginMatrixWindow(WINDOW *win){
@@ -206,6 +214,8 @@ void updateRequestedUSRENV(){
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
             for(int i=5; i<strlen(buffer)+4; i++){titleBarItems[2][i]=buffer[i-5];};
+            //int i=0;
+            // while(buffer[i]!='\0'){titleBarItems[2][i+5]=buffer[i];i++;}
         }
         pclose(pp);
     }
@@ -306,7 +316,7 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
 }
 
 
-
+/*
 void list_available_desktop_environments(WINDOW *win, int y, int x){
     wmove(win, y, x);
     FILE *pp;
@@ -328,7 +338,7 @@ void list_available_desktop_environments(WINDOW *win, int y, int x){
         pclose(pp);
     }
 }
-
+*/
 
 void fill_available_desktop_environments(){
     FILE *pp;
@@ -539,7 +549,7 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 for (int i = 0; desktopEnvironmentsSubItems[i][0] != '\0'; i++) {
                     rows++;
                 }
-                
+
                 /*char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
 
                 for (int i = 0; i < rows; i++) {
@@ -557,17 +567,17 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
 }
 
 
-void user_pass_visibility(WINDOW *win, int y, int x){
+void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 
     /*
      ------------------------------------------------------------------------------------------------------------------
 
      0 : COLOR_BLACK -> NONE | Common
+     1: COLOR_GREEN -> hide chr
 
-     ----------------------------------
-     1: COLOR_RED -> show chr
-     2: COLOR_YELLOW -> mask chr | with *
-     3: COLOR_GREEN -> hide chr
+     ------------------------------------
+     2: COLOR_RED -> show chr
+     3: COLOR_YELLOW -> mask chr | with *
      ----------------------------------
 
      ----------------------------------
@@ -596,13 +606,16 @@ void user_pass_visibility(WINDOW *win, int y, int x){
     */
 
     wmove(win, y, x);
-    int j=1;
-    for(int i=0; i<sizeof(userpassVisibilityConf)/sizeof(userpassVisibilityConf[0]); i++){
-        wattron(win, COLOR_PAIR(userpassVisibilityConf[i]+j));
-        waddch(win, userpassVisibilityConf[i]);
-        wattroff(win, COLOR_PAIR(userpassVisibilityConf[i]+j));
+    int j=2;
+    // while(arr[i]!='\0'){
+    for(int i=0; i<=(sizeof(arr)/sizeof(arr[0])); i++){
+        // if(i>0){j+2}
+        wattron(win, COLOR_PAIR(arr[i]+j));
+        waddch(win, arr[i]);
+        wattroff(win, COLOR_PAIR(arr[i]+j));
         j+=2;
 
+    //}
     }
     wrefresh(win);
 
@@ -747,6 +760,9 @@ void freeMemory(){
     // TitleBar Item Tree Depth | Free Allocated Storage Space
     free(titleBarItemTree);
 
+    // De-allocate space for config list for loginColourMatrix
+    free(loginColourMatrixConf);
+
     // Free Allocated Space of The Environment Names in 2d char Array
     for (int i = 0; i < sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]); i++) {
         free(desktopEnvironmentsSubItems[i]);
@@ -770,6 +786,9 @@ void allocateMemory(){
 
     // TitleBar Item Tree Depth | Storage Space Allocation
     titleBarItemTree = static_cast<int*>(std::malloc(maxTitleBarItemTreeDepth * sizeof(int)));
+
+    // Allocate space for config list for loginColourMatrix
+    loginColourMatrixConf = static_cast<int*>(std::malloc(4 * sizeof(int)));
 
     // Allocate & Fill Space For Environment Names
     fill_available_desktop_environments();
@@ -827,10 +846,10 @@ void initWindow(){
 //     list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
 
     //// UserName Visibility colorMap
-    user_pass_visibility(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10);
+    authChrVisibilityPattern(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10, usernameVisibilityConf);
 
     //// UserPass Visibility colorMap
-    user_pass_visibility(authBox, (loginBoxMaxY/2), loginBoxMaxX-10);
+    authChrVisibilityPattern(authBox, (loginBoxMaxY/2), loginBoxMaxX-10, userpassVisibilityConf);
 
 
     // Set Login Matrix Config
