@@ -1,135 +1,16 @@
+#include "config/config.h"
+#include "lib/cryptography.h"
+#include "lib/security.h"
 #include <locale.h>
 #include <ncurses.h>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
-/*#include <stdlib.h>
-#include <stdio.h>*/
+#include <random>
+// #include <openssl/evp.h>
 
 using namespace std;
-
-char package[] = "halkaDM:nano";
-
-char KEY_ESCAPE = '\x1b';
-
-int asciiColors[] = {
-    COLOR_BLACK,
-    COLOR_RED,
-    COLOR_YELLOW,
-    COLOR_GREEN,
-    COLOR_WHITE,
-    COLOR_MAGENTA,
-    COLOR_BLUE,
-    COLOR_CYAN
-};
-
-int totalRandomizedColors = 10; // Must be loaded from the config file
-int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
-int totalManualColors = 8;
-
-
-
-
-/*
-
-// COLORS MAPOUT //
-
-0: [1-8] : size:8 | Pre Setup Colours
-1: [9-16] | [COLOR_BLACK, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_WHITE, COLOR_MAGENTA, COLOR_BLUE, COLOR_CYAN] : size:8 | Exclude the following for directly calling them in any case
-2: [<totalRandomizedColors>] | <randomize <totalRandomizedColors> colors> : size <totalRandomizedColors> | Randomization will be done only once on initial loading of the executable, to reduce memory consumption
-2: [<totalRandomizedColors>+3] | [username visibility colourmap] : size:3
-3: [<<totalRandomizedColors>+3>+3] | [userpass visibility colourmap] : size:3
-4: [Profile Pic] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors><totalRandomizedColors>
-5: [Login Randomization colourMap] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors>+<totalRandomizedColors>
-
-
-*/
-
-/*// Default starting static Colour index
-init_pair(1, COLOR_WHITE, COLOR_BLACK);
-init_pair(2, COLOR_WHITE. COLOR_RED);
-init_pair(3, COLOR_BLACK, COLOR_YELLOW);
-init_pair(4, COLOR_WHITE, COLOR_GREEN);
-init_pair(5, COLOR_BLACK, COLOR_WHITE);
-init_pair(6, COLOR_WHITE, COLOR_MAGENTA);
-init_pair(7, COLOR_WHITE, COLOR_BLUE);
-init_pair(8, COLOR_BLACK, COLOR_CYAN);*/
-
-int currentTitleID = 0;
-
-int maxSubItemElementLen=16;
-
-char powerSubItems[][10] = {
-    "Sleep",
-    "Restart",
-    "Shutdown"
-};
-
-char utilitiesSubItems[][15] = {
-    "Calender",
-    "CPU Status",
-    "Network Status"
-};
-
-char desktopEnvironmentsSubItems[30][30];
-
-// ENV: DEFAULT
-
-char titleBarItems[][30] = {
-    "POWER",
-    "Utilities",
-    "ENV: DEFAULT"
-
-};
-
-/*char powerSubItemsCmd[][40] = {
-    "echo Sleep_clked",
-    "sudo shutdown -r now",
-    "sudo /usr/sbin/shutdown -h now",
-};
-
-char utilitiesSubItemsCmd[][40] = {
-    "/usr/bin/cal",
-    "/usr/bin/mpstat -P ALL",
-    "/usr/sbin/tcpdump --list-interfaces"
-};*/
-
-char subItemsCmd[][10][55] = {
-    {
-        "echo Sleep_clked",
-        "sudo shutdown -r now",
-        "sudo /usr/sbin/shutdown -h now"
-    },
-    {
-        "/usr/bin/cal",
-        "/usr/bin/mpstat -P ALL",
-        "/usr/sbin/tcpdump --list-interfaces"
-    },
-    {
-        "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev"
-    }
-
-};
-
-int titleBarItemTree[2];
-
-/*char commandList[][55]={
-    "/usr/bin/date | tr -s '\n' ' '",
-    "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev",
-    "/usr/bin/mpstat -P ALL",
-    "/usr/bin/cal",
-    "/usr/sbin/tcpdump --list-interfaces",
-    "/usr/bin/jp2a --size=50x25 ~/profilePic.jpg"
-};
-
-char commandTitle[][30]={
-    "Date Time",
-    "Environment",
-    "CPU Status",
-    "Calender",
-    "Network Status",
-    "Profile Picture"
-}*/
 
 /*
 // TitleBar Item ID List
@@ -141,33 +22,81 @@ char commandTitle[][30]={
 
 */
 
-
+// char desktopEnvironmentsSubItems[30][30];
+char** desktopEnvironmentsSubItems;
+int *titleBarItemTree;
 
 int availableDesktopManagerCount;
 
-char desktopManagerSubItems[1][20];
+// char desktopManagerSubItems[1][20];
 
-WINDOW *mainScreenWin, *subItemListWindow, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
+WINDOW *mainScreenWin, *subItemListWindow, *loginColourMatrixWin, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
 WINDOW *messageBoxBorderWindow, *messageBox_msg;
+
 int winMaxX, winMaxY;
 int accountPicBoxMaxX, accountPicBoxMaxY, accountPicBoxMaxW, accountPicBoxMaxH;
 int msgBoxMaxX, msgBoxMaxY, msgBoxMaxW, msgBoxMaxH;
 int loginBoxMaxX, loginBoxMaxY;
 
-char username[32];
-char userpass[255]; // no password limit
+char *username, *visible_username;
+char *userpass, *visible_userpass;
 
-/*char maskedUsername[50]; // Masked Username
-char maskedUserpass[50]; // Masked Userpass
-*/
+int *loginColourMatrixConf;
 
 
-int usernameVisibilityConf[3] = {0, 0, 0}; // {[0..2], [0..1], [0..1]}Default username_visibility_config
-int userpassVisibilityConf[3] = {1, 0, 0}; // Default userpass_visibility_config
+char* fillArray(int c, char* arr){
+    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
+    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
 
-WINDOW *loginColourMatrixWin;
-int loginColourMatrixConf[] = {}; // {COORDINATE-Y, COORDINATE-X, HEIGHT, WIDTH}
+    arr = static_cast<char*>(std::malloc(c * sizeof(char)));
+    arr[0] = '\0';
+    return arr;
+}
 
+char** fillArray(int r, int c, char** arr){
+    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
+    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
+
+    arr = static_cast<char**>(std::malloc(r * sizeof(char*)));
+    for (int i = 0; i < c; i++) {
+        arr[i] = static_cast<char*>(std::malloc(c * sizeof(char)));
+        arr[i][0] = '\0';
+    }
+    return arr;
+}
+
+char*** fillArray(int r, int rc, int c, char*** arr){
+    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
+    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
+
+    arr = static_cast<char***>(std::malloc(r * sizeof(char**)));
+    for (int i = 0; i < rc; i++) {
+        arr[i] = static_cast<char**>(std::malloc(rc * sizeof(char*)));
+        for (int j = 0; j < c; j++) {
+            arr[i][j] = static_cast<char*>(std::malloc(c * sizeof(char)));
+            arr[i][j][0] = '\0';
+        }
+    }
+    return arr;
+}
+
+
+void freeArray(int r, char** arr){
+    for (int i = 0; i < r; i++) {
+        free(arr[i]);
+    }
+    free(arr);
+}
+
+void freeArray(int r, int c, char*** arr){
+    for (int i = 0; i < r; i++) {
+        //for(int j=0; j<c; j++){
+          //  free(arr[i][j]);
+        //}
+        free(arr[i]);
+    }
+    free(arr);
+}
 
 void setLoginMatrixWindow(WINDOW *win){
     loginColourMatrixWin = win;
@@ -235,6 +164,20 @@ void initColor(){
 
 }
 
+void createSessionKey(int len, char* arr){
+    srand(time(NULL));
+    for (int i = 0; i < len; i++) {
+        // arr[i] = '!'+(rand() % 94);
+        arr[i] = 'a'+(rand() % 25);
+    }
+    //unsigned char result[MD5_DIGEST_LENGTH];
+    //MD5((unsigned char*)arr, strlen(arr), result);
+
+    //for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    //    sprintf(&arr[i*2], "%02x", (unsigned int)result[i]);
+    //}
+}
+
 void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
     // Draw Random bitmap
     int randColorID=1;
@@ -273,17 +216,26 @@ void show_datetime(WINDOW *win, int y, int x){
     }
 }
 
-/*static void finish(int sig)
-{
-    endwin();
 
-    // do your non-curses wrapup here
+void execCMD(const char* cmd){
+    FILE *pp;
+    if ((pp = popen(cmd, "r")) != 0) {
+        // char buffer[BUFSIZ];
+        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
+        pclose(pp);
+    }
+}
 
-    exit(0);
-}*/
+void execCMD(char* cmd){
+    FILE *pp;
+    if ((pp = popen(cmd, "r")) != 0) {
+        // char buffer[BUFSIZ];
+        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
+        pclose(pp);
+    }
+}
 
-
-void drawCMDStr(WINDOW *win, int y, int x, int alignX, int is_cmd, int colorID, const char* msg){
+void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int colorID, const char* msg){
     // wmove(win, y, x);
     FILE *pp;
     cbreak();
@@ -292,48 +244,104 @@ void drawCMDStr(WINDOW *win, int y, int x, int alignX, int is_cmd, int colorID, 
           alignX==1 : centre align
           alignX==2 : right align
     */
-//    char osReleaseCMD[] = "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '";
-  //  char unameCMD[] = "uname -n -o";
-    // uname -n -o
-
 
     if(is_cmd==0){
-        if(alignX==1){
-            wmove(win, y, x-(strlen(msg)/2));
+        if(show>0){
+            if(alignX==0){wmove(win, y, x);}
+            else if(alignX==1){
+                wmove(win, y, x-(strlen(msg)/2));
+            }
+            else if(alignX==1){
+                wmove(win, y, x-strlen(msg));
+            }
+            wattron(win, COLOR_PAIR(colorID));
+            waddstr(win, msg);
+            wattroff(win, COLOR_PAIR(colorID));
+            wrefresh(win);
         }
-        else if(alignX==1){
-            wmove(win, y, x-strlen(msg));
-        }
-        wattron(win, COLOR_PAIR(colorID));
-        waddstr(win, msg);
-        wattroff(win, COLOR_PAIR(colorID));
 
     }
     else{
 
         if ((pp = popen(msg, "r")) != 0) {
-            char buffer[BUFSIZ];
-            while (fgets(buffer, sizeof(buffer), pp) != 0) {
-
-                if(alignX==1){
-                    wmove(win, y, x-(strlen(buffer)/2));
+            // if(show>0){
+                char buffer[BUFSIZ];
+                while (fgets(buffer, sizeof(buffer), pp) != 0) {
+                    if(show>0){
+                        if(alignX==1){
+                            wmove(win, y, x-(strlen(buffer)/2));
+                        }
+                        else if(alignX==1){
+                            wmove(win, y, x-strlen(buffer));
+                        }
+                        wattron(win, COLOR_PAIR(colorID));
+                        waddstr(win, buffer);
+                        wattroff(win, COLOR_PAIR(colorID));
+                        wrefresh(win);
+                    }
                 }
-                else if(alignX==1){
-                    wmove(win, y, x-strlen(buffer));
-                }
-                wattron(win, COLOR_PAIR(colorID));
-                waddstr(win, buffer);
-                wattroff(win, COLOR_PAIR(colorID));
-            }
-            pclose(pp);
+                pclose(pp);
+            //}
         }
     }
 }
 
+char* storeExecCMD(char* arr, const char* cmd){
+    FILE *pp;
+    if ((pp = popen(cmd, "r")) != 0) {
+        char buffer[BUFSIZ];
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+            int elementCount=0;
+            while(buffer[elementCount]!='\0'){elementCount++;}
+//            arr = fillArray(elementCount, arr);
+            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
+            arr[0] = '\0';
+            for(int i=0; i<elementCount; i++){
+                arr[i]=buffer[i];
+            }
+            waddstr(mainScreenWin, buffer);
+            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
 
+        }
+  //      else{arr=nullptr;}
+        pclose(pp);
+        return arr;
+    }
+    else{
+        return nullptr;
+    }
+
+    //return arr;
+}
+
+char* storeExecCMD(char* arr, char* cmd){
+    FILE *pp;
+    if ((pp = popen(cmd, "r")) != 0) {
+        char buffer[BUFSIZ];
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+            int elementCount=0;
+            while(buffer[elementCount]!='\0'){elementCount++;}
+            // arr = fillArray(elementCount, arr);
+            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
+            arr[0] = '\0';
+            for(int i=0; i<elementCount; i++){
+                arr[i]=buffer[i];
+            }
+            waddstr(mainScreenWin, buffer);
+            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
+        }
+//        else{arr=nullptr;}
+        pclose(pp);
+        return arr;
+    }
+    else{
+        return nullptr;
+    }
+
+//    return arr;
+}
 
 void updateRequestedUSRENV(){
-    // wmove(win, y, x);
     FILE *pp;
     cbreak();
     char defaultEnv[] = "Default";
@@ -342,37 +350,30 @@ void updateRequestedUSRENV(){
     strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
     if ((pp = popen(cmd, "r")) != 0) {
         char buffer[BUFSIZ];
-        //strLen = strlen(buffer);
-        // wmove(win, y, x-(strlen(buffer)/2));
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
             for(int i=5; i<strlen(buffer)+4; i++){titleBarItems[2][i]=buffer[i-5];};
-            // titleBarItems[2][i+2]='\0';
-            // wrefresh(titleBar_subwin);
+            //int i=0;
+            // while(buffer[i]!='\0'){titleBarItems[2][i+5]=buffer[i];i++;}
         }
         pclose(pp);
     }
-//    else{for(int i=5; i<strlen(defaultEnv); i++){titleBarItems[2][i]=defaultEnv[i-5];}}
 }
 
 void genProfilePicture(int h, int w, int y, int x){
     // Draw Random bitmap
     int randColorID=1;
     int totalAvailableColour = totalASCIIcolors+totalManualColors+totalRandomizedColors;
-    // wmove(win, y, x);
+
     box(accountPicBox, 0, 0);
     srand(time(NULL));
     for (int i = y; i < h; i++) {
         wmove(accountPicBox, i, x);
         for (int j = 0; j < w; j++) {
            randColorID = rand()%totalAvailableColour;
-        //    int fg = asciiColors[rand() % 8] + rand()%7;
-        //    int bg = asciiColors[rand() % 8] * rand()%15;
-        //    init_pair(randColorID, fg, bg);
-            // wattron(win, COLOR_PAIR(color));
+
             wattron(accountPicBox, COLOR_PAIR(randColorID));
             waddch(accountPicBox, 'A' + rand() % 26);
             wattroff(accountPicBox, COLOR_PAIR(randColorID));
-            // wattroff(win, COLOR_PAIR(color));
         }
     }
     wrefresh(accountPicBox);
@@ -385,7 +386,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
       else if is_cmd==0, then the message will directly be printed in the message box
    */
 
-    // WINDOW *messageBoxBorderWindow, *messageBox_msg;
     FILE *pp;
     int ch;
 
@@ -393,7 +393,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
     messageBox_msg = newwin(h-6, w-4, y+4, x+2);
 
     box(messageBoxBorderWindow, 0, 0);
-//   box(messageBox_msg, 0, 0);
 
     // Draw Message Box Title
 
@@ -410,15 +409,14 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
 
     if(is_cmd==1){
 
-        if ((pp = popen(msg, "r")) != 0) {
+        // Print CMD Output
+        char cmd[100] = "sudo python3 /etc/halkaDM/scripts/config.parser.py ";
+        strcat(cmd, msg);
+
+        if ((pp = popen(cmd, "r")) != 0) {
             char buffer[BUFSIZ];
             while (fgets(buffer, sizeof(buffer), pp) != 0) {
 
-/*
-               int i=0;
-               while(buffer[i]!='\n'){i++;}
-               wmove(messageBox_msg, y, x);
-*/
                 waddstr(messageBox_msg, buffer);
             }
             wrefresh(messageBox_msg);
@@ -460,7 +458,7 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
 }
 
 
-
+/*
 void list_available_desktop_environments(WINDOW *win, int y, int x){
     wmove(win, y, x);
     FILE *pp;
@@ -472,79 +470,103 @@ void list_available_desktop_environments(WINDOW *win, int y, int x){
     if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            // waddstr(win, buffer);
-
-            /*if(buffer=='\n'){
-                i++;
-                j=0;
-            }*/
             for(int k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
                 if(buffer[k]=='\7'){i++;k++;j=0;}
                 else if(buffer[k]=='\0'){break;}
                 desktopEnvironmentsSubItems[i][j] = buffer[k];
                 j++;
             }
-            // j++;
+        }
+        pclose(pp);
+    }
+}
+*/
+
+void fill_available_desktop_environments(){
+    FILE *pp;
+    // Should be initiated only once during initial Memory allocation setup
+    int rows=1, cols=0;
+    int i=0, j=0;
+    int k;
+
+    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
+        char buffer[BUFSIZ];
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+
+            for(k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
+                if(buffer[k]=='\7'){
+                    rows++;k++;
+                    if(j>cols){cols=j;}
+                    j=0;
+                }
+                else if(buffer[k]=='\0'){
+                    if(buffer[k-1]!='\7'){rows++;}
+                    if(j>cols){cols=j;}
+                    break;
+                }
+                j++;
+            }
+
+            desktopEnvironmentsSubItems = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+            for (int a = 0; a<rows; a++) {
+                desktopEnvironmentsSubItems[a] = static_cast<char*>(std::malloc(cols * sizeof(char)));
+                desktopEnvironmentsSubItems[a][0] = '\0';
+
+                for(int b=0;b<cols;b++){
+
+                    if(buffer[i]=='\7'||buffer[i]=='\0'){desktopEnvironmentsSubItems[a][b++]='\0';break;}
+                    else{
+                        desktopEnvironmentsSubItems[a][b] = buffer[i];
+                    }
+                    i++;
+                }
+                i++;
+            }
+
         }
         pclose(pp);
     }
 }
 
-
-void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
+void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
     // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
 
-//     WINDOW *subItemListWindow;
 
     if ((maxY != 0) && (maxX != 0)){
         int ch='\0';
         maxY+=2;
         maxX+=2;
         noecho();
-        //keypad(subItemListWindow, TRUE);
 
-    // WINDOW *subItemListWindow = newwin(maxY, maxX, minY, minX);
-        /*for(int i=0; i<1; i=0){
-            if(ch=='\n'){break;};*/
         do{
         subItemListWindow = newwin(maxY, maxX, minY, minX);
         keypad(subItemListWindow, TRUE);
-    /*noecho();
-    keypad(subItemListWindow, TRUE);*/
 
         box(subItemListWindow, 0, 0);
-
-        /*for(int i=0; i<1; i=0){
-            if(ch=='\n'){break;};*/
+            //int i=0;
             for(int i=0; i<(maxY-2); i++){
+            //  while(charArray[0][i][0]!='\0'){
                 if(i==titleBarItemTree[1]){wattron(subItemListWindow, COLOR_PAIR(13));}
-                mvwprintw(subItemListWindow, i+1, 1, charArray[i]);
+                mvwprintw(subItemListWindow, i+1, 1, charArray[0][i]);
                 if(i==titleBarItemTree[1]){wattroff(subItemListWindow, COLOR_PAIR(13));}
-
             }
 
 
             wrefresh(subItemListWindow);
 
 
-            //do{
-                // if(ch=='\n'){break;};
                 ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
                 if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
-                    for (int i = 0; i < maxY-2; i++) {
-                        free(charArray[i]);
-                    }
-                    free(charArray);
-            // werase(subItemListWindow);
+                    freeArray(maxY-2, maxX-2, charArray);
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
                     wrefresh(subItemListWindow);
-                   // delwin(subItemListWindow);
                     break;
                 }
                 else if((ch == '\n') || (ch==KEY_RIGHT) || (ch == 'd') || (ch=='6') || (ch=='5')){
                     // Execute Message Window
-                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, charArray[titleBarItemTree[1]], subItemsCmd[titleBarItemTree[0]][titleBarItemTree[1]]);
+//                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, charArray[0][titleBarItemTree[1]], subItemsCmd[titleBarItemTree[0]][titleBarItemTree[1]]);
+                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, charArray[0][titleBarItemTree[1]], charArray[1][titleBarItemTree[1]]);
 
                 }
                 else if((ch == '\t') || (ch==KEY_DOWN) || (ch == 's') || (ch=='2')){
@@ -564,14 +586,13 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char **charArray){
                 }
                 else{}
             }while(1);
-        //}
     }
 
 }
 
 // void draw_titlebar(WINDO *titlebar=titleBar_subwin, int itemID=-1);
 
-void draw_titlebar(WINDOW *titlebar, int itemID=-1)
+int draw_titlebar(WINDOW *titlebar, int itemID=-1)
 {
 
     int ch, titlebarCoordX, titlebarCoordY;
@@ -580,9 +601,7 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
     int titleBarItemCount = sizeof(titleBarItems)/sizeof(titleBarItems[0]);
     noecho();
     titleBarItemTree[0]=itemID;
-    // init_pair(5, COLOR_BLACK, COLOR_WHITE);
     do{
-        // titleBarItemTree[0]=itemID;
         keypad(titlebar, TRUE);
         getmaxyx(titlebar, titlebarCoordY, titlebarCoordX);
         positionCoordX=0;
@@ -595,7 +614,7 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
         positionCoordX+=strlen(titleBarItems[0]);
 
         if(titleBarItemTree[0]==1){wattron(titlebar, COLOR_PAIR(13));}
-        wmove(titlebar, 1, positionCoordX+spacingX);
+        wmove(titlebar, 1, positionCoordX+(spacingX)*2);
         waddstr(titlebar, titleBarItems[1]);
         if(titleBarItemTree[0]==1){wattroff(titlebar, COLOR_PAIR(13));}
 
@@ -629,247 +648,85 @@ void draw_titlebar(WINDOW *titlebar, int itemID=-1)
         else if((ch=='\n') || (ch==KEY_DOWN) || (ch=='s') || (ch=='5') || (ch=='2')){
             if(titleBarItemTree[0]==0){
                 titleBarItemTree[1]=0;
-                int rows = sizeof(powerSubItems)/sizeof(powerSubItems[0]);
-                int cols = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
-                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
 
-                for (int i = 0; i < rows; i++) {
-                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
-                    for (int j = 0; j < cols; j++) {
-                        arr[i][j] = powerSubItems[i][j];
+                int r =  sizeof(powerSubItems)/sizeof(powerSubItems[0]);
+                int rc = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
+                int c = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
+                titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+
+                for(int i=0; i<r; i++){
+                    for(int j = 0; j < rc; j++){
+                        for(int k = 0; k < c; k++) {
+                            titleBarSubItems[i][j][k] = powerSubItems[i][j][k];
+                        }
                     }
                 }
+                subItemListWin(rc, c, titlebarCoordY, spacingX, titleBarSubItems);
 
-                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
 
-
-                /*for (int i = 0; i < rows; i++) {
-                    free(arr[i]);
-                }
-                free(arr);*/
-                // wrefresh(titlebar);
             }
             else if(titleBarItemTree[0]==1){
                 titleBarItemTree[1]=0;
-                int rows = sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
-                int cols = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
-                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
 
-                for (int i = 0; i < rows; i++) {
-                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
-                    for (int j = 0; j < cols; j++) {
-                        arr[i][j] = utilitiesSubItems[i][j];
+                int r =  sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
+                int rc = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
+                int c = sizeof(utilitiesSubItems[0][0])/sizeof(utilitiesSubItems[0][0][0]);
+                titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+
+                for(int i=0; i<r; i++){
+                    for(int j = 0; j < rc; j++){
+                        for(int k = 0; k < c; k++) {
+                            titleBarSubItems[i][j][k] = utilitiesSubItems[i][j][k];
+                        }
                     }
                 }
 
-                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+                subItemListWin(rc, c, titlebarCoordY, spacingX, titleBarSubItems);
+
             }
             else if(titleBarItemTree[0]==2){
                 titleBarItemTree[1]=0;
-                int rows = sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]);
+                //int rows = sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]);
                 int cols = sizeof(desktopEnvironmentsSubItems[0])/sizeof(desktopEnvironmentsSubItems[0][0]);
-                char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
+                //int rows = distance(desktopEnvironmentsSubItems, desktopEnvironmentsSubItems + sizeof(desktopEnvironmentsSubItems) / sizeof(desktopEnvironmentsSubItems[0]));
+
+                int rows = 0;
+
+                for (int i = 0; desktopEnvironmentsSubItems[i][0] != '\0'; i++) {
+                    rows++;
+                }
+
+                /*char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
 
                 for (int i = 0; i < rows; i++) {
                     arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
                     for (int j = 0; j < cols; j++) {
                         arr[i][j] = desktopEnvironmentsSubItems[i][j];
                     }
-                }
+                }*/
 
-                 subItemListWin(rows, cols, titlebarCoordY, spacingX, arr);
+                 // subItemListWin(rows, cols, titlebarCoordY, spacingX, desktopEnvironmentsSubItems);
             }
         }
 
     }while(1);
+
+    return 0;
+
 }
 
 
-
-/*char maskedStr[50];
-
-char* maskStr2(int strLen, char character='*');
-
-char* maskStr2(int strLen, char character){
-    //static char str[50];
-    // memset(str, character, sizeof(str[0])*strLen);
-    // for(int i=0; i<strLen; i++){str[i]=character;}
-    for(int i=0; i<strLen; i++){maskedStr[i]=character;}
-    return maskedStr;
-}
-*/
-
-void maskStr(int strLen, char character, char *arr){
-    //static char str[50];
-    // memset(arr, character, sizeof(arr[0])*strLen);
-    int i;
-    for(i=0; i<strLen; i++){arr[i]=character;}
-    arr[i++]='\0';
-}
-
-// char* generateRandomStr(int randomizeLen=0, int maxStrLen=10, const char *chrType="a");
-
-void generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType, char *visibleStrOut){
-
-    int i;
-    int strLen=maxStrLen;
-
-    if(randomizeLen!=0){
-        srand(time(NULL));
-        strLen = rand()%maxStrLen;
-    }
-    /*else{
-        strLen = maxStrLen;
-    }*/
-
-
-    //////////////////////////
-    // static char str[50];
-    if(strLen>49){strLen=49;}
-    //char str[strLen];
-    char charT;
-
-    // int chrTypeLen = sizeof(chrType)/sizeof(chrType[0]);
-    int chrTypeLen = strlen(chrType);
-
-    srand(time(NULL));
-    for(i=0; i<strLen; i++){
-
-        // srand(time(NULL));
-        /*if(chrTypeLen>1){charT = chrType[rand()%chrTypeLen];}
-        else{charT = chrType[0];}*/
-        charT = chrType[rand()%chrTypeLen];
-
-
-        if(((int)charT>='a') && ((int)charT<='z')){
-        // Lower Case Randomization
-            visibleStrOut[i] = 'a'+rand()%26;
-        }
-        else if(((int)charT>='A') && ((int)charT<='Z')){
-        // Upper Case Randomization
-            visibleStrOut[i] = 'A'+rand()%26;
-        }
-        else if(((int)charT>='0') && ((int)charT<='9')){
-        // Integer Randomization
-            visibleStrOut[i] = '0'+rand()%9;
-        }
-        else if(
-                (((int)charT>='!') && ((int)charT<='/')) || 
-                (((int)charT>=':') && ((int)charT<='@')) || 
-                (((int)charT>='[') && ((int)charT<='`')) || 
-                (((int)charT>='{') && ((int)charT<='~'))
-                // (((int)charT>='{') && ((int)charT<=254))
-        ){
-        // Special Charaacter+symbol Randomization
-            int specialCharType=rand()%3;
-
-            if(specialCharType==0){
-                visibleStrOut[i] = '!'+rand()%14;
-            }
-            else if(specialCharType==1){
-                visibleStrOut[i] = ':'+rand()%6;
-            }
-            else if(specialCharType==2){
-                visibleStrOut[i] = '['+rand()%5;
-            }
-            else if(specialCharType==3){
-                visibleStrOut[i] = '{'+rand()%3;
-            }
-        }
-        else{
-            visibleStrOut[i] = '\0';
-        }
-    }
-    // str[strLen]='\0';
-    visibleStrOut[i++]='\0';
-
-//    return str;
-}
-
-
-// char *mask_authInput(int authType=0, int *maskingConfig=userpassVisibilityConf, const char* str="TEST");
-
-void mask_authInput(int authType, int *maskingConfig, char* str, char* visibleStrOut){
-    /* maskField: "username" | For masking the username for visibility
-       maskField: "userpass" | For masking the userpass for visibility*/
-    // int maskingConfigLength, strLen;
-
-    // strLen = sizeof(str)/sizeof(str[0]);
-    int strLen = strlen(str);
-
-    // Mask According to masking Config
-
-    if(maskingConfig[0]>=2){visibleStrOut[0]='\0';}
-    else if(maskingConfig[2]==0){
-
-        if(maskingConfig[1]==0){
-            if(maskingConfig[0]==0){
-                // strcpy(maskedOutput, str);
-                // maskedOutput = str;
-                strcpy(visibleStrOut, str);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = maskStr(strLen, '*');
-                maskStr(strLen, '*', visibleStrOut);
-            }
-        }
-        else if(maskingConfig[1]==1){
-            if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(0, strLen, "Aa0");
-                generateRandomStr(0, strLen, "Aa0", visibleStrOut);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = generateRandomStr(0, strLen, "!");
-                generateRandomStr(0, strLen, "!", visibleStrOut);
-            }
-        }
-    }
-    else if(maskingConfig[2]==1){
-        // srand(time(NULL));
-        // strLen = rand()%(strLen+5);
-
-        if(maskingConfig[1]==0){
-            if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
-                generateRandomStr(1, strLen, "Aa0", visibleStrOut);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = maskStr(strLen, '*'); // need review
-                maskStr(strLen, '*', visibleStrOut);
-            }
-        }
-        else if(maskingConfig[1]==1){
-            if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
-                generateRandomStr(1, strLen, "Aa0", visibleStrOut);
-            }
-            else if(maskingConfig[0]==1){
-                // maskedOutput = generateRandomStr(1, strLen, "!");
-                generateRandomStr(1, strLen, "!", visibleStrOut);
-            }
-        }
-    }
-    else{
-         // maskedOutput = maskStr(strLen, '*');
-         maskStr(strLen, '*', visibleStrOut);
-    }
-
-//    return maskedOutput;
-}
-
-
-
-void user_pass_visibility(WINDOW *win, int y, int x){
+void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 
     /*
      ------------------------------------------------------------------------------------------------------------------
 
      0 : COLOR_BLACK -> NONE | Common
+     1: COLOR_GREEN -> hide chr
 
-     ----------------------------------
-     1: COLOR_RED -> show chr
-     2: COLOR_YELLOW -> mask chr | with *
-     3: COLOR_GREEN -> hide chr
+     ------------------------------------
+     2: COLOR_RED -> show chr
+     3: COLOR_YELLOW -> mask chr | with *
      ----------------------------------
 
      ----------------------------------
@@ -898,26 +755,114 @@ void user_pass_visibility(WINDOW *win, int y, int x){
     */
 
     wmove(win, y, x);
-    int j=1;
-    for(int i=0; i<sizeof(userpassVisibilityConf)/sizeof(userpassVisibilityConf[0]); i++){
-        wattron(win, COLOR_PAIR(userpassVisibilityConf[i]+j));
-        waddch(win, userpassVisibilityConf[i]);
-        wattroff(win, COLOR_PAIR(userpassVisibilityConf[i]+j));
+    int j=2;
+    // while(arr[i]!='\0'){
+    for(int i=0; i<=(sizeof(arr)/sizeof(arr[0])); i++){
+        // if(i>0){j+2}
+        wattron(win, COLOR_PAIR(arr[i]+j));
+        waddch(win, arr[i]);
+        wattroff(win, COLOR_PAIR(arr[i]+j));
         j+=2;
 
+    //}
     }
     wrefresh(win);
 
 }
 
+void authSuccess(){
+    // On Auth Success Create Session File and source file for sourcing
+    // Create New Session Key
+    char cmd[250] = "getent passwd ";
+    strcat(cmd, username);
+    strcat(cmd, " | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
+    usrHomeDir = storeExecCMD(usrHomeDir, cmd);
 
-void login_passField(WINDOW *win, int y, int x){
+    for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
+    // Check if any home directory exist for the user & if it is valid
+    if(usrHomeDir==nullptr){
+        //drawCMDStr(mainScreenWin, 20, 0, 1, 0, 0, 13, "NULL");
+        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, "Login Failed", "Incorrect Credentials");
+    }
+    else{
+        // drawCMDStr(mainScreenWin, 15, 0, 1, 0, 0, 13, usrHomeDir);
+    //}
+
+
+    // std::replace(usrHomeDir, usrHomeDir + strlen(usrHomeDir), '\7', '/');
+
+        createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+
+
+    //memset(cmd, '\0', sizeof(cmd)); // Clear cmd char* array
+    //for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
+    // Create Session Directory
+        char envSource[] = "env_source";
+    // char cmd[200] = "mkdir -p ";
+        strcpy(cmd, "mkdir -p ");
+        strcat(cmd, usrHomeDir);
+        strcat(cmd, ".halkaDM/");
+        strcat(cmd, SESSION_KEY);
+        strcat(cmd, " && echo 'NEW_USER=");
+        strcat(cmd, username);
+        strcat(cmd, "&&SESSION=");
+        strcat(cmd, currentDesktopENV);
+        strcat(cmd, "' > ");
+        strcat(cmd, usrHomeDir);
+        strcat(cmd, ".halkaDM/");
+        strcat(cmd, SESSION_KEY);
+        strcat(cmd, "/");
+        strcat(cmd, envSource);
+    // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(usrHomeDir)+2), 1, 0, 0, 13, cmd);
+        execCMD(cmd);
+    }
+}
+
+int authenticateButton(){
+
+    wattron(authBox, COLOR_PAIR(13));
+    mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, "LOGIN");
+    wattron(authBox, COLOR_PAIR(13));
+
+    wrefresh(authBox);
+
+    int retCode;
+
+    int ch;
+
+
+    do{
+        ch = wgetch(authBox);
+        if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==KEY_ESCAPE) || (ch=='8')){retCode = 1;break;}
+        else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
+        else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
+        else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){authSuccess();retCode = 0;break;}
+   // else{}
+    }while(1);
+
+    wattron(authBox, COLOR_PAIR(9));
+    mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, "LOGIN");
+    wattron(authBox, COLOR_PAIR(9));
+
+    wrefresh(authBox);
+
+    // Check if username is valid
+
+    // Check if Password is valid for the mentioned username
+
+
+    // If username and pass is valid then create session with authSuccess()
+    // Else Notify that the credentials are not valid
+    return retCode;
+}
+
+int login_passField(WINDOW *win, int y, int x){
     wmove(win, y, x);
     int userpassChrCount = 0;
     int userpassLengthMax = sizeof(userpass)/sizeof(userpass[0]);
     int ch;
     // char* visible_userpass;
-    char visible_userpass[50]={'\0'};
+    // char visible_userpass[50]={'\0'};
     // int finish=0;
     // cbreak();
     noecho();
@@ -929,73 +874,54 @@ void login_passField(WINDOW *win, int y, int x){
         if(userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
             // visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
             // maskStr2(visible_userpass, strlen(userpass), '*');
-            mask_authInput(0, userpassVisibilityConf, userpass, visible_userpass);
+            halkadm_security.mask_authInput(0, userpassVisibilityConf, userpass, visible_userpass);
             wprintw(win, visible_userpass);
             userpassChrCount=strlen(userpass);
         }
         wrefresh(win);
-        // wmove(win, y, x);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
             genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
-            //finish=1;
+            // authSuccess();
             break;
         }
         else if((userpassChrCount==0) && (ch == KEY_BACKSPACE)){}
         else if(((userpassChrCount>=0) && (userpassChrCount<userpassLengthMax)) || ((userpassChrCount == userpassLengthMax) && (ch == KEY_BACKSPACE))){
             gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
-            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
                 userpassChrCount-=1;
                 userpass[userpassChrCount] = '\0';
-                // wmove(win, y, x+userpassChrCount);
-                // waddch(win, ' ');
-                // mvwaddch(win, y, x+userpassChrCount, ' ');
                 mvwprintw(win, y, x+userpassChrCount, " ");
             }
             else{
                 userpass[userpassChrCount] = ch;
                 userpassChrCount++;
             }
-            /*wmove(win, y, x);
-
-            if(userpassVisibilityConf[0]!=2){
-                visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
-                wprintw(win, visible_userpass);
-            }
-
-            wrefresh(win);*/
-
-            // show_datetime(titlebar, 1, (titlebarCoordX/2)-16);
-            // free(visible_userpass);
-            /* process the command keystroke */
         }
     }while (1);
+
+    return 2;
+
 }
 
-void login_userField(WINDOW *win, int y, int x){
+int login_userField(WINDOW *win, int y, int x){
     wmove(win, y, x);
     int usernameChrCount = 0;
     int usernameLengthMax = sizeof(username)/sizeof(username[0]);
     int ch;
-//    char* visible_username;
-    char visible_username[50]={'\0'};
-    // cbreak();
+    // char visible_username[50]={'\0'};
     noecho();
     keypad(win, TRUE);
 
     do{
-        // wmove(win, y, x);
         wmove(win, y, x);
 
         if(usernameVisibilityConf[0]!=2 && strlen(username)>0){
-            // visible_username = mask_authInput(0, usernameVisibilityConf, username);
-            mask_authInput(0, usernameVisibilityConf, username, visible_username);
+            halkadm_security.mask_authInput(0, usernameVisibilityConf, username, visible_username);
             wprintw(win, visible_username);
             usernameChrCount=strlen(username);
         }
-            // mvwprintw(win, y, x, username);
 
         wrefresh(win);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
@@ -1024,6 +950,9 @@ void login_userField(WINDOW *win, int y, int x){
 
         /* process the command keystroke */
     }while (1);
+
+    return 1;
+
 }
 
 
@@ -1058,9 +987,113 @@ void drawAuthBox(int maxY, int maxX, int minY, int minX){
 }
 
 
+/*void createSessionKey() {
+    std::random_device rd;
+    for (int i = 0; i < sizeof(SESSION_KEY); ++i) {
+        SESSION_KEY[i] = rd();
+    }
+    // create a hash object
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+    // specify the hash function
+    EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+    // calculate the hash
+    EVP_DigestUpdate(mdctx, SESSION_KEY, sizeof(SESSION_KEY));
+    unsigned char md_value[EVP_MAX_MD_SIZE];
+    unsigned int md_len;
+    EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+    EVP_MD_CTX_free(mdctx);
+    // print the hash
+    //cout << "Hash: ";
+    //for(int i = 0; i < md_len; i++) cout << hex << (int)md_value[i];
+    //cout << endl;
+}*/
+
+void freeMemory(){
+
+    // This function must be called before exiting the program to clear the system allocated memory space
+
+    // Free User SESSION_KEY allocated space
+    free(SESSION_KEY);
+
+    // Free Username Space
+    free(username);
+    free(visible_userpass);
+    // Free Userpass Space
+    free(userpass);
+    free(visible_userpass);
+
+    // TitleBar Item Tree Depth | Free Allocated Storage Space
+    free(titleBarItemTree);
+
+    // De-allocate space for config list for loginColourMatrix
+    free(loginColourMatrixConf);
+
+    // Free Allocated Space of The Environment Names in 2d char Array
+    for (int i = 0; i < sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]); i++) {
+        free(desktopEnvironmentsSubItems[i]);
+    }
+    free(desktopEnvironmentsSubItems);
+
+}
+
+/*void calculate_hash(AutoSeeded_RNG &rng) {
+    rng.randomize(SESSION_KEY, SESSION_KEY_LENGTH);
+    string hash = hash_string(SESSION_KEY, SESSION_KEY_LENGTH, "SHA-256");
+    // cout << "Hash: " << hash << endl;
+}*/
+
+/*void createSessionKey(int len, char* arr){
+    srand(time(NULL));
+    for (int i = 0; i < len; i++) {
+        // arr[i] = '!'+(rand() % 94);
+        arr[i] = 'a'+(rand() % 25);
+    }
+    //unsigned char result[MD5_DIGEST_LENGTH];
+    //MD5((unsigned char*)arr, strlen(arr), result);
+
+    //for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    //    sprintf(&arr[i*2], "%02x", (unsigned int)result[i]);
+    //}
+}*/
+
+void allocateMemory(){
+
+    // Create SESSION_KEY | SIZE 33
+    SESSION_KEY = static_cast<char*>(std::malloc(SESSION_KEY_LENGTH * sizeof(char)));
+    // createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+
+    // createSessionKey();
+    // AutoSeeded_RNG rng; // cryptographically secure random number generator
+    // calculate_hash(rng);
+
+
+    // Allocate Username Space
+    username = static_cast<char*>(std::malloc(maxUsernameLen * sizeof(char)));
+    visible_username = static_cast<char*>(std::malloc(visibleAuthStrLen * sizeof(char)));
+    username[0] = '\0';
+    visible_username[0] = '\0';
+
+    // Allocate Userpass Space
+    userpass = static_cast<char*>(std::malloc(maxUserpassLen * sizeof(char)));
+    visible_userpass = static_cast<char*>(std::malloc(visibleAuthStrLen * sizeof(char)));
+    userpass[0] = '\0';
+    visible_userpass[0] = '\0';
+
+    // TitleBar Item Tree Depth | Storage Space Allocation
+    titleBarItemTree = static_cast<int*>(std::malloc(maxTitleBarItemTreeDepth * sizeof(int)));
+
+    // Allocate space for config list for loginColourMatrix
+    loginColourMatrixConf = static_cast<int*>(std::malloc(4 * sizeof(int)));
+
+    // Allocate & Fill Space For Environment Names
+    fill_available_desktop_environments();
+}
+
 
 void initWindow(){
     // Allocate Memory Space
+
+    allocateMemory();
 
     // initscr(); // Initialize Curses Screen Base
 
@@ -1090,12 +1123,13 @@ void initWindow(){
 
 
     // Setup Colours
-    start_color();
+    // start_color();
     initColor();
 
-    drawCMDStr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 0, 0, 13, package);
-    drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 13, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
-    drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 13, "uname -n -o");
+    drawCMDStr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 1, 0, 0, 13, package);
+    // drawCMDStr(mainScreenWin, winMaxY-3, winMaxX-(strlen(SESSION_KEY)+2), 1, 0, 0, 13, SESSION_KEY);
+    drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 1, 13, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
+    drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 1, 13, "uname -n -o");
 
     refresh();
 
@@ -1105,13 +1139,13 @@ void initWindow(){
     draw_titlebar(titleBar_subwin, -1);
 
     // List Available Desktop Managers
-    list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
+//     list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
 
     //// UserName Visibility colorMap
-    user_pass_visibility(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10);
+    authChrVisibilityPattern(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10, usernameVisibilityConf);
 
     //// UserPass Visibility colorMap
-    user_pass_visibility(authBox, (loginBoxMaxY/2), loginBoxMaxX-10);
+    authChrVisibilityPattern(authBox, (loginBoxMaxY/2), loginBoxMaxX-10, userpassVisibilityConf);
 
 
     // Set Login Matrix Config
@@ -1132,16 +1166,29 @@ void initWindow(){
 int main(int argc, char **argv)
 {
     initscr();
+    start_color();
     initWindow();
-
+    int id=0;
     do{
         genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
-        login_userField(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX/4)+14);
-        login_passField(authBox, (loginBoxMaxY/2), (loginBoxMaxX/4)+14);
-        draw_titlebar(titleBar_subwin, 0);
+
+        if(id==0){
+            id = login_userField(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX/4)+14);
+        }
+        else if(id==1){
+            id = login_passField(authBox, (loginBoxMaxY/2), (loginBoxMaxX/4)+14);
+        }
+        else if(id==2){
+            //authSuccess();
+            id = authenticateButton();
+        }
+        else if(id==3){
+            id = draw_titlebar(titleBar_subwin, 0);
+        }
     }while(1);
 
     getch();
     endwin();
+    freeMemory();
     return 0;
 }

@@ -1,0 +1,15 @@
+{
+ "CMD":{
+  "shutdown":"sudo /usr/sbin/shutdown -h now",
+  "restart":"sudo shutdown -r now",
+  "sleep":"sudo systemctl suspend",
+  "calender":"/usr/bin/cal",
+  "cpuStatus":"/usr/bin/mpstat -P ALL",
+  "networkStatus":"/usr/sbin/tcpdump --list-interfaces",
+  "availableDesktopEnv":"ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'",
+  "usrDefaultEnv":"sudo cat /var/lib/AccountsService/users/$USER 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2",
+  "osbase":"cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '",
+  "systemName":"uname -n -o",
+  "setDesktopEnv":"cat /usr/share/xsessions/$SESSION.* | grep -E -m 1 '^Exec\s*=' | sed '1s/^Exec\s*=\s*//; 1s/^/exec /' > /home/$NEWUSER/.xsession"
+  }
+}

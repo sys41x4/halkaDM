@@ -3,7 +3,8 @@
 --------
 
 [branch/dev]
-    ISSUE-1 : /source/micro/halkaDM.micro.cpp suffers from memory allocation issues, causing segmentation fault in long run.
+    ISSUE-1 : /source/micro/halkaDM.micro.cpp suffers from memory allocation issues, for long run.
+    ISSUE-2 : /source/micro/halkaDM.micro.test.cpp suffers from libraries fetching and execution issues with "/lib/*.h" and "/lib/*.cpp" files
 
 [branch/testing]
 
