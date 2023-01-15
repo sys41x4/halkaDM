@@ -7,7 +7,7 @@
 #include <ctime>
 #include <cstring>
 
-char package[] = "halkaDM:nano";
+char package[] = "halkaDM:nano|testing";
 char KEY_ESCAPE = '\x1b';
 
 /*
@@ -35,27 +35,35 @@ int asciiColors[] = {
     COLOR_CYAN
 };
 
+char* SESSION_KEY = nullptr;
+int SESSION_KEY_LENGTH = 33;
+
 int totalRandomizedColors = 10; // Must be loaded from the config file
 int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
 int totalManualColors = 8;
+
+// char* currentDesktopENV;
+char currentDesktopENV[] = "ubuntu";
+char* usrHomeDir = nullptr; // getent passwd username | cut -d: -f6
 
 int currentTitleID = 0;
 
 int maxSubItemElementLen=16;
 
+// Status {Visible_Text,...}
+//        {SECTION, ...}
+//        {KEY, ....}
 
-char powerSubItems[][10] = {
-    "Sleep",
-    "Restart",
-    "Shutdown"
+char*** titleBarSubItems;
+
+char powerSubItems[][3][15] = {
+    {"Sleep", "Restart", "Shutdown"},
+    {"CMD@sleep", "CMD@restart", "CMD@shutdown"}
 };
 
-char utilitiesSubItems[][15] = {
-    "Calender",
-    "CPU Status",
-    "Network Status",
-    "Refresh",
-    "Exit"
+char utilitiesSubItems[][5][20] = {
+    {"Calender", "CPU Status", "Network Status", "Refresh", "Exit"},
+    {"CMD@calender", "CMD@cpuStatus", "CMD@networkStatus"}
 };
 
 // ENV: DEFAULT
