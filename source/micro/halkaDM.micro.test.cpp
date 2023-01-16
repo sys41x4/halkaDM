@@ -770,52 +770,76 @@ void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 
 }
 
-void authSuccess(){
+
+int authCheck(){
     // On Auth Success Create Session File and source file for sourcing
     // Create New Session Key
-    char cmd[250] = "getent passwd ";
-    strcat(cmd, username);
-    strcat(cmd, " | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
-    usrHomeDir = storeExecCMD(usrHomeDir, cmd);
 
-    for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
+    if(strlen(userpass)>0){
+        char cmd[250] = "getent passwd ";
+        strcat(cmd, username);
+        strcat(cmd, " | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
+        usrHomeDir = storeExecCMD(usrHomeDir, cmd);
+
+        for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
     // Check if any home directory exist for the user & if it is valid
-    if(usrHomeDir==nullptr){
-        //drawCMDStr(mainScreenWin, 20, 0, 1, 0, 0, 13, "NULL");
-        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, "Login Failed", "Incorrect Credentials");
+        if(usrHomeDir==nullptr){
+            //drawCMDStr(mainScreenWin, 20, 0, 1, 0, 0, 13, "NULL");
+            messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, "Login Failed", "Incorrect Credentials");
+            free(usrHomeDir);
+            return 0; // Auth Failed
+        }
+        else{return 1;} // Auth Success
     }
-    else{
+    else{return 0;}
+}
+
+void createSession(){
         // drawCMDStr(mainScreenWin, 15, 0, 1, 0, 0, 13, usrHomeDir);
     //}
 
 
     // std::replace(usrHomeDir, usrHomeDir + strlen(usrHomeDir), '\7', '/');
 
-        createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
-
+    createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+    char cmd[250] = {'\0'};
 
     //memset(cmd, '\0', sizeof(cmd)); // Clear cmd char* array
     //for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
     // Create Session Directory
-        char envSource[] = "env_source";
+    char envSource[] = "env_source";
     // char cmd[200] = "mkdir -p ";
-        strcpy(cmd, "mkdir -p ");
-        strcat(cmd, usrHomeDir);
-        strcat(cmd, ".halkaDM/");
-        strcat(cmd, SESSION_KEY);
-        strcat(cmd, " && echo 'NEW_USER=");
-        strcat(cmd, username);
-        strcat(cmd, "&&SESSION=");
-        strcat(cmd, currentDesktopENV);
-        strcat(cmd, "' > ");
-        strcat(cmd, usrHomeDir);
-        strcat(cmd, ".halkaDM/");
-        strcat(cmd, SESSION_KEY);
-        strcat(cmd, "/");
-        strcat(cmd, envSource);
+    strcpy(cmd, "mkdir -p ");
+    strcat(cmd, usrHomeDir);
+    strcat(cmd, ".halkaDM/");
+    //strcat(cmd, SESSION_KEY);
+    strcat(cmd, " && echo 'NEW_USER=");
+    strcat(cmd, username);
+    strcat(cmd, "&&SESSION=");
+    strcat(cmd, currentDesktopENV);
+    strcat(cmd, "' > ");
+    strcat(cmd, usrHomeDir);
+    strcat(cmd, ".halkaDM/");
+    //strcat(cmd, SESSION_KEY);
+    //strcat(cmd, "/");
+    strcat(cmd, envSource);
     // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(usrHomeDir)+2), 1, 0, 0, 13, cmd);
-        execCMD(cmd);
-    }
+    execCMD(cmd);
+    //}
+    for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
+
+    strcpy(cmd, "cat /usr/share/xsessions/");
+    strcat(cmd, currentDesktopENV);
+    strcat(cmd, ".* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/");
+    strcat(cmd, username);
+    strcat(cmd, "/.xsession");
+    // cat /usr/share/xsessions/$SESSION.* | grep -E -m 1 '^Exec\s*=' | sed '1s/^Exec\s*=\s*//; 1s/^/exec /' > /home/$NEWUSER/.xsession
+    execCMD(cmd);
+
+}
+
+void startSession(){
+
 }
 
 int authenticateButton(){
@@ -836,7 +860,10 @@ int authenticateButton(){
         if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==KEY_ESCAPE) || (ch=='8')){retCode = 1;break;}
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
-        else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){authSuccess();retCode = 0;break;}
+        else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
+            if(authCheck()==1){createSession();}
+            retCode = 0;break;
+        }
    // else{}
     }while(1);
 
@@ -881,13 +908,13 @@ int login_passField(WINDOW *win, int y, int x){
         wrefresh(win);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
-            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
-            // authSuccess();
+            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
             break;
         }
         else if((userpassChrCount==0) && (ch == KEY_BACKSPACE)){}
         else if(((userpassChrCount>=0) && (userpassChrCount<userpassLengthMax)) || ((userpassChrCount == userpassLengthMax) && (ch == KEY_BACKSPACE))){
-            gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
+            // gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
                 userpassChrCount-=1;
@@ -926,14 +953,15 @@ int login_userField(WINDOW *win, int y, int x){
         wrefresh(win);
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if((ch == '\n') || (ch == '\t')){ // If Enter is pressed
-            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
             updateRequestedUSRENV();
             draw_titlebar(titleBar_subwin, -1);
             break;
         }
         else if((usernameChrCount==0) && (ch == KEY_BACKSPACE)){}
         else if(((usernameChrCount>=0) && (usernameChrCount<usernameLengthMax)) || ((usernameChrCount == usernameLengthMax) && (ch == KEY_BACKSPACE))){
-            gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
+            // gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
                 usernameChrCount-=1;
@@ -1169,8 +1197,9 @@ int main(int argc, char **argv)
     start_color();
     initWindow();
     int id=0;
+    genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
     do{
-        genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+        // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
         if(id==0){
             id = login_userField(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX/4)+14);
