@@ -82,5 +82,4 @@ void HALKADM_CRYPTO::generateRandomStr(int randomizeLen, int maxStrLen, const ch
 
 //    return str;
 };
-
-// HALKADM_CRYPTO halkadm_crypto;
+HALKADM_CRYPTO halkadm_crypto;

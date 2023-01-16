@@ -1,6 +1,16 @@
-#include "config/config.h"
-#include "lib/cryptography.h"
-#include "lib/security.h"
+#include "../config/config.h"
+#include "../lib/cryptography.h"
+#include "../lib/cryptography.cpp"
+#include "../lib/security.h"
+#include "../lib/security.cpp"
+#include "../lib/dataHandling.h"
+#include "../lib/dataHandling.cpp"
+#include "../lib/CMDexecutor.h"
+#include "../lib/CMDexecutor.cpp"
+#include "../lib/sessionManagement.h"
+#include "../lib/sessionManagement.cpp"
+#include "../lib/AuthManagement.h"
+#include "../lib/AuthManagement.cpp"
 #include <locale.h>
 #include <ncurses.h>
 #include <algorithm>
@@ -8,6 +18,9 @@
 #include <ctime>
 #include <cstring>
 #include <random>
+#include "../lib/draw.h"
+#include "../lib/draw.cpp"
+
 // #include <openssl/evp.h>
 
 using namespace std;
@@ -44,9 +57,19 @@ char *userpass, *visible_userpass;
 int *loginColourMatrixConf;
 
 
+
+// Import Classes
+// HALKADM_CRYPTO halkadm_crypto;
+// CMD_EXECUTOR cmd_executor;
+DATA data_handler;
+HALKADM_SECURITY halkadm_security;
+DRAW draw;
+SESSION_MANAGEMENT session_management;
+AUTH_MANAGEMENT auth_management;
+// HALKADM_CRYPTO halkadm_crypto;
+
+/*
 char* fillArray(int c, char* arr){
-    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
 
     arr = static_cast<char*>(std::malloc(c * sizeof(char)));
     arr[0] = '\0';
@@ -54,8 +77,6 @@ char* fillArray(int c, char* arr){
 }
 
 char** fillArray(int r, int c, char** arr){
-    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
 
     arr = static_cast<char**>(std::malloc(r * sizeof(char*)));
     for (int i = 0; i < c; i++) {
@@ -66,8 +87,6 @@ char** fillArray(int r, int c, char** arr){
 }
 
 char*** fillArray(int r, int rc, int c, char*** arr){
-    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
 
     arr = static_cast<char***>(std::malloc(r * sizeof(char**)));
     for (int i = 0; i < rc; i++) {
@@ -97,6 +116,8 @@ void freeArray(int r, int c, char*** arr){
     }
     free(arr);
 }
+
+*/
 
 void setLoginMatrixWindow(WINDOW *win){
     loginColourMatrixWin = win;
@@ -164,20 +185,6 @@ void initColor(){
 
 }
 
-void createSessionKey(int len, char* arr){
-    srand(time(NULL));
-    for (int i = 0; i < len; i++) {
-        // arr[i] = '!'+(rand() % 94);
-        arr[i] = 'a'+(rand() % 25);
-    }
-    //unsigned char result[MD5_DIGEST_LENGTH];
-    //MD5((unsigned char*)arr, strlen(arr), result);
-
-    //for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-    //    sprintf(&arr[i*2], "%02x", (unsigned int)result[i]);
-    //}
-}
-
 void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
     // Draw Random bitmap
     int randColorID=1;
@@ -212,25 +219,6 @@ void show_datetime(WINDOW *win, int y, int x){
             waddstr(win, buffer);
         }
         wrefresh(win);
-        pclose(pp);
-    }
-}
-
-
-void execCMD(const char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        // char buffer[BUFSIZ];
-        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
-        pclose(pp);
-    }
-}
-
-void execCMD(char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        // char buffer[BUFSIZ];
-        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
         pclose(pp);
     }
 }
@@ -284,61 +272,6 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
             //}
         }
     }
-}
-
-char* storeExecCMD(char* arr, const char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            int elementCount=0;
-            while(buffer[elementCount]!='\0'){elementCount++;}
-//            arr = fillArray(elementCount, arr);
-            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
-            for(int i=0; i<elementCount; i++){
-                arr[i]=buffer[i];
-            }
-            waddstr(mainScreenWin, buffer);
-            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
-
-        }
-  //      else{arr=nullptr;}
-        pclose(pp);
-        return arr;
-    }
-    else{
-        return nullptr;
-    }
-
-    //return arr;
-}
-
-char* storeExecCMD(char* arr, char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            int elementCount=0;
-            while(buffer[elementCount]!='\0'){elementCount++;}
-            // arr = fillArray(elementCount, arr);
-            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
-            for(int i=0; i<elementCount; i++){
-                arr[i]=buffer[i];
-            }
-            waddstr(mainScreenWin, buffer);
-            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
-        }
-//        else{arr=nullptr;}
-        pclose(pp);
-        return arr;
-    }
-    else{
-        return nullptr;
-    }
-
-//    return arr;
 }
 
 void updateRequestedUSRENV(){
@@ -457,31 +390,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
     }while(1);
 }
 
-
-/*
-void list_available_desktop_environments(WINDOW *win, int y, int x){
-    wmove(win, y, x);
-    FILE *pp;
-    cbreak();
-
-    int i=0;
-    int j=0;
-
-    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            for(int k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
-                if(buffer[k]=='\7'){i++;k++;j=0;}
-                else if(buffer[k]=='\0'){break;}
-                desktopEnvironmentsSubItems[i][j] = buffer[k];
-                j++;
-            }
-        }
-        pclose(pp);
-    }
-}
-*/
-
 void fill_available_desktop_environments(){
     FILE *pp;
     // Should be initiated only once during initial Memory allocation setup
@@ -557,7 +465,7 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
 
                 ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
                 if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
-                    freeArray(maxY-2, maxX-2, charArray);
+                    data_handler.freeArray(maxY-2, maxX-2, charArray);
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
                     wrefresh(subItemListWindow);
@@ -652,7 +560,8 @@ int draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 int r =  sizeof(powerSubItems)/sizeof(powerSubItems[0]);
                 int rc = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
                 int c = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-                titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                // titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                titleBarSubItems = data_handler.fillArray(r, rc, c, titleBarSubItems);
 
                 for(int i=0; i<r; i++){
                     for(int j = 0; j < rc; j++){
@@ -671,7 +580,8 @@ int draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 int r =  sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
                 int rc = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
                 int c = sizeof(utilitiesSubItems[0][0])/sizeof(utilitiesSubItems[0][0][0]);
-                titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                // titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                titleBarSubItems = data_handler.fillArray(r, rc, c, titleBarSubItems);
 
                 for(int i=0; i<r; i++){
                     for(int j = 0; j < rc; j++){
@@ -770,83 +680,12 @@ void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 
 }
 
-
-int authCheck(){
-    // On Auth Success Create Session File and source file for sourcing
-    // Create New Session Key
-
-    if(strlen(userpass)>0){
-        char cmd[250] = "getent passwd ";
-        strcat(cmd, username);
-        strcat(cmd, " | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
-        usrHomeDir = storeExecCMD(usrHomeDir, cmd);
-
-        for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
-    // Check if any home directory exist for the user & if it is valid
-        if(usrHomeDir==nullptr){
-            //drawCMDStr(mainScreenWin, 20, 0, 1, 0, 0, 13, "NULL");
-            messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, "Login Failed", "Incorrect Credentials");
-            free(usrHomeDir);
-            return 0; // Auth Failed
-        }
-        else{return 1;} // Auth Success
-    }
-    else{return 0;}
-}
-
-void createSession(){
-        // drawCMDStr(mainScreenWin, 15, 0, 1, 0, 0, 13, usrHomeDir);
-    //}
-
-
-    // std::replace(usrHomeDir, usrHomeDir + strlen(usrHomeDir), '\7', '/');
-
-    createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
-    char cmd[250] = {'\0'};
-
-    //memset(cmd, '\0', sizeof(cmd)); // Clear cmd char* array
-    //for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
-    // Create Session Directory
-    char envSource[] = "env_source";
-    // char cmd[200] = "mkdir -p ";
-    strcpy(cmd, "mkdir -p ");
-    strcat(cmd, usrHomeDir);
-    strcat(cmd, ".halkaDM/");
-    //strcat(cmd, SESSION_KEY);
-    strcat(cmd, " && echo 'NEW_USER=");
-    strcat(cmd, username);
-    strcat(cmd, "&&SESSION=");
-    strcat(cmd, currentDesktopENV);
-    strcat(cmd, "' > ");
-    strcat(cmd, usrHomeDir);
-    strcat(cmd, ".halkaDM/");
-    //strcat(cmd, SESSION_KEY);
-    //strcat(cmd, "/");
-    strcat(cmd, envSource);
-    // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(usrHomeDir)+2), 1, 0, 0, 13, cmd);
-    execCMD(cmd);
-    //}
-    for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
-
-    strcpy(cmd, "cat /usr/share/xsessions/");
-    strcat(cmd, currentDesktopENV);
-    strcat(cmd, ".* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/");
-    strcat(cmd, username);
-    strcat(cmd, "/.xsession");
-    // cat /usr/share/xsessions/$SESSION.* | grep -E -m 1 '^Exec\s*=' | sed '1s/^Exec\s*=\s*//; 1s/^/exec /' > /home/$NEWUSER/.xsession
-    execCMD(cmd);
-
-}
-
-void startSession(){
-
-}
-
 int authenticateButton(){
 
     wattron(authBox, COLOR_PAIR(13));
     mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, "LOGIN");
     wattron(authBox, COLOR_PAIR(13));
+    // draw.charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 13, "LOGIN");
 
     wrefresh(authBox);
 
@@ -861,7 +700,14 @@ int authenticateButton(){
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
-            if(authCheck()==1){createSession();}
+            if(auth_management.authCheck(usrHomeDir, username, userpass)==1){
+                session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+                //createSession();
+                session_management.createSession(currentDesktopENV, usrHomeDir, username);
+            }
+            else{
+                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, "Login Failed", "Incorrect Credentials");
+            }
             retCode = 0;break;
         }
    // else{}
