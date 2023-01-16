@@ -28,7 +28,7 @@
 </p>
 
 
-<p align="center"><img src="/assets/cover_image.png" alt="halkaDM png"  width="500" /></p>
+<p align="center"><img src="/assets/cover_image.png" alt="halkaDM png"  width="auto" /></p>
 
 
 <p align="center">
