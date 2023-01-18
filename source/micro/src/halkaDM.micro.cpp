@@ -1,6 +1,16 @@
-#include "config/config.h"
-#include "lib/cryptography.h"
-#include "lib/security.h"
+#include "../config/config.h"
+#include "../lib/cryptography.h"
+#include "../lib/cryptography.cpp"
+#include "../lib/security.h"
+#include "../lib/security.cpp"
+#include "../lib/dataHandling.h"
+#include "../lib/dataHandling.cpp"
+#include "../lib/CMDexecutor.h"
+#include "../lib/CMDexecutor.cpp"
+#include "../lib/sessionManagement.h"
+#include "../lib/sessionManagement.cpp"
+#include "../lib/AuthManagement.h"
+#include "../lib/AuthManagement.cpp"
 #include <locale.h>
 #include <ncurses.h>
 #include <algorithm>
@@ -8,6 +18,9 @@
 #include <ctime>
 #include <cstring>
 #include <random>
+#include "../lib/draw.h"
+#include "../lib/draw.cpp"
+
 // #include <openssl/evp.h>
 
 using namespace std;
@@ -38,65 +51,38 @@ int accountPicBoxMaxX, accountPicBoxMaxY, accountPicBoxMaxW, accountPicBoxMaxH;
 int msgBoxMaxX, msgBoxMaxY, msgBoxMaxW, msgBoxMaxH;
 int loginBoxMaxX, loginBoxMaxY;
 
+
+char *userFullName;
 char *username, *visible_username;
 char *userpass, *visible_userpass;
 
 int *loginColourMatrixConf;
 
 
-char* fillArray(int c, char* arr){
-    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
 
-    arr = static_cast<char*>(std::malloc(c * sizeof(char)));
-    arr[0] = '\0';
-    return arr;
+// Import Classes
+// HALKADM_CRYPTO halkadm_crypto;
+// CMD_EXECUTOR cmd_executor;
+DATA data_handler;
+HALKADM_SECURITY halkadm_security;
+DRAW draw;
+SESSION_MANAGEMENT session_management;
+AUTH_MANAGEMENT auth_management;
+// HALKADM_CRYPTO halkadm_crypto;
+
+
+void draw_charArr(WINDOW *win, int y, int x, int colorID, const char* arr){
+    wattron(win, COLOR_PAIR(colorID));
+    mvwprintw(win, y, x, arr);
+    wattroff(win, COLOR_PAIR(colorID));
 }
 
-char** fillArray(int r, int c, char** arr){
-    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-
-    arr = static_cast<char**>(std::malloc(r * sizeof(char*)));
-    for (int i = 0; i < c; i++) {
-        arr[i] = static_cast<char*>(std::malloc(c * sizeof(char)));
-        arr[i][0] = '\0';
-    }
-    return arr;
+void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
+    wattron(win, COLOR_PAIR(colorID));
+    mvwprintw(win, y, x, arr);
+    wattroff(win, COLOR_PAIR(colorID));
 }
 
-char*** fillArray(int r, int rc, int c, char*** arr){
-    //int cols = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-    //int cols1 = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-
-    arr = static_cast<char***>(std::malloc(r * sizeof(char**)));
-    for (int i = 0; i < rc; i++) {
-        arr[i] = static_cast<char**>(std::malloc(rc * sizeof(char*)));
-        for (int j = 0; j < c; j++) {
-            arr[i][j] = static_cast<char*>(std::malloc(c * sizeof(char)));
-            arr[i][j][0] = '\0';
-        }
-    }
-    return arr;
-}
-
-
-void freeArray(int r, char** arr){
-    for (int i = 0; i < r; i++) {
-        free(arr[i]);
-    }
-    free(arr);
-}
-
-void freeArray(int r, int c, char*** arr){
-    for (int i = 0; i < r; i++) {
-        //for(int j=0; j<c; j++){
-          //  free(arr[i][j]);
-        //}
-        free(arr[i]);
-    }
-    free(arr);
-}
 
 void setLoginMatrixWindow(WINDOW *win){
     loginColourMatrixWin = win;
@@ -140,7 +126,7 @@ void initColor(){
 
    // Default Stored Colour blocks | fg==bg
    for(int i=1; i<=totalASCIIcolors; i++){
-       init_pair(i, asciiColors[i+storedColorsStartIndex], asciiColors[i+storedColorsStartIndex]);
+       init_pair(i, asciiColors[i+storedColorsStartIndex-1], asciiColors[i+storedColorsStartIndex-1]);
    }
 
    // Manual Colour Setup
@@ -162,20 +148,6 @@ void initColor(){
    }
 
 
-}
-
-void createSessionKey(int len, char* arr){
-    srand(time(NULL));
-    for (int i = 0; i < len; i++) {
-        // arr[i] = '!'+(rand() % 94);
-        arr[i] = 'a'+(rand() % 25);
-    }
-    //unsigned char result[MD5_DIGEST_LENGTH];
-    //MD5((unsigned char*)arr, strlen(arr), result);
-
-    //for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-    //    sprintf(&arr[i*2], "%02x", (unsigned int)result[i]);
-    //}
 }
 
 void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
@@ -216,25 +188,6 @@ void show_datetime(WINDOW *win, int y, int x){
     }
 }
 
-
-void execCMD(const char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        // char buffer[BUFSIZ];
-        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
-        pclose(pp);
-    }
-}
-
-void execCMD(char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        // char buffer[BUFSIZ];
-        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
-        pclose(pp);
-    }
-}
-
 void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int colorID, const char* msg){
     // wmove(win, y, x);
     FILE *pp;
@@ -244,19 +197,23 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
           alignX==1 : centre align
           alignX==2 : right align
     */
+    int positionX=0;
 
     if(is_cmd==0){
         if(show>0){
-            if(alignX==0){wmove(win, y, x);}
+            if(alignX==0){positionX=x;}
             else if(alignX==1){
-                wmove(win, y, x-(strlen(msg)/2));
+                positionX = x-(strlen(msg)/2);
+                // wmove(win, y, x-(strlen(msg)/2));
             }
-            else if(alignX==1){
+            else if(alignX==2){
+                positionX = x-strlen(msg);
                 wmove(win, y, x-strlen(msg));
             }
-            wattron(win, COLOR_PAIR(colorID));
+            /*wattron(win, COLOR_PAIR(colorID));
             waddstr(win, msg);
-            wattroff(win, COLOR_PAIR(colorID));
+            wattroff(win, COLOR_PAIR(colorID));*/
+            draw_charArr(win, y, positionX, colorID, msg);
             wrefresh(win);
         }
 
@@ -268,15 +225,21 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
                 char buffer[BUFSIZ];
                 while (fgets(buffer, sizeof(buffer), pp) != 0) {
                     if(show>0){
-                        if(alignX==1){
-                            wmove(win, y, x-(strlen(buffer)/2));
-                        }
+                        if(alignX==0){positionX = x;}
                         else if(alignX==1){
-                            wmove(win, y, x-strlen(buffer));
+                            positionX = x-(strlen(buffer)/2);
+                            //positionX = x-(sizeof(buffer)/sizeof(buffer[0]))/2;
+                            //wmove(win, y, x-(strlen(buffer)/2));
                         }
-                        wattron(win, COLOR_PAIR(colorID));
+                        else if(alignX==2){
+                            // wmove(win, y, x-strlen(buffer));
+                            // positionX = x-(sizeof(buffer)/sizeof(buffer[0]));
+                            positionX = x-strlen(buffer);
+                        }
+                        draw_charArr(win, y, positionX, colorID, buffer);
+                        /*wattron(win, COLOR_PAIR(colorID));
                         waddstr(win, buffer);
-                        wattroff(win, COLOR_PAIR(colorID));
+                        wattroff(win, COLOR_PAIR(colorID));*/
                         wrefresh(win);
                     }
                 }
@@ -284,61 +247,6 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
             //}
         }
     }
-}
-
-char* storeExecCMD(char* arr, const char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            int elementCount=0;
-            while(buffer[elementCount]!='\0'){elementCount++;}
-//            arr = fillArray(elementCount, arr);
-            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
-            for(int i=0; i<elementCount; i++){
-                arr[i]=buffer[i];
-            }
-            waddstr(mainScreenWin, buffer);
-            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
-
-        }
-  //      else{arr=nullptr;}
-        pclose(pp);
-        return arr;
-    }
-    else{
-        return nullptr;
-    }
-
-    //return arr;
-}
-
-char* storeExecCMD(char* arr, char* cmd){
-    FILE *pp;
-    if ((pp = popen(cmd, "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            int elementCount=0;
-            while(buffer[elementCount]!='\0'){elementCount++;}
-            // arr = fillArray(elementCount, arr);
-            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
-            for(int i=0; i<elementCount; i++){
-                arr[i]=buffer[i];
-            }
-            waddstr(mainScreenWin, buffer);
-            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
-        }
-//        else{arr=nullptr;}
-        pclose(pp);
-        return arr;
-    }
-    else{
-        return nullptr;
-    }
-
-//    return arr;
 }
 
 void updateRequestedUSRENV(){
@@ -380,7 +288,7 @@ void genProfilePicture(int h, int w, int y, int x){
 }
 
 
-void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title, const char* msg){
+void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, const char* title, const char* msg){
 
    /* If is_cmd==1,  then the supplied char array, will be eecuted and the output will be printed in the message box
       else if is_cmd==0, then the message will directly be printed in the message box
@@ -396,9 +304,10 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
 
     // Draw Message Box Title
 
-    wattron(messageBoxBorderWindow, COLOR_PAIR(12));
+    draw_charArr(messageBoxBorderWindow, 2, (w-(sizeof(title)/sizeof(title[0])))/2, colorID, title);
+    /*wattron(messageBoxBorderWindow, COLOR_PAIR(12));
     mvwprintw(messageBoxBorderWindow, 2, (w-(sizeof(title)/sizeof(title[0])))/2, title);
-    wattroff(messageBoxBorderWindow, COLOR_PAIR(12));
+    wattroff(messageBoxBorderWindow, COLOR_PAIR(12));*/
 
     wrefresh(messageBoxBorderWindow);
 
@@ -456,31 +365,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, const char* title,
         else{}
     }while(1);
 }
-
-
-/*
-void list_available_desktop_environments(WINDOW *win, int y, int x){
-    wmove(win, y, x);
-    FILE *pp;
-    cbreak();
-
-    int i=0;
-    int j=0;
-
-    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            for(int k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
-                if(buffer[k]=='\7'){i++;k++;j=0;}
-                else if(buffer[k]=='\0'){break;}
-                desktopEnvironmentsSubItems[i][j] = buffer[k];
-                j++;
-            }
-        }
-        pclose(pp);
-    }
-}
-*/
 
 void fill_available_desktop_environments(){
     FILE *pp;
@@ -557,7 +441,7 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
 
                 ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
                 if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
-                    freeArray(maxY-2, maxX-2, charArray);
+                    data_handler.freeArray(maxY-2, maxX-2, charArray);
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
                     wrefresh(subItemListWindow);
@@ -566,7 +450,7 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
                 else if((ch == '\n') || (ch==KEY_RIGHT) || (ch == 'd') || (ch=='6') || (ch=='5')){
                     // Execute Message Window
 //                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, charArray[0][titleBarItemTree[1]], subItemsCmd[titleBarItemTree[0]][titleBarItemTree[1]]);
-                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, charArray[0][titleBarItemTree[1]], charArray[1][titleBarItemTree[1]]);
+                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, charArray[0][titleBarItemTree[1]], charArray[1][titleBarItemTree[1]]);
 
                 }
                 else if((ch == '\t') || (ch==KEY_DOWN) || (ch == 's') || (ch=='2')){
@@ -652,7 +536,8 @@ int draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 int r =  sizeof(powerSubItems)/sizeof(powerSubItems[0]);
                 int rc = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
                 int c = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-                titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                // titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                titleBarSubItems = data_handler.fillArray(r, rc, c, titleBarSubItems);
 
                 for(int i=0; i<r; i++){
                     for(int j = 0; j < rc; j++){
@@ -671,7 +556,8 @@ int draw_titlebar(WINDOW *titlebar, int itemID=-1)
                 int r =  sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
                 int rc = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
                 int c = sizeof(utilitiesSubItems[0][0])/sizeof(utilitiesSubItems[0][0][0]);
-                titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                // titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
+                titleBarSubItems = data_handler.fillArray(r, rc, c, titleBarSubItems);
 
                 for(int i=0; i<r; i++){
                     for(int j = 0; j < rc; j++){
@@ -770,83 +656,32 @@ void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 
 }
 
-
-int authCheck(){
-    // On Auth Success Create Session File and source file for sourcing
-    // Create New Session Key
-
-    if(strlen(userpass)>0){
-        char cmd[250] = "getent passwd ";
-        strcat(cmd, username);
-        strcat(cmd, " | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
-        usrHomeDir = storeExecCMD(usrHomeDir, cmd);
-
-        for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
-    // Check if any home directory exist for the user & if it is valid
-        if(usrHomeDir==nullptr){
-            //drawCMDStr(mainScreenWin, 20, 0, 1, 0, 0, 13, "NULL");
-            messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, "Login Failed", "Incorrect Credentials");
-            free(usrHomeDir);
-            return 0; // Auth Failed
-        }
-        else{return 1;} // Auth Success
+void filluserFullName(char* username){
+    if(userFullName!=nullptr){
+        draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 1, userFullName);
+        free(userFullName);
     }
-    else{return 0;}
-}
-
-void createSession(){
-        // drawCMDStr(mainScreenWin, 15, 0, 1, 0, 0, 13, usrHomeDir);
-    //}
-
-
-    // std::replace(usrHomeDir, usrHomeDir + strlen(usrHomeDir), '\7', '/');
-
-    createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
-    char cmd[250] = {'\0'};
-
-    //memset(cmd, '\0', sizeof(cmd)); // Clear cmd char* array
-    //for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
-    // Create Session Directory
-    char envSource[] = "env_source";
-    // char cmd[200] = "mkdir -p ";
-    strcpy(cmd, "mkdir -p ");
-    strcat(cmd, usrHomeDir);
-    strcat(cmd, ".halkaDM/");
-    //strcat(cmd, SESSION_KEY);
-    strcat(cmd, " && echo 'NEW_USER=");
+    // free(userFullName);
+    char cmd[250] = "getent passwd ";
     strcat(cmd, username);
-    strcat(cmd, "&&SESSION=");
-    strcat(cmd, currentDesktopENV);
-    strcat(cmd, "' > ");
-    strcat(cmd, usrHomeDir);
-    strcat(cmd, ".halkaDM/");
-    //strcat(cmd, SESSION_KEY);
-    //strcat(cmd, "/");
-    strcat(cmd, envSource);
-    // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(usrHomeDir)+2), 1, 0, 0, 13, cmd);
-    execCMD(cmd);
-    //}
-    for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
+    strcat(cmd, " | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
+    userFullName = cmd_executor.fetchExecOutput(userFullName, cmd);
+    /*wattron(mainScreenWin, COLOR_PAIR(13));
+    mvwaddch(mainScreenWin,(winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2)-1,  ' ');
+    wattroff(mainScreenWin, COLOR_PAIR(13));*/
 
-    strcpy(cmd, "cat /usr/share/xsessions/");
-    strcat(cmd, currentDesktopENV);
-    strcat(cmd, ".* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/");
-    strcat(cmd, username);
-    strcat(cmd, "/.xsession");
-    // cat /usr/share/xsessions/$SESSION.* | grep -E -m 1 '^Exec\s*=' | sed '1s/^Exec\s*=\s*//; 1s/^/exec /' > /home/$NEWUSER/.xsession
-    execCMD(cmd);
-
-}
-
-void startSession(){
-
+    if(userFullName!=nullptr){
+        draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 13, userFullName);
+        wrefresh(mainScreenWin);
+    }
+    else{free(userFullName);}
+//    wrefresh(mainScreenWin);
+//    draw_charArr(mainScreenWin, (winMaxY-2)-1, winMaxX-(strlen(userFullName)+2), 12, userFullName);
 }
 
 int authenticateButton(){
 
-    wattron(authBox, COLOR_PAIR(13));
-    mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, "LOGIN");
-    wattron(authBox, COLOR_PAIR(13));
+    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 13, "LOGIN");
 
     wrefresh(authBox);
 
@@ -861,15 +696,20 @@ int authenticateButton(){
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
-            if(authCheck()==1){createSession();}
+            if(auth_management.authCheck(usrHomeDir, username, userpass)==1){
+                session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+                //createSession();
+                session_management.createSession(currentDesktopENV, usrHomeDir, username);
+            }
+            else{
+                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Login Failed", "Incorrect Credentials");
+            }
             retCode = 0;break;
         }
    // else{}
     }while(1);
 
-    wattron(authBox, COLOR_PAIR(9));
-    mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, "LOGIN");
-    wattron(authBox, COLOR_PAIR(9));
+    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 9, "LOGIN");
 
     wrefresh(authBox);
 
@@ -955,6 +795,8 @@ int login_userField(WINDOW *win, int y, int x){
         if((ch == '\n') || (ch == '\t')){ // If Enter is pressed
             // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
             gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
+            filluserFullName(username);
+            //draw_charArr(mainScreenWin, (winMaxY/8)-2, (winMaxX/2)-(strlen(userFullName)/2), 13, userFullName);
             updateRequestedUSRENV();
             draw_titlebar(titleBar_subwin, -1);
             break;
@@ -1154,8 +996,9 @@ void initWindow(){
     // start_color();
     initColor();
 
-    drawCMDStr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 1, 0, 0, 13, package);
-    // drawCMDStr(mainScreenWin, winMaxY-3, winMaxX-(strlen(SESSION_KEY)+2), 1, 0, 0, 13, SESSION_KEY);
+
+    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 13, package);
+//    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(SESSION_KEY)+2), 13, SESSION_KEY);
     drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 1, 13, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
     drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 1, 13, "uname -n -o");
 
