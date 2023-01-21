@@ -49,6 +49,7 @@ public:
     int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
     int totalManualColors = 8;
     int totalRandomizedColors;
+    char* newSelectedDesktopEnv = nullptr;
     char* SESSION_KEY = nullptr;
     int SESSION_KEY_LENGTH;
     int maxTitleBarItemTreeDepth = 2;
@@ -60,21 +61,45 @@ public:
     int maxUserpassLen = 255;
     int visibleAuthStrLen = 50;
 
-    // Error Text
-    char* loginFailed_text;
-    char* loginSuccess_text;
-    char* logoutFailed_text;
-    char* logoutSuccess_text;
-    char* emptyCredPassed;
-    char* incorrectCred;
+
+    char* uuid;
+    char* usrGroup;
+    char* getUserFullname;
+    char* usrHomeDir = nullptr;
+    char* usrShell;
+    char* getSystemUname;
+    char* setUserDesktopEnv;
+    char* currentUserDesktopEnv;
+    char* availableUserDesktopEnv;
+    char* getSystemBasicInfo;
+    char* shutdown;
+    char* sleep;
+    char* restart;
+    char* dateTime;
+    char* calender;
+    char* cpuStatus;
+    char* networkStatus;
+
+
+    // Alert Text
+    char** loginFailed_text;
+    char** loginSuccess_text;
+    char** logoutFailed_text;
+    char** logoutSuccess_text;
+    char** emptyCredPassed;
+    char** incorrectCred;
 
     // CMD Varables;
-    char* getUserFullname;
-    char* getSystemUname;
-    char* usrHomeDir = nullptr;
+    char* uuidCMD;
+    char* usrGroupCMD;
+    char* getUserFullnameCMD;
+    char* usrHomeDirCMD = nullptr;
+    char* usrShellCMD;
+    char* getSystemUnameCMD;
+    char* setUserDesktopEnvCMD;
     char* currentUserDesktopEnvCMD;
     char* availableUserDesktopEnvCMD;
-    char* getSystemBasicInfo;
+    char* getSystemBasicInfoCMD;
     char* shutdownCMD;
     char* sleepCMD;
     char* restartCMD;
@@ -82,6 +107,7 @@ public:
     char* calenderCMD;
     char* cpuStatusCMD;
     char* networkStatusCMD;
+
     int refresh=0;
     int exit=0;
 };
@@ -93,7 +119,7 @@ public:
     void load_default_keyValues();
     void load_default_softwareInfo();
     void load_default_lang();
-    void load_default_errorText();
+    void load_default_alertText();
 //};
 
 CONFIG config;

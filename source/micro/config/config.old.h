@@ -1,103 +1,11 @@
-#ifndef HALKADM_CONFIG_H
-#define HALKADM_CONFIG_H
+#ifndef halkaDM_micro_H
+#define halkaDM_micro_H
 
 #include <locale.h>
-//#include <ncurses.h>
+#include <ncurses.h>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
-
-
-
-class CONFIG{
-public:
-
-    // Language Variable Config
-    char* loginBTN_text;
-    char* logoutBTN_text;
-    char* shutdownBTN_text;
-    char* restartBTN_text;
-    char* sleepBTN_text;
-    char* calenderBTN_text;
-    char* cpuStatusBTN_text;
-    char* networkStatusBTN_text;
-    char* refreshBTN_text;
-    char* exitBTN_text;
-    char* powerBTN_text;
-    char* utilitiesBTN_text;
-    char* desktopENVBTN_text;
-    char* defaultDesktopENV_text;
-    char* usernameFieldID_text;
-    char* userpassFieldID_text;
-
-
-    // Software Info
-    char* package;
-
-    // Default KeyValues
-    char KEY_ESCAPE = '\x1b';
-    int asciiColors[] = {
-        COLOR_BLACK,
-        COLOR_GREEN,
-        COLOR_RED,
-        COLOR_YELLOW,
-        COLOR_WHITE,
-        COLOR_MAGENTA,
-        COLOR_BLUE,
-        COLOR_CYAN
-    };
-    int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
-    int totalManualColors = 8;
-    int totalRandomizedColors;
-    char* SESSION_KEY = nullptr;
-    int SESSION_KEY_LENGTH;
-    int maxTitleBarItemTreeDepth = 2;
-    char** titleBarSubItems;
-    char** titleBarSubItemsCMD;
-    int usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
-    int userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
-    int maxUsernameLen = 32;
-    int maxUserpassLen = 255;
-    int visibleAuthStrLen = 50;
-
-    // Error Text
-    char* loginFailed_text;
-    char* loginSuccess_text;
-    char* logoutFailed_text;
-    char* logoutSuccess_text;
-    char* emptyCredPassed;
-    char* incorrectCred;
-
-    // CMD Varables;
-    char* getUserFullname;
-    char* getSystemUname;
-    char* usrHomeDir = nullptr;
-    char* currentUserDesktopEnvCMD;
-    char* availableUserDesktopEnvCMD;
-    char* getSystemBasicInfo;
-    char* shutdownCMD;
-    char* sleepCMD;
-    char* restartCMD;
-    char* dateTimeCMD;
-    char* calenderCMD;
-    char* cpuStatusCMD;
-    char* networkStatusCMD;
-    int refresh=0;
-    int exit=0;
-};
-
-//class DEFAULT_CONFIG{
-//public:
-
-    void load_default_CMD();
-    void load_default_keyValues();
-    void load_default_softwareInfo();
-    void load_default_lang();
-    void load_default_errorText();
-//};
-
-CONFIG config;
-// DEFAULT_CONFIG default_config;
 
 char package[] = "halkaDM:nano|testing";
 char KEY_ESCAPE = '\x1b';
@@ -138,9 +46,9 @@ int totalManualColors = 8;
 char currentDesktopENV[] = "ubuntu";
 char* usrHomeDir = nullptr; // getent passwd username | cut -d: -f6
 
-int currentTitleID = 0; // not included
+int currentTitleID = 0;
 
-int maxSubItemElementLen=16; // Not Included
+int maxSubItemElementLen=16;
 
 // Status {Visible_Text,...}
 //        {SECTION, ...}
@@ -167,7 +75,7 @@ char titleBarItems[][30] = {
 
 };
 
-/*char subItemsCmd[][10][55] = {
+char subItemsCmd[][10][55] = {
     {
         "echo Sleep_clked",
         "sudo shutdown -r now",
@@ -182,7 +90,7 @@ char titleBarItems[][30] = {
         "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev"
     }
 
-};*/
+};
 
 int maxTitleBarItemTreeDepth = 2;
 
