@@ -1,7 +1,7 @@
 #include "CMDexecutor.h"
 #include "AuthManagement.h"
 #include "../lib/dataHandling.h"
-#include "../config/config.new.h"
+#include "../config/config.h"
 
 int AUTH_MANAGEMENT::authCheck(char* usrHomeDir, char* username, char* userpass){
     // On Auth Success Create Session File and source file for sourcing

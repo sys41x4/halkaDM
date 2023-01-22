@@ -1,4 +1,5 @@
 #include "../config/config.h"
+#include "../config/config.cpp"
 #include "../lib/cryptography.h"
 #include "../lib/cryptography.cpp"
 #include "../lib/security.h"
@@ -24,6 +25,16 @@
 // #include <openssl/evp.h>
 
 using namespace std;
+
+
+//
+/* load Default config Data
+load_default_CMD();
+load_default_keyValues();
+load_default_softwareInfo();
+load_default_lang();
+load_default_alertText();*/
+
 
 /*
 // TitleBar Item ID List
@@ -63,7 +74,7 @@ int *loginColourMatrixConf;
 // Import Classes
 // HALKADM_CRYPTO halkadm_crypto;
 // CMD_EXECUTOR cmd_executor;
-DATA data_handler;
+// DATA data_handler;
 HALKADM_SECURITY halkadm_security;
 DRAW draw;
 SESSION_MANAGEMENT session_management;
@@ -178,7 +189,7 @@ void show_datetime(WINDOW *win, int y, int x){
     FILE *pp;
     cbreak();
 
-    if ((pp = popen("/usr/bin/date | tr -s '\n' ' '", "r")) != 0) {
+    if ((pp = popen(config.dateTimeCMD, "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
             waddstr(win, buffer);
@@ -253,9 +264,13 @@ void updateRequestedUSRENV(){
     FILE *pp;
     cbreak();
     char defaultEnv[] = "Default";
-    char cmd[100] = "sudo cat /var/lib/AccountsService/users/";
+    /*char cmd[100] = "sudo cat /var/lib/AccountsService/users/";
     strcat(cmd, username);
-    strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
+    strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");*/
+    char* cmd;
+    cmd = data_handler.replaceStr(cmd, config.currentUserDesktopEnvCMD, "$[", "]$", "USER", username);
+    // draw_charArr(mainScreenWin, winMaxY-2, 0, 12, cmd);
+    // wrefresh(mainScreenWin);
     if ((pp = popen(cmd, "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
@@ -286,9 +301,7 @@ void genProfilePicture(int h, int w, int y, int x){
     }
     wrefresh(accountPicBox);
 }
-
-
-void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, const char* title, const char* msg){
+void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char* title, char* msg){
 
    /* If is_cmd==1,  then the supplied char array, will be eecuted and the output will be printed in the message box
       else if is_cmd==0, then the message will directly be printed in the message box
@@ -366,6 +379,107 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, const
     }while(1);
 }
 
+void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, const char* title, const char* msg){
+    char* arr = strdup(title);
+    char* arr2 = strdup(msg);
+    //free(title);free(msg);
+    messageBoxWindow(h, w, y, x, is_cmd, colorID, arr, arr2);
+    free(arr);free(arr2);
+}
+
+void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char seperator, char* flatKeyValueArr){
+
+    char* msgBoxKey=nullptr;
+    char* msgBoxValue=nullptr;
+
+    msgBoxKey = data_handler.getFlatKey(msgBoxKey, seperator, flatKeyValueArr);
+    msgBoxValue = data_handler.getFlatValue(msgBoxValue, seperator, flatKeyValueArr);
+    messageBoxWindow(h, w, y, x, is_cmd, colorID, msgBoxKey, msgBoxValue);
+    if(msgBoxKey!=nullptr){free(msgBoxKey);msgBoxKey=nullptr;}
+    if(msgBoxValue!=nullptr){free(msgBoxValue);msgBoxValue=nullptr;}
+
+}
+
+void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char seperator, const char* flatKeyValueArr){
+    char* arr = strdup(flatKeyValueArr);
+    //free(flatKeyValueArr);
+    messageBoxWindow(h, w, y, x, is_cmd, colorID, seperator, arr);
+    if(arr!=nullptr){free(arr);arr=nullptr;}
+}
+
+/*void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, const char* title, const char* msg){
+
+     // else if is_cmd==0, then the message will directly be printed in the message box
+
+    FILE *pp;
+    int ch;
+
+    messageBoxBorderWindow = newwin(h, w, y, x);
+    messageBox_msg = newwin(h-6, w-4, y+4, x+2);
+
+    box(messageBoxBorderWindow, 0, 0);
+
+    // Draw Message Box Title
+
+    draw_charArr(messageBoxBorderWindow, 2, (w-(sizeof(title)/sizeof(title[0])))/2, colorID, title);
+
+    wrefresh(messageBoxBorderWindow);
+
+    noecho();
+    keypad(messageBox_msg, TRUE);
+
+    wmove(messageBox_msg, 0, 0);
+
+    if(is_cmd==1){
+
+        // Print CMD Output
+        char cmd[100] = "sudo python3 /etc/halkaDM/scripts/config.parser.py ";
+        strcat(cmd, msg);
+
+        if ((pp = popen(cmd, "r")) != 0) {
+            char buffer[BUFSIZ];
+            while (fgets(buffer, sizeof(buffer), pp) != 0) {
+
+                waddstr(messageBox_msg, buffer);
+            }
+            wrefresh(messageBox_msg);
+            pclose(pp);
+        }
+    }
+    else{
+        mvwprintw(messageBox_msg, 0, 0, msg);
+        wrefresh(messageBox_msg);
+    }
+
+
+    do{
+        ch = wgetch(messageBox_msg);     // refresh, accept single keystroke of input 
+        if((ch == KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == 'w') || (ch == 'a') || (ch == 's') || (ch == 'd') || (ch == '4') || (ch == '8') || (ch == '2') || (ch == '6') || (ch == '5') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
+
+            wclear(messageBox_msg);
+            werase(messageBox_msg);
+            // delwin(messageBox_msg);
+
+            wclear(messageBoxBorderWindow);
+            werase(messageBoxBorderWindow);
+            // delwin(messageBoxBorderWindow);
+
+            wrefresh(messageBox_msg);
+            wrefresh(messageBoxBorderWindow);
+
+            // delwin(messageBox_msg);
+            // delwin(messageBoxBorderWindow);
+
+            genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+            break;
+        }
+        else if(ch == '\t'){
+            // login_passField(win, (loginBoxMaxY/2), (loginBoxMaxX/4)+14);
+        }
+        else{}
+    }while(1);
+}*/
+
 void fill_available_desktop_environments(){
     FILE *pp;
     // Should be initiated only once during initial Memory allocation setup
@@ -373,7 +487,7 @@ void fill_available_desktop_environments(){
     int i=0, j=0;
     int k;
 
-    if ((pp = popen("ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'", "r")) != 0) {
+    if ((pp = popen(config.availableUserDesktopEnvCMD, "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
 
@@ -660,11 +774,14 @@ void filluserFullName(char* username){
     if(userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 1, userFullName);
         free(userFullName);
+        userFullName = nullptr;
     }
     // free(userFullName);
-    char cmd[250] = "getent passwd ";
-    strcat(cmd, username);
-    strcat(cmd, " | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
+    char* cmd;
+    // char cmd[250] = "getent passwd ";
+    // strcat(cmd, username);
+    // strcat(cmd, " | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
+    cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
     userFullName = cmd_executor.fetchExecOutput(userFullName, cmd);
     /*wattron(mainScreenWin, COLOR_PAIR(13));
     mvwaddch(mainScreenWin,(winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2)-1,  ' ');
@@ -674,14 +791,14 @@ void filluserFullName(char* username){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 13, userFullName);
         wrefresh(mainScreenWin);
     }
-    else{free(userFullName);}
+    // else{free(userFullName);}
 //    wrefresh(mainScreenWin);
 //    draw_charArr(mainScreenWin, (winMaxY-2)-1, winMaxX-(strlen(userFullName)+2), 12, userFullName);
 }
 
 int authenticateButton(){
 
-    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 13, " LOGIN ");
+    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 13, config.loginBTN_text);
 
     wrefresh(authBox);
 
@@ -696,23 +813,37 @@ int authenticateButton(){
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
+            //char* msgBoxKey=nullptr;
+            //char* msgBoxValue=nullptr;
             if(strlen(username)<=0 || strlen(userpass)<=0){
-                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, "Login Failed", "Empty Credentials Passed");
+                //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, "Login Failed", "Empty Credentials Passed");
+                /*msgBoxKey = data_handler.getFlatKey(msgBoxKey, '\6', config.emptyCredPassed);
+                msgBoxValue = data_handler.getFlatValue(msgBoxValue, '\6', config.emptyCredPassed);
+                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, msgBoxKey, msgBoxValue);*/
+                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, '\6', config.emptyCredPassed);
             }
-            else if(auth_management.authCheck(usrHomeDir, username, userpass)==1){
-                session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
-                //createSession();
-                session_management.createSession(currentDesktopENV, usrHomeDir, username);
+            else if(auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
+                //session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+                session_management.createSession(currentDesktopENV, config.usrHomeDir, username);
+                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
+//                draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 12, "xzc");
+//                wrefresh(mainScreenWin);
             }
             else{
-                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Login Failed", "Incorrect Credentials");
+//                msgBoxKey = data_handler.getFlatKey(msgBoxKey, '\6', config.incorrectCred);
+//               msgBoxValue = data_handler.getFlatValue(msgBoxValue, '\6', config.incorrectCred);
+                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, '\6', config.incorrectCred);
             }
+
+
+            //if(msgBoxKey!=nullptr){free(msgBoxKey);msgBoxKey=nullptr;}
+            //if(msgBoxValue!=nullptr){free(msgBoxValue);msgBoxValue=nullptr;}
             retCode = 0;break;
         }
    // else{}
     }while(1);
 
-    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 9, " LOGIN ");
+    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 9, config.loginBTN_text);
 
     wrefresh(authBox);
 
@@ -846,18 +977,18 @@ void drawAuthBox(int maxY, int maxX, int minY, int minX){
     box(authBox, 0, 0);
 
     // Draw Auth Map
-    gen_randColorMap(authBox, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
+    //gen_randColorMap(authBox, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
     // Auth Section //
 
     // Username Field
-    mvwprintw(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX/4)+5, "USER : ");
-
+    mvwprintw(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX/4)+5, config.usernameFieldID_text);
+    waddstr(authBox, " :");
     // Userpass Field
-    mvwprintw(authBox, (loginBoxMaxY/2), (loginBoxMaxX/4)+5, "PASS : ");
-
+    mvwprintw(authBox, (loginBoxMaxY/2), (loginBoxMaxX/4)+5, config.userpassFieldID_text);
+    waddstr(authBox, " :");
     // Login Button
-    mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, " LOGIN ");
+    mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, config.loginBTN_text);
 
 
     wrefresh(authBox);
@@ -936,7 +1067,7 @@ void freeMemory(){
 void allocateMemory(){
 
     // Create SESSION_KEY | SIZE 33
-    SESSION_KEY = static_cast<char*>(std::malloc(SESSION_KEY_LENGTH * sizeof(char)));
+//    SESSION_KEY = static_cast<char*>(std::malloc(SESSION_KEY_LENGTH * sizeof(char)));
     // createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
 
     // createSessionKey();
@@ -945,19 +1076,19 @@ void allocateMemory(){
 
 
     // Allocate Username Space
-    username = static_cast<char*>(std::malloc(maxUsernameLen * sizeof(char)));
-    visible_username = static_cast<char*>(std::malloc(visibleAuthStrLen * sizeof(char)));
+    username = static_cast<char*>(std::malloc(config.maxUsernameLen * sizeof(char)));
+    visible_username = static_cast<char*>(std::malloc(config.visibleAuthStrLen * sizeof(char)));
     username[0] = '\0';
     visible_username[0] = '\0';
 
     // Allocate Userpass Space
-    userpass = static_cast<char*>(std::malloc(maxUserpassLen * sizeof(char)));
-    visible_userpass = static_cast<char*>(std::malloc(visibleAuthStrLen * sizeof(char)));
+    userpass = static_cast<char*>(std::malloc(config.maxUserpassLen * sizeof(char)));
+    visible_userpass = static_cast<char*>(std::malloc(config.visibleAuthStrLen * sizeof(char)));
     userpass[0] = '\0';
     visible_userpass[0] = '\0';
 
     // TitleBar Item Tree Depth | Storage Space Allocation
-    titleBarItemTree = static_cast<int*>(std::malloc(maxTitleBarItemTreeDepth * sizeof(int)));
+    titleBarItemTree = static_cast<int*>(std::malloc(config.maxTitleBarItemTreeDepth * sizeof(int)));
 
     // Allocate space for config list for loginColourMatrix
     loginColourMatrixConf = static_cast<int*>(std::malloc(4 * sizeof(int)));
@@ -1004,10 +1135,10 @@ void initWindow(){
     initColor();
 
 
-    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 13, package);
+    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 13, config.package);
 //    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(SESSION_KEY)+2), 13, SESSION_KEY);
-    drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 1, 13, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
-    drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 1, 13, "uname -n -o");
+    drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 1, 13, config.getSystemBasicInfoCMD);
+    drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 1, 13, config.getSystemUnameCMD);
 
     refresh();
 
@@ -1020,10 +1151,10 @@ void initWindow(){
 //     list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
 
     //// UserName Visibility colorMap
-    authChrVisibilityPattern(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10, usernameVisibilityConf);
+    authChrVisibilityPattern(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10, config.usernameVisibilityConf);
 
     //// UserPass Visibility colorMap
-    authChrVisibilityPattern(authBox, (loginBoxMaxY/2), loginBoxMaxX-10, userpassVisibilityConf);
+    authChrVisibilityPattern(authBox, (loginBoxMaxY/2), loginBoxMaxX-10, config.userpassVisibilityConf);
 
 
     // Set Login Matrix Config
@@ -1043,11 +1174,20 @@ void initWindow(){
 
 int main(int argc, char **argv)
 {
+    // load Default config Data
+    load_default_CMD();
+    load_default_keyValues();
+    load_default_softwareInfo();
+    load_default_lang();
+    load_default_alertText();
+
     initscr();
     start_color();
     initWindow();
     int id=0;
     genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
+    // Draw Auth Map
+    gen_randColorMap(authBox, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
     do{
         // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
@@ -1071,3 +1211,4 @@ int main(int argc, char **argv)
     freeMemory();
     return 0;
 }
+
