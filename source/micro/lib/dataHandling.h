@@ -9,6 +9,9 @@
 
 class DATA{
 public:
+    int getCharFreq(char character, char* arr);
+    int maxFlatItemLen(char character, char* arr);
+
     char* replaceStr(char* arrTo, char* arrFrom, const char* startBound, const char* endBound, const char* replacementOf, const char* replaceBy);
     char* replaceStr(char* arrTo, char* arrFrom, char startBound[2], char endBound[2], const char* replacementOf, const char* replaceBy);
 

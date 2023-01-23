@@ -98,6 +98,22 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, char startBound[2], char endB
 }
 
 
+int DATA::getCharFreq(char character, char* arr){
+    int count=0;
+    for(int i=0;arr[i]!='\0';i++){if(arr[i]==character){count++;}}
+    return count;
+}
+
+int DATA::maxFlatItemLen(char character, char* arr){
+    int cnt=0;
+    int maxLen=0;
+    for(int i=0;arr[i]!='\0';i++){
+        if(arr[i]==character || arr[i+1]=='\0'){if(maxLen<cnt){maxLen=cnt;}cnt=0;}
+        else{cnt++;}
+    }
+    return maxLen;
+}
+
 char* DATA::flatKeyValue(char* arrTo, char seperator, const char* keyArr, const char* valueArr){
 
     /*int i;

@@ -18,6 +18,8 @@ public:
     char* shutdownBTN_text;
     char* restartBTN_text;
     char* sleepBTN_text;
+    char* powerList_text;
+    char* utilitiesList_text;
     char* calenderBTN_text;
     char* cpuStatusBTN_text;
     char* networkStatusBTN_text;
@@ -26,7 +28,7 @@ public:
     char* powerBTN_text;
     char* utilitiesBTN_text;
     char* desktopENVBTN_text;
-    char* defaultDesktopENV_text;
+    char* currentDesktopENV_text;
     char* usernameFieldID_text;
     char* userpassFieldID_text;
 
@@ -49,7 +51,7 @@ public:
     int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
     int totalManualColors = 8;
     int totalRandomizedColors;
-    char* newSelectedDesktopEnv = nullptr;
+    // char* newSelectedDesktopEnv = nullptr;
     char* SESSION_KEY = nullptr;
     int SESSION_KEY_LENGTH;
     int maxTitleBarItemTreeDepth = 2;
