@@ -10,8 +10,17 @@
 
 class AUTH_MANAGEMENT{
 public:
+    int chkCharAllowence(char character);
 
     int authCheck(char* usrHomeDir, char* username, char* userpass);
+
+//    struct pam_response *reply;
+
+//    int PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr);
+//    int chkPAMAuthStatus(char* username, char* password);
 };
+int PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr);
+int chkPAMAuthStatus(char* username, char* password);
+// AUTH_MANAGEMENT auth_management;
 
 #endif

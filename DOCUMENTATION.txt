@@ -2,7 +2,7 @@
 
 --[halkaDM:micro]--
 
-gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses
+gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam
 
 ---------------------------------------------------
 
@@ -14,6 +14,8 @@ cpu status [/usr/bin/mpstat]
 network status [/usr/sbin/tcpdump]
 available desktop environment [/usr/share/xsessions]
 jpg->ASCII ART [/usr/bin/jp2a]
+
+libpam0g-dev | PAM Authentication
 
 ----------------------------------------------------
 [Testing]

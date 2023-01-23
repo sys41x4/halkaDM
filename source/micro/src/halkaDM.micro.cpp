@@ -19,6 +19,8 @@
 #include <ctime>
 #include <cstring>
 #include <random>
+#include <security/pam_appl.h>
+#include <unistd.h>
 #include "../lib/draw.h"
 #include "../lib/draw.cpp"
 
@@ -81,6 +83,7 @@ SESSION_MANAGEMENT session_management;
 AUTH_MANAGEMENT auth_management;
 // HALKADM_CRYPTO halkadm_crypto;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void draw_charArr(WINDOW *win, int y, int x, int colorID, const char* arr){
     wattron(win, COLOR_PAIR(colorID));
@@ -93,6 +96,105 @@ void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
     mvwprintw(win, y, x, arr);
     wattroff(win, COLOR_PAIR(colorID));
 }
+
+
+// Test Codes
+
+// struct pam_response *reply;
+
+//function used to get user input
+/*int function_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
+{
+  *resp = reply;
+  return PAM_SUCCESS;
+}
+
+int chkpamAuth(char* username, char* password)
+{
+  /*if(argc != 2) {
+      fprintf(stderr, "Usage: check_user <username>\n");
+      exit(1);
+  }
+  const char *username;
+  username = argv[1];*
+
+  const struct pam_conv local_conversation = { function_conversation, NULL };
+  pam_handle_t *local_auth_handle = NULL; // this gets set by pam_start
+
+  int retval;
+
+  // local_auth_handle gets set based on the service
+  retval = pam_start("common-auth", username, &local_conversation, &local_auth_handle);
+
+  if (retval != PAM_SUCCESS)
+  {
+    //std::cout << "pam_start returned " << retval << std::endl;
+    // exit(retval);
+    draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Error Starting PAM Service");
+    wrefresh(mainScreenWin);
+  }
+
+  reply = (struct pam_response *)malloc(sizeof(struct pam_response));
+
+  // *** Get the password by any method, or maybe it was passed into this function.
+  // reply[0].resp = getpass("Password: ");
+  reply[0].resp = password;
+  reply[0].resp_retcode = 0;
+
+  retval = pam_authenticate(local_auth_handle, 0);
+
+  if (retval != PAM_SUCCESS)
+  {
+    if (retval == PAM_AUTH_ERR)
+    {
+//      std::cout << "Authentication failure." << std::endl;
+      draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Authentication Failure");
+      wrefresh(mainScreenWin);
+    }
+    else
+    {
+     // std::cout << "pam_authenticate returned " << retval << std::endl;
+     draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "pam_authenticate returned");
+     wrefresh(mainScreenWin);
+    }
+    // exit(retval);
+  }
+
+  // std::cout << "Authenticated." << std::endl;
+  draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Authenticated");
+  wrefresh(mainScreenWin);
+
+  retval = pam_end(local_auth_handle, retval);
+
+  if (retval != PAM_SUCCESS)
+  {
+//    std::cout << "pam_end returned " << retval << std::endl;
+    draw_charArr(mainScreenWin, winMaxY-3, 0, 13, "pam_end returned");
+    wrefresh(mainScreenWin);
+    //exit(retval);
+  }
+
+  return retval;
+}*/
+
+// Test Codes End
+
+
+
+
+
+
+/*void draw_charArr(WINDOW *win, int y, int x, int colorID, const char* arr){
+    wattron(win, COLOR_PAIR(colorID));
+    mvwprintw(win, y, x, arr);
+    wattroff(win, COLOR_PAIR(colorID));
+}
+
+void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
+    wattron(win, COLOR_PAIR(colorID));
+    mvwprintw(win, y, x, arr);
+    wattroff(win, COLOR_PAIR(colorID));
+}*/
 
 
 void setLoginMatrixWindow(WINDOW *win){
@@ -259,38 +361,6 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
         }
     }
 }
-
-/*void updateRequestedUSRENV(){
-    FILE *pp;
-    cbreak();
-    //char defaultEnv[] = "Default";
-    int titlebarCoordY, titlebarCoordX;
-    getmaxyx(titleBar_subwin, titlebarCoordY, titlebarCoordX);
-    if(titleBarItemTree[0]==2){wattron(titleBar_subwin, COLOR_PAIR(1));}
-     wmove(titleBar_subwin, 1, titlebarCoordX-(strlen(config.currentDesktopENV_text)+strlen(config.desktopENVBTN_text)+3+3));
-     wprintw(titleBar_subwin, config.desktopENVBTN_text);
-     wprintw(titleBar_subwin, " : ");
-     wprintw(titleBar_subwin, config.currentDesktopENV_text);
-     if(titleBarItemTree[0]==2){wattroff(titleBar_subwin, COLOR_PAIR(1));}
-     wrefresh(titleBar_subwin);
-    //char cmd[100] = "sudo cat /var/lib/AccountsService/users/";
-    //strcat(cmd, username);
-    //strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
-    char* cmd;
-    cmd = data_handler.replaceStr(cmd, config.currentUserDesktopEnvCMD, "$[", "]$", "USER", username);
-    // draw_charArr(mainScreenWin, winMaxY-2, 0, 12, cmd);
-    // wrefresh(mainScreenWin);
-    if ((pp = popen(cmd, "r")) != 0) {
-        char buffer[BUFSIZ];
-        //free(config.currentDesktopENV_text);
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            for(int i=5; i<strlen(buffer)+4; i++){config.currentDesktopENV_text[i] = buffer[i-5];}//titleBarItems[2][i]=buffer[i-5];};
-            //int i=0;
-            // while(buffer[i]!='\0'){titleBarItems[2][i+5]=buffer[i];i++;}
-        }
-        pclose(pp);
-    }
-}*/
 
 void genProfilePicture(int h, int w, int y, int x){
     // Draw Random bitmap
@@ -724,15 +794,17 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
 
         if(titleBarItemTree[0]==0){wattron(titlebar, COLOR_PAIR(colorID));}
         wmove(titlebar, 1, positionCoordX+spacingX);
-        waddstr(titlebar,titleBarItems[0]);
+        waddstr(titlebar,config.powerBTN_text);
         if(titleBarItemTree[0]==0){wattroff(titlebar, COLOR_PAIR(colorID));}
 
-        positionCoordX+=strlen(titleBarItems[0]);
+        positionCoordX+=strlen(config.powerBTN_text);
 
         if(titleBarItemTree[0]==1){wattron(titlebar, COLOR_PAIR(colorID));}
         wmove(titlebar, 1, positionCoordX+(spacingX)*2);
-        waddstr(titlebar, titleBarItems[1]);
+        waddstr(titlebar, config.utilitiesBTN_text);
         if(titleBarItemTree[0]==1){wattroff(titlebar, COLOR_PAIR(colorID));}
+
+
 
         if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(colorID));}
         wmove(titlebar, 1, titlebarCoordX-(strlen(config.currentDesktopENV_text)+strlen(config.desktopENVBTN_text)+3+spacingX));
@@ -742,8 +814,9 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
         if(titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(colorID));}
 
 
-        wmove(titlebar, 1, titlebarCoordX/2);
-        show_datetime(titlebar, 1, (titlebarCoordX/2)-16); // Show DateTime
+        //wmove(titlebar, 1, titlebarCoordX/2);
+//        show_datetime(titlebar, 1, (titlebarCoordX/2)-16); // Show DateTime
+        drawCMDStr(mainScreenWin, 1, (titlebarCoordX/2), 1, 1, 1, 9, config.dateTimeCMD); // Show DateTime
 
         wrefresh(titlebar);
 
@@ -767,20 +840,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             if(titleBarItemTree[0]==0){
                 titleBarItemTree[1]=0;
 
-                /*int r =  sizeof(powerSubItems)/sizeof(powerSubItems[0]);
-                int rc = sizeof(powerSubItems[0])/sizeof(powerSubItems[0][0]);
-                int c = sizeof(powerSubItems[0][0])/sizeof(powerSubItems[0][0][0]);
-                // titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
-                titleBarSubItems = data_handler.fillArray(r, rc, c, titleBarSubItems);
-
-                for(int i=0; i<r; i++){
-                    for(int j = 0; j < rc; j++){
-                        for(int k = 0; k < c; k++) {
-                            titleBarSubItems[i][j][k] = powerSubItems[i][j][k];
-                        }
-                    }
-                }
-                subItemListWin(rc, c, titlebarCoordY, spacingX, titleBarSubItems);*/
                 int itemIndex =  getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.powerList_text);
                 if(itemIndex>=0){
                     char* title = getSelectedSubItemNameByID('\7', config.powerList_text, title, itemIndex);
@@ -806,22 +865,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             else if(titleBarItemTree[0]==1){
                 titleBarItemTree[1]=0;
 
-/*                int r =  sizeof(utilitiesSubItems)/sizeof(utilitiesSubItems[0]);
-                int rc = sizeof(utilitiesSubItems[0])/sizeof(utilitiesSubItems[0][0]);
-                int c = sizeof(utilitiesSubItems[0][0])/sizeof(utilitiesSubItems[0][0][0]);
-                // titleBarSubItems = fillArray(r, rc, c, titleBarSubItems);
-                titleBarSubItems = data_handler.fillArray(r, rc, c, titleBarSubItems);
-
-                for(int i=0; i<r; i++){
-                    for(int j = 0; j < rc; j++){
-                        for(int k = 0; k < c; k++) {
-                            titleBarSubItems[i][j][k] = utilitiesSubItems[i][j][k];
-                        }
-                    }
-                }
-
-                subItemListWin(rc, c, titlebarCoordY, spacingX, titleBarSubItems);
-*/
                 int itemIndex =  getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.utilitiesList_text);
                 if(itemIndex>=0){
                     char* title = getSelectedSubItemNameByID('\7', config.utilitiesList_text, title, itemIndex);
@@ -848,16 +891,7 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             }
             else if(titleBarItemTree[0]==2){
                 titleBarItemTree[1]=0;
-                //int rows = sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]);
-//                int cols = sizeof(desktopEnvironmentsSubItems[0])/sizeof(desktopEnvironmentsSubItems[0][0]);
-                //int rows = distance(desktopEnvironmentsSubItems, desktopEnvironmentsSubItems + sizeof(desktopEnvironmentsSubItems) / sizeof(desktopEnvironmentsSubItems[0]));
 
-//                int rows = 0;
-
-//                for (int i = 0; desktopEnvironmentsSubItems[i][0] != '\0'; i++) {
-//                    rows++;
-//                }
-                // showsubItemListWin(titlebarCoordY, spacingX, 0, 13, '\7', config.availableUserDesktopEnv);
                 char* itemName =  getSelectedSubItemName(titlebarCoordY, spacingX, 0, 13, '\7', config.availableUserDesktopEnv, itemName);
                 char* title = strdup("Selected Environment");
                 messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
@@ -876,16 +910,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
                 free(config.currentDesktopENV_text);
                 config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, itemName);
                 free(itemName);free(title);
-                /*char** arr = static_cast<char**>(std::malloc(rows * sizeof(char*)));
-
-                for (int i = 0; i < rows; i++) {
-                    arr[i] = static_cast<char*>(std::malloc(cols * sizeof(char)));
-                    for (int j = 0; j < cols; j++) {
-                        arr[i][j] = desktopEnvironmentsSubItems[i][j];
-                    }
-                }*/
-
-                 // subItemListWin(rows, cols, titlebarCoordY, spacingX, desktopEnvironmentsSubItems);
             }
         }
 
@@ -898,31 +922,15 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
 void updateRequestedUSRENV(){
     FILE *pp;
     cbreak();
-    //draw_titlebar(titleBar_subwin, 1, 2);
-    //char defaultEnv[] = "Default";
-    /*int titlebarCoordY, titlebarCoordX;
-    getmaxyx(titleBar_subwin, titlebarCoordY, titlebarCoordX);
-    if(titleBarItemTree[0]==2){wattron(titleBar_subwin, COLOR_PAIR(1));}
-     wmove(titleBar_subwin, 1, titlebarCoordX-(strlen(config.currentDesktopENV_text)+strlen(config.desktopENVBTN_text)+3+3));
-     wprintw(titleBar_subwin, config.desktopENVBTN_text);
-     wprintw(titleBar_subwin, " : ");
-     wprintw(titleBar_subwin, config.currentDesktopENV_text);
-     if(titleBarItemTree[0]==2){wattroff(titleBar_subwin, COLOR_PAIR(1));}
-     wrefresh(titleBar_subwin);
-    /*char cmd[100] = "sudo cat /var/lib/AccountsService/users/";
-    strcat(cmd, username);
-    strcat(cmd, " 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");*/
+
     char* cmd;
     cmd = data_handler.replaceStr(cmd, config.currentUserDesktopEnvCMD, "$[", "]$", "USER", username);
-    // draw_charArr(mainScreenWin, winMaxY-2, 0, 12, cmd);
-    // wrefresh(mainScreenWin);
+
     if ((pp = popen(cmd, "r")) != 0) {
         char buffer[BUFSIZ];
         //free(config.currentDesktopENV_text);
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            for(int i=0; i<strlen(buffer)-1; i++){config.currentDesktopENV_text[i] = buffer[i];}//titleBarItems[2][i]=buffer[i-5];};
-            //int i=0;
-            // while(buffer[i]!='\0'){titleBarItems[2][i+5]=buffer[i];i++;}
+            for(int i=0; buffer[i+1]!='\0'; i++){config.currentDesktopENV_text[i] = buffer[i];}
         }
         pclose(pp);
     }
@@ -1025,31 +1033,30 @@ int authenticateButton(){
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
-            //char* msgBoxKey=nullptr;
-            //char* msgBoxValue=nullptr;
+
             if(strlen(username)<=0 || strlen(userpass)<=0){
-                //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, "Login Failed", "Empty Credentials Passed");
-                /*msgBoxKey = data_handler.getFlatKey(msgBoxKey, '\6', config.emptyCredPassed);
-                msgBoxValue = data_handler.getFlatValue(msgBoxValue, '\6', config.emptyCredPassed);
-                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, msgBoxKey, msgBoxValue);*/
                 messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, '\6', config.emptyCredPassed);
             }
-            else if(auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
+            else if(chkPAMAuthStatus(username, userpass)==PAM_SUCCESS && auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
                 //session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
+                // chkpamAuth(username, userpass);
                 session_management.createSession(currentDesktopENV, config.usrHomeDir, username);
-                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
+                //int PAMAuthStatus = chkPAMAuthStatus(username, userpass);
+                //if(PAMAuthStatus==PAM_SUCCESS){
+                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
+                //}
+                //else{messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, '\6', config.loginFailed_text);}*/
+//                  mvwaddch(mainScreenWin, winMaxY-2, 0, 'a'+PAMAuthStatus);
+//                  wrefresh(mainScreenWin);
+//                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 13, "status", 'a'+);
 //                draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 12, "xzc");
 //                wrefresh(mainScreenWin);
             }
             else{
-//                msgBoxKey = data_handler.getFlatKey(msgBoxKey, '\6', config.incorrectCred);
-//               msgBoxValue = data_handler.getFlatValue(msgBoxValue, '\6', config.incorrectCred);
                 messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, '\6', config.incorrectCred);
             }
 
 
-            //if(msgBoxKey!=nullptr){free(msgBoxKey);msgBoxKey=nullptr;}
-            //if(msgBoxValue!=nullptr){free(msgBoxValue);msgBoxValue=nullptr;}
             retCode = 0;break;
         }
    // else{}
@@ -1101,7 +1108,7 @@ int login_passField(WINDOW *win, int y, int x){
             break;
         }
         else if((userpassChrCount==0) && (ch == KEY_BACKSPACE)){}
-        else if(((userpassChrCount>=0) && (userpassChrCount<userpassLengthMax)) || ((userpassChrCount == userpassLengthMax) && (ch == KEY_BACKSPACE))){
+        else if(((userpassChrCount>=0) && (userpassChrCount<config.maxUserpassLen)) || ((userpassChrCount == config.maxUserpassLen) && (ch == KEY_BACKSPACE))){
             // gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
@@ -1109,7 +1116,8 @@ int login_passField(WINDOW *win, int y, int x){
                 userpass[userpassChrCount] = '\0';
                 mvwprintw(win, y, x+userpassChrCount, " ");
             }
-            else{
+//            else{
+            else if(auth_management.chkCharAllowence(ch)==1){
                 userpass[userpassChrCount] = ch;
                 userpassChrCount++;
             }
@@ -1152,7 +1160,7 @@ int login_userField(WINDOW *win, int y, int x){
             break;
         }
         else if((usernameChrCount==0) && (ch == KEY_BACKSPACE)){}
-        else if(((usernameChrCount>=0) && (usernameChrCount<usernameLengthMax)) || ((usernameChrCount == usernameLengthMax) && (ch == KEY_BACKSPACE))){
+        else if(((usernameChrCount>=0) && (usernameChrCount<config.maxUsernameLen)) || ((usernameChrCount == config.maxUsernameLen) && (ch == KEY_BACKSPACE))){
             // gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
@@ -1162,9 +1170,9 @@ int login_userField(WINDOW *win, int y, int x){
                 // waddch(win, ' ');
                 mvwprintw(win, y, x+usernameChrCount, " ");
             }
-            else{
-                username[usernameChrCount] = ch;
-                usernameChrCount++;
+            else if(auth_management.chkCharAllowence(ch)==1){
+                    username[usernameChrCount] = ch;
+                    usernameChrCount++;
             }
         }
 
@@ -1207,27 +1215,6 @@ void drawAuthBox(int maxY, int maxX, int minY, int minX){
 }
 
 
-/*void createSessionKey() {
-    std::random_device rd;
-    for (int i = 0; i < sizeof(SESSION_KEY); ++i) {
-        SESSION_KEY[i] = rd();
-    }
-    // create a hash object
-    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
-    // specify the hash function
-    EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
-    // calculate the hash
-    EVP_DigestUpdate(mdctx, SESSION_KEY, sizeof(SESSION_KEY));
-    unsigned char md_value[EVP_MAX_MD_SIZE];
-    unsigned int md_len;
-    EVP_DigestFinal_ex(mdctx, md_value, &md_len);
-    EVP_MD_CTX_free(mdctx);
-    // print the hash
-    //cout << "Hash: ";
-    //for(int i = 0; i < md_len; i++) cout << hex << (int)md_value[i];
-    //cout << endl;
-}*/
-
 void freeMemory(){
 
     // This function must be called before exiting the program to clear the system allocated memory space
@@ -1255,26 +1242,6 @@ void freeMemory(){
     free(desktopEnvironmentsSubItems);
 
 }
-
-/*void calculate_hash(AutoSeeded_RNG &rng) {
-    rng.randomize(SESSION_KEY, SESSION_KEY_LENGTH);
-    string hash = hash_string(SESSION_KEY, SESSION_KEY_LENGTH, "SHA-256");
-    // cout << "Hash: " << hash << endl;
-}*/
-
-/*void createSessionKey(int len, char* arr){
-    srand(time(NULL));
-    for (int i = 0; i < len; i++) {
-        // arr[i] = '!'+(rand() % 94);
-        arr[i] = 'a'+(rand() % 25);
-    }
-    //unsigned char result[MD5_DIGEST_LENGTH];
-    //MD5((unsigned char*)arr, strlen(arr), result);
-
-    //for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-    //    sprintf(&arr[i*2], "%02x", (unsigned int)result[i]);
-    //}
-}*/
 
 void allocateMemory(){
 
