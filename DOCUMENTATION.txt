@@ -15,7 +15,12 @@ network status [/usr/sbin/tcpdump]
 available desktop environment [/usr/share/xsessions]
 jpg->ASCII ART [/usr/bin/jp2a]
 
-libpam0g-dev | PAM Authentication
+--[sudo apt install]--
+libncurses5-dev libncursesw5-dev
+libpam0g-dev
+ncal
+sysstat
+tcpdump
 
 ----------------------------------------------------
 [Testing]
