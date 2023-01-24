@@ -29,13 +29,6 @@
 using namespace std;
 
 
-//
-/* load Default config Data
-load_default_CMD();
-load_default_keyValues();
-load_default_softwareInfo();
-load_default_lang();
-load_default_alertText();*/
 
 
 /*
@@ -184,14 +177,9 @@ void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
         wmove(win, i, x);
         for (int j = 0; j < w; j++) {
               randColorID = rand()%totalAvailableColour;
-   //         int fg = asciiColors[rand() % 8] + rand()%7;
-   //         int bg = asciiColors[rand() % 8] * rand()%15;
-   //         init_pair(randColorID, fg, bg);
-            // wattron(win, COLOR_PAIR(color));
             wattron(win, COLOR_PAIR(randColorID));
             waddch(win, 'A' + rand() % 26);
             wattroff(win, COLOR_PAIR(randColorID));
-            // wattroff(win, COLOR_PAIR(color));
         }
     }
     wrefresh(win);
@@ -626,6 +614,7 @@ char* getSelectedSubItemName(int minY, int minX, int highlightedItemIndex, int c
     return itemName;
 }
 
+/*
 void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
     // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
 
@@ -653,7 +642,7 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
             wrefresh(subItemListWindow);
 
 
-                ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
+                ch = wgetch(subItemListWindow);     // refresh, accept single keystroke of input 
                 if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
                     data_handler.freeArray(maxY-2, maxX-2, charArray);
                     wclear(subItemListWindow);
@@ -687,6 +676,7 @@ void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
     }
 
 }
+*/
 
 
 int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
@@ -767,9 +757,9 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
                     free(title);
                 }
 
-                char* title = getSelectedSubItemNameByID('\7', config.powerList_text, title, itemIndex);
-                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, title);
-                free(title);
+                //char* title = getSelectedSubItemNameByID('\7', config.powerList_text, title, itemIndex);
+                //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, title);
+                //free(title);
 
 
             }
@@ -845,6 +835,7 @@ void updateRequestedUSRENV(){
         }
         pclose(pp);
     }
+    free(cmd);
 }
 
 void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
@@ -904,15 +895,15 @@ void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 void filluserFullName(char* username){
     if(userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 1, userFullName);
-//        free(userFullName);
-        userFullName = nullptr;
+        free(userFullName);
+//        userFullName = nullptr;
     }
     // free(userFullName);
-    char* cmd;
+//    char* cmd;
     // char cmd[250] = "getent passwd ";
     // strcat(cmd, username);
     // strcat(cmd, " | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
-    cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
+    char* cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
     //draw_charArr(mainScreenWin, (winMaxY*0.75)-2, 0 , 13, cmd);
     userFullName = cmd_executor.fetchExecOutput(userFullName, cmd);
     /*wattron(mainScreenWin, COLOR_PAIR(13));
@@ -1139,7 +1130,7 @@ void freeMemory(){
     // This function must be called before exiting the program to clear the system allocated memory space
 
     // Free User SESSION_KEY allocated space
-    free(SESSION_KEY);
+  //  free(SESSION_KEY);
 
     // Free Username Space
     free(username);
@@ -1155,10 +1146,10 @@ void freeMemory(){
     free(loginColourMatrixConf);
 
     // Free Allocated Space of The Environment Names in 2d char Array
-    for (int i = 0; i < sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]); i++) {
+    /*for (int i = 0; i < sizeof(desktopEnvironmentsSubItems)/sizeof(desktopEnvironmentsSubItems[0]); i++) {
         free(desktopEnvironmentsSubItems[i]);
     }
-    free(desktopEnvironmentsSubItems);
+    free(desktopEnvironmentsSubItems);*/
 
 }
 
@@ -1193,7 +1184,7 @@ void allocateMemory(){
 
     // Allocate & Fill Space For Environment Names
     config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(config.availableUserDesktopEnv, config.availableUserDesktopEnvCMD);
-    fill_available_desktop_environments();
+    // fill_available_desktop_environments();
 }
 
 

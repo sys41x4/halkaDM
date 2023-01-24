@@ -113,9 +113,9 @@ void load_default_CMD(){
     // config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev");
     config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
     config.getSystemBasicInfoCMD = data_handler.cpArray(config.getSystemBasicInfoCMD, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
-    config.shutdownCMD = data_handler.cpArray(config.shutdownCMD, "sudo /usr/sbin/shutdown -h now");
-    config.sleepCMD = data_handler.cpArray(config.sleepCMD, "sudo systemctl suspend");
-    config.restartCMD = data_handler.cpArray(config.restartCMD, "sudo shutdown -r now");
+    config.shutdownCMD = data_handler.cpArray(config.shutdownCMD, "echo Shutting Down System && sudo /usr/sbin/shutdown -h now");
+    config.sleepCMD = data_handler.cpArray(config.sleepCMD, "echo System going to Sleep && sudo systemctl suspend");
+    config.restartCMD = data_handler.cpArray(config.restartCMD, "echo Restarting System && sudo shutdown -r now");
     config.dateTimeCMD = data_handler.cpArray(config.dateTimeCMD, "/usr/bin/date | tr -s '\n' ' '");
     config.calenderCMD = data_handler.cpArray(config.calenderCMD, "/usr/bin/cal");
     config.cpuStatusCMD = data_handler.cpArray(config.cpuStatusCMD, "/usr/bin/mpstat -P ALL");
