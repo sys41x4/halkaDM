@@ -23,8 +23,8 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, const char* startBound, const
         fullArrayLen++;
     }
     int newArrayLen = (replacementOccurence*replaceByLen)+fullArrayLen-(replacementOccurence*(replacementOfLen+4));
-    arrTo = static_cast<char*>(std::malloc(newArrayLen * sizeof(char)));
-
+    arrTo = static_cast<char*>(std::malloc(newArrayLen+1 * sizeof(char)));
+    arrTo[newArrayLen] = '\0';
     int j=0;
     int replaceCompleteCount = 0;
 
@@ -44,6 +44,7 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, const char* startBound, const
          else{arrTo[j]=arrFrom[i];}
          j++;
     }
+    //arrTo[newArrayLen] = '\0';
 
     return arrTo;
 }

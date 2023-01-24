@@ -102,11 +102,11 @@ void load_default_CMD(){
     // CMD Varables; // Specifically for Debian
     // Variable Identifier that is to be replaced [Format : $[<variable>]$]
     //                                            [ Requires 4 variable for position identification $,[,],$
-    config.uuidCMD = data_handler.cpArray(config.uuidCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d: -f3 | tr -s '\n' ' '");
-    config.usrGroupCMD = data_handler.cpArray(config.usrGroupCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d: -f4 | tr -s '\n' ' '");
-    config.getUserFullnameCMD = data_handler.cpArray(config.getUserFullnameCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
-    config.usrHomeDirCMD = data_handler.cpArray(config.usrHomeDirCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
-    config.usrShellCMD = data_handler.cpArray(config.usrShellCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d: -f7 | tr -s '\n' ' '");
+    config.uuidCMD = data_handler.cpArray(config.uuidCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f3 | tr -s '\n' ' '");
+    config.usrGroupCMD = data_handler.cpArray(config.usrGroupCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f4 | tr -s '\n' ' '");
+    config.getUserFullnameCMD = data_handler.cpArray(config.getUserFullnameCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f5 | tr -s '\n' ' '");
+    config.usrHomeDirCMD = data_handler.cpArray(config.usrHomeDirCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f6 | tr -s '\n' '/'");
+    config.usrShellCMD = data_handler.cpArray(config.usrShellCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -s '\n' ' '");
     config.getSystemUnameCMD = data_handler.cpArray(config.getSystemUnameCMD, "uname -n -o");
     config.currentUserDesktopEnvCMD = data_handler.cpArray(config.currentUserDesktopEnvCMD, "sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
     config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");

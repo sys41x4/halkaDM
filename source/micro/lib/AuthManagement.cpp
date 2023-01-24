@@ -89,7 +89,7 @@ int chkPAMAuthStatus(char* username, char* password)
 
   // *** Get the password by any method, or maybe it was passed into this function.
   // reply[0].resp = getpass("Password: ");
-  reply[0].resp = password;
+  reply[0].resp = strdup(password);
   reply[0].resp_retcode = 0;
 
   retval = pam_authenticate(local_auth_handle, 0);

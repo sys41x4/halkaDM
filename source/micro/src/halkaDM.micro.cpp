@@ -100,101 +100,12 @@ void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
 
 // Test Codes
 
-// struct pam_response *reply;
-
-//function used to get user input
-/*int function_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
-{
-  *resp = reply;
-  return PAM_SUCCESS;
-}
-
-int chkpamAuth(char* username, char* password)
-{
-  /*if(argc != 2) {
-      fprintf(stderr, "Usage: check_user <username>\n");
-      exit(1);
-  }
-  const char *username;
-  username = argv[1];*
-
-  const struct pam_conv local_conversation = { function_conversation, NULL };
-  pam_handle_t *local_auth_handle = NULL; // this gets set by pam_start
-
-  int retval;
-
-  // local_auth_handle gets set based on the service
-  retval = pam_start("common-auth", username, &local_conversation, &local_auth_handle);
-
-  if (retval != PAM_SUCCESS)
-  {
-    //std::cout << "pam_start returned " << retval << std::endl;
-    // exit(retval);
-    draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Error Starting PAM Service");
-    wrefresh(mainScreenWin);
-  }
-
-  reply = (struct pam_response *)malloc(sizeof(struct pam_response));
-
-  // *** Get the password by any method, or maybe it was passed into this function.
-  // reply[0].resp = getpass("Password: ");
-  reply[0].resp = password;
-  reply[0].resp_retcode = 0;
-
-  retval = pam_authenticate(local_auth_handle, 0);
-
-  if (retval != PAM_SUCCESS)
-  {
-    if (retval == PAM_AUTH_ERR)
-    {
-//      std::cout << "Authentication failure." << std::endl;
-      draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Authentication Failure");
-      wrefresh(mainScreenWin);
-    }
-    else
-    {
-     // std::cout << "pam_authenticate returned " << retval << std::endl;
-     draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "pam_authenticate returned");
-     wrefresh(mainScreenWin);
-    }
-    // exit(retval);
-  }
-
-  // std::cout << "Authenticated." << std::endl;
-  draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Authenticated");
-  wrefresh(mainScreenWin);
-
-  retval = pam_end(local_auth_handle, retval);
-
-  if (retval != PAM_SUCCESS)
-  {
-//    std::cout << "pam_end returned " << retval << std::endl;
-    draw_charArr(mainScreenWin, winMaxY-3, 0, 13, "pam_end returned");
-    wrefresh(mainScreenWin);
-    //exit(retval);
-  }
-
-  return retval;
-}*/
-
 // Test Codes End
 
 
 
 
 
-
-/*void draw_charArr(WINDOW *win, int y, int x, int colorID, const char* arr){
-    wattron(win, COLOR_PAIR(colorID));
-    mvwprintw(win, y, x, arr);
-    wattroff(win, COLOR_PAIR(colorID));
-}
-
-void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
-    wattron(win, COLOR_PAIR(colorID));
-    mvwprintw(win, y, x, arr);
-    wattroff(win, COLOR_PAIR(colorID));
-}*/
 
 
 void setLoginMatrixWindow(WINDOW *win){
@@ -993,7 +904,7 @@ void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 void filluserFullName(char* username){
     if(userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 1, userFullName);
-        free(userFullName);
+//        free(userFullName);
         userFullName = nullptr;
     }
     // free(userFullName);
@@ -1002,16 +913,17 @@ void filluserFullName(char* username){
     // strcat(cmd, username);
     // strcat(cmd, " | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
     cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
+    //draw_charArr(mainScreenWin, (winMaxY*0.75)-2, 0 , 13, cmd);
     userFullName = cmd_executor.fetchExecOutput(userFullName, cmd);
     /*wattron(mainScreenWin, COLOR_PAIR(13));
     mvwaddch(mainScreenWin,(winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2)-1,  ' ');
     wattroff(mainScreenWin, COLOR_PAIR(13));*/
-
+    free(cmd);
     if(userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 13, userFullName);
         wrefresh(mainScreenWin);
     }
-    // else{free(userFullName);}
+    else{free(userFullName);}
 //    wrefresh(mainScreenWin);
 //    draw_charArr(mainScreenWin, (winMaxY-2)-1, winMaxX-(strlen(userFullName)+2), 12, userFullName);
 }
@@ -1038,12 +950,19 @@ int authenticateButton(){
                 messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, '\6', config.emptyCredPassed);
             }
             else if(chkPAMAuthStatus(username, userpass)==PAM_SUCCESS && auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
+//            else if(auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
+//            else if(chkPAMAuthStatus(username, userpass)==PAM_SUCCESS){
                 //session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
                 // chkpamAuth(username, userpass);
-                session_management.createSession(currentDesktopENV, config.usrHomeDir, username);
+              // session_management.createSession(currentDesktopENV, config.usrHomeDir, username);
                 //int PAMAuthStatus = chkPAMAuthStatus(username, userpass);
                 //if(PAMAuthStatus==PAM_SUCCESS){
                     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
+/*                    int result = system("startx");
+                    if (result != 0) {
+                        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, "Login Failed", "Failed to start Xsession");
+                    }
+*/
                 //}
                 //else{messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, '\6', config.loginFailed_text);}*/
 //                  mvwaddch(mainScreenWin, winMaxY-2, 0, 'a'+PAMAuthStatus);
@@ -1224,7 +1143,7 @@ void freeMemory(){
 
     // Free Username Space
     free(username);
-    free(visible_userpass);
+    free(visible_username);
     // Free Userpass Space
     free(userpass);
     free(visible_userpass);
