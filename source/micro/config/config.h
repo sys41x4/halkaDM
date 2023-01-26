@@ -11,6 +11,44 @@
 
 class CONFIG{
 public:
+char* capslock;
+char* err_alloc;
+char* err_bounds;
+char* err_chdir;
+char* err_console_dev;
+char* err_dgn_oob;
+char* err_domain;
+char* err_hostname;
+char* err_mlock;
+char* err_null;
+char* err_pam;
+char* err_pam_abort;
+char* err_pam_acct_expired;
+char* err_pam_auth;
+char* err_pam_authinfo_unavail;
+char* err_pam_authok_reqd;
+char* err_pam_buf;
+char* err_pam_cred_err;
+char* err_pam_cred_expired;
+char* err_pam_cred_insufficient;
+char* err_pam_cred_unavail;
+char* err_pam_maxtries;
+char* err_pam_perm_denied;
+char* err_pam_session;
+char* err_pam_sys;
+char* err_pam_user_unknown;
+char* err_path;
+char* err_perm_dir;
+char* err_perm_group;
+char* err_perm_user;
+char* err_pwnam;
+char* err_user_gid;
+char* err_user_init;
+char* err_user_uid;
+char* err_xsessions_dir;
+char* err_xsessions_open;
+
+    char* service_name;
 
     // Language Variable Config
     char* loginBTN_text;

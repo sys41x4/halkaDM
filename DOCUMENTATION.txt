@@ -2,7 +2,7 @@
 
 --[halkaDM:micro]--
 
-gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam
+gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb
 
 ---------------------------------------------------
 

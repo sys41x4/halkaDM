@@ -12,6 +12,8 @@
 #include "../lib/sessionManagement.cpp"
 #include "../lib/AuthManagement.h"
 #include "../lib/AuthManagement.cpp"
+// #include "../lib/login.h"
+// #include "../lib/login.c"
 #include <locale.h>
 #include <ncurses.h>
 #include <algorithm>
@@ -19,10 +21,17 @@
 #include <ctime>
 #include <cstring>
 #include <random>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include <security/pam_appl.h>
+#include <xcb/xcb.h>
+#include <utmp.h>
 #include <unistd.h>
 #include "../lib/draw.h"
 #include "../lib/draw.cpp"
+#include "../lib/pam.h"
+#include "../lib/pam.c"
 
 // #include <openssl/evp.h>
 
@@ -92,7 +101,6 @@ void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
 
 
 // Test Codes
-
 // Test Codes End
 
 
@@ -918,6 +926,60 @@ void filluserFullName(char* username){
 //    wrefresh(mainScreenWin);
 //    draw_charArr(mainScreenWin, (winMaxY-2)-1, winMaxX-(strlen(userFullName)+2), 12, userFullName);
 }
+#define DISPLAY      ":1"
+#define VT           "vt01"
+static bool testing = false;
+static pthread_t login_thread;
+static pid_t x_server_pid;
+
+
+static void stop_x_server() {
+    if (x_server_pid != 0) {
+        kill(x_server_pid, SIGKILL);
+    }
+}
+
+static void sig_handler(int signo) {
+    stop_x_server();
+}
+static void start_x_server(const char *display, const char *vt) {
+    x_server_pid = fork();
+    if (x_server_pid == 0) {
+        char cmd[32];
+        snprintf(cmd, sizeof(cmd), "/usr/bin/X %s %s", display, vt);
+        execl("/bin/bash", "/bin/bash", "-c", cmd, NULL);
+        printf("Failed to start X server");
+        exit(1);
+    } else {
+        // TODO: Wait for X server to start
+        sleep(1);
+    }
+}
+
+
+void initiateSession(){
+    pid_t child_pid;
+    const char *display = DISPLAY;
+    const char *vt = VT;
+    if (!testing) {
+        signal(SIGSEGV, sig_handler);
+        signal(SIGTRAP, sig_handler);
+        start_x_server(display, vt);
+    }
+    setenv(strdup("DISPLAY"), display, true);
+
+//    if (login(strdup(username), strdup(userpass), &child_pid)) {
+    if (login(username, userpass, &child_pid)) {
+    // Wait for child process to finish (wait for logout)
+    int status;
+    waitpid(child_pid, &status, 0); // TODO: Handle errors
+
+
+    logout();
+//    stop_x_server();
+    } else { messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginFailed_text);}
+    stop_x_server();
+}
 
 int authenticateButton(){
 
@@ -949,6 +1011,10 @@ int authenticateButton(){
                 //int PAMAuthStatus = chkPAMAuthStatus(username, userpass);
                 //if(PAMAuthStatus==PAM_SUCCESS){
                     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
+                    initiateSession();
+                    //auth(desktop, username, userpass);
+//                    cmd_executor.exec("su sys41x4 -c 'export DISPLAY=:0; startx'");
+//                       cmd_executor.exec("");
 /*                    int result = system("startx");
                     if (result != 0) {
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, "Login Failed", "Failed to start Xsession");

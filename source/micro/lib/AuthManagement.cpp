@@ -59,7 +59,7 @@ int PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_
 }
 
 //int AUTH_MANAGEMENT::chkPAMAuthStatus(char* username, char* password)
-int chkPAMAuthStatus(char* username, char* password)
+int chkPAMAuthStatus(char* user, char* password)
 {
   /*if(argc != 2) {
       fprintf(stderr, "Usage: check_user <username>\n");
@@ -72,6 +72,8 @@ int chkPAMAuthStatus(char* username, char* password)
   pam_handle_t *local_auth_handle = NULL; // this gets set by pam_start
 
   int retval;
+
+  char* username = strdup(user);
 
   // local_auth_handle gets set based on the service
   retval = pam_start("common-auth", username, &local_conversation, &local_auth_handle);

@@ -36,7 +36,45 @@ void load_default_softwareInfo(){
 };
 
 void load_default_lang(){
+config.capslock = strdup("capslock");
+config.err_alloc = strdup("failed memory allocation");
+config.err_bounds = strdup("out-of-bounds index");
+config.err_chdir = strdup("failed to open home folder");
+config.err_console_dev = strdup("failed to access console");
+config.err_dgn_oob = strdup("log message");
+config.err_domain = strdup("invalid domain");
+config.err_hostname = strdup("failed to get hostname");
+config.err_mlock = strdup("failed to lock password memory");
+config.err_null = strdup("null pointer");
+config.err_pam = strdup("pam transaction failed");
+config.err_pam_abort = strdup("pam transaction aborted");
+config.err_pam_acct_expired = strdup("account expired");
+config.err_pam_auth = strdup("authentication error");
+config.err_pam_authinfo_unavail = strdup("failed to get user info");
+config.err_pam_authok_reqd = strdup("token expired");
+config.err_pam_buf = strdup("memory buffer error");
+config.err_pam_cred_err = strdup("failed to set credentials");
+config.err_pam_cred_expired = strdup("credentials expired");
+config.err_pam_cred_insufficient = strdup("insufficient credentials");
+config.err_pam_cred_unavail = strdup("failed to get credentials");
+config.err_pam_maxtries = strdup("reached maximum tries limit");
+config.err_pam_perm_denied = strdup("permission denied");
+config.err_pam_session = strdup("session error");
+config.err_pam_sys = strdup("system error");
+config.err_pam_user_unknown = strdup("unknown user");
+config.err_path = strdup("failed to set path");
+config.err_perm_dir = strdup("failed to change current directory");
+config.err_perm_group = strdup("failed to downgrade group permissions");
+config.err_perm_user = strdup("failed to downgrade user permissions");
+config.err_pwnam = strdup("failed to get user info");
+config.err_user_gid = strdup("failed to set user GID");
+config.err_user_init = strdup("failed to initialize user");
+config.err_user_uid = strdup("failed to set user UID");
+config.err_xsessions_dir = strdup("failed to find sessions folder");
+config.err_xsessions_open = strdup("failed to open sessions folder");
+
     // Language Variable Config
+    config.service_name = strdup("halkaDM");
     config.loginBTN_text = data_handler.cpArray(config.loginBTN_text, " LOGIN ");
     config.logoutBTN_text = data_handler.cpArray(config.logoutBTN_text, " LOGOUT ");
     /*config.shutdownBTN_text = data_handler.cpArray(config.shutdownBTN_text, "Shutdown");
@@ -82,7 +120,7 @@ void load_default_keyValues(){
     // char** titleBarSubItemsCMD;
     // config.usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
     // config.userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
-    config.maxUsernameLen = 32;
+    config.maxUsernameLen = 255;
     config.maxUserpassLen = 255;
     config.visibleAuthStrLen = 50;
 };
@@ -119,7 +157,7 @@ void load_default_CMD(){
     config.dateTimeCMD = data_handler.cpArray(config.dateTimeCMD, "/usr/bin/date | tr -s '\n' ' '");
     config.calenderCMD = data_handler.cpArray(config.calenderCMD, "/usr/bin/cal");
     config.cpuStatusCMD = data_handler.cpArray(config.cpuStatusCMD, "/usr/bin/mpstat -P ALL");
-    config.networkStatusCMD = data_handler.cpArray(config.networkStatusCMD, "/usr/sbin/tcpdump --list-interfaces");
+    config.networkStatusCMD = data_handler.cpArray(config.networkStatusCMD, "tcpdump --list-interfaces");
 
     config.refresh = 0;
     config.exit = 0;
