@@ -7,7 +7,14 @@
 #include <ctime>
 #include <cstring>
 
+#define DISPLAY      ":1"
+#define VT           "vt01"
+static bool testing = false;
+static pthread_t login_thread;
+static pid_t x_server_pid;
 
+
+char KEY_ESCAPE = '\x1b';
 
 class CONFIG{
 public:
@@ -91,8 +98,9 @@ char* err_xsessions_open;
     int totalRandomizedColors;
     // char* newSelectedDesktopEnv = nullptr;
     char* SESSION_KEY = nullptr;
-    int SESSION_KEY_LENGTH;
+    int SESSION_KEY_LENGTH = 33;
     int maxTitleBarItemTreeDepth = 2;
+    int titleBarHoverableItemCount = 3;
     char** titleBarSubItems;
     char** titleBarSubItemsCMD;
     int usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
@@ -109,6 +117,8 @@ char* err_xsessions_open;
     char* usrShell;
     char* getSystemUname;
     char* setUserDesktopEnv;
+    char* currentUserDesktopEnvComProtocol;
+    char* availableUserDesktopEnvComProtocol;
     char* currentUserDesktopEnv;
     char* availableUserDesktopEnv;
     char* getSystemBasicInfo;
@@ -150,11 +160,13 @@ char* err_xsessions_open;
 
     int refresh=0;
     int exit=0;
+
+    void allocate();
+    void deallocate();
 };
 
 //class DEFAULT_CONFIG{
 //public:
-
     void load_default_CMD();
     void load_default_keyValues();
     void load_default_softwareInfo();
@@ -165,8 +177,6 @@ char* err_xsessions_open;
 CONFIG config;
 // DEFAULT_CONFIG default_config;
 
-char package[] = "halkaDM:nano|testing";
-char KEY_ESCAPE = '\x1b';
 
 /*
 
@@ -174,90 +184,12 @@ char KEY_ESCAPE = '\x1b';
 
 0: [1-8] : size:8 | Pre Setup Colours
 1: [9-16] | [COLOR_BLACK, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_WHITE, COLOR_MAGENTA, COLOR_BLUE, COLOR_CYAN] : size:8 | Exclude the following for directly calling them in any case
-2: [<totalRandomizedColors>] | <randomize <totalRandomizedColors> colors> : size <totalRandomizedColors> | Randomization will be done only once on initial loading of the executable, to reduce memory consumpti>2: [<totalRandomizedColors>+3] | [username visibility colourmap] : size:3
+2: [<totalRandomizedColors>] | <randomize <totalRandomizedColors> colors> : size <totalRandomizedColors> | Randomization will be done only once on initial loading of the executable, to reduce memory consumpti>2: [totalRandomizedColors>+3] | [username visibility colourmap] : size:3
 3: [<<totalRandomizedColors>+3>+3] | [userpass visibility colourmap] : size:3
 4: [Profile Pic] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors><totalRandomizedColors>
 5: [Login Randomization colourMap] : size:(Relative)maxX*maxY | 1D-array | available colour : 8+<static_Colors>+<totalRandomizedColors>
 
 
 */
-
-int asciiColors[] = {
-    COLOR_BLACK,
-    COLOR_GREEN,
-    COLOR_RED,
-    COLOR_YELLOW,
-    COLOR_WHITE,
-    COLOR_MAGENTA,
-    COLOR_BLUE,
-    COLOR_CYAN
-};
-
-char* SESSION_KEY = nullptr;
-int SESSION_KEY_LENGTH = 33;
-
-int totalRandomizedColors = 10; // Must be loaded from the config file
-int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
-int totalManualColors = 8;
-
-// char* currentDesktopENV;
-char currentDesktopENV[] = "ubuntu";
-char* usrHomeDir = nullptr; // getent passwd username | cut -d: -f6
-
-int currentTitleID = 0; // not included
-
-int maxSubItemElementLen=16; // Not Included
-
-// Status {Visible_Text,...}
-//        {SECTION, ...}
-//        {KEY, ....}
-
-char*** titleBarSubItems;
-
-char powerSubItems[][3][15] = {
-    {"Sleep", "Restart", "Shutdown"},
-    {"CMD@sleep", "CMD@restart", "CMD@shutdown"}
-};
-
-char utilitiesSubItems[][5][20] = {
-    {"Calender", "CPU Status", "Network Status", "Refresh", "Exit"},
-    {"CMD@calender", "CMD@cpuStatus", "CMD@networkStatus"}
-};
-
-// ENV: DEFAULT
-
-char titleBarItems[][30] = {
-    "POWER",
-    "Utilities",
-    "ENV: DEFAULT"
-
-};
-
-/*char subItemsCmd[][10][55] = {
-    {
-        "echo Sleep_clked",
-        "sudo shutdown -r now",
-        "sudo /usr/sbin/shutdown -h now"
-    },
-    {
-        "/usr/bin/cal",
-        "/usr/bin/mpstat -P ALL",
-        "/usr/sbin/tcpdump --list-interfaces"
-    },
-    {
-        "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev"
-    }
-
-};*/
-
-int maxTitleBarItemTreeDepth = 2;
-
-int usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
-int userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
-
-int maxUsernameLen = 32;
-int maxUserpassLen = 255;
-
-int visibleAuthStrLen = 50;
 
 #endif

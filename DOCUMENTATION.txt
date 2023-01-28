@@ -2,8 +2,6 @@
 
 --[halkaDM:micro]--
 
-gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb
-
 ---------------------------------------------------
 
 --[Software Dependencies]--
@@ -23,9 +21,34 @@ sysstat
 tcpdump
 
 ----------------------------------------------------
+Currently Only Desktop Environtments are supported located at
+1. X-Sessions : /usr/share/xsessions/
+2. Wayland-Sessions : /usr/share/wayland-sessions/
+
+----------------------------------------------------
 [Testing]
 
-Currently it is being testing in
+Currently tested only for Debian Based Distribution
+
+-- Install software & library dependencies before further process--
+
+[Create Executable]
+gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb
+
+[ Setup ] {use the below setup process untill makefile and documentation are officially created}
+cd source/micro/
+sudo install -dZ /etc/halkaDM/halkaDM.micro
+sudo install -DZ ../../../bin/micro/halkaDM.micro -t /usr/bin
+sudo install -DZ res/halkaDM.service -m 644 -t /usr/lib/systemd/system
+
+
+
+tty -> 2
+As the application is running in tty2 and if you got stuck in other tty's
+then you can switch to tty2 with CTRL+ALT+F2 and use the application
+
+[ Hardware ]
+Currently it is being testing in Ubuntu & Debian 11 bullseye & with icewm
     Distributor ID: Ubuntu
     Description:    Ubuntu 20.04.4 LTS
     Release:        20.04

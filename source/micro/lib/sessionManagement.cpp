@@ -1,6 +1,15 @@
 #include "CMDexecutor.h"
 #include "sessionManagement.h"
 
+#include "pam.h"
+#include "draw.h"
+#include <xcb/xcb.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <security/pam_appl.h>
+#include <utmp.h>
+#include <unistd.h>
+
 void SESSION_MANAGEMENT::createSessionKey(int len, char* session_key){
     srand(time(NULL));
     for (int i = 0; i < len; i++) {
@@ -64,4 +73,61 @@ void SESSION_MANAGEMENT::createSession(char* currentDesktopENV, char* usrHomeDir
     // Create .xinitrc file entry
 
 
+}
+
+
+/*#define DISPLAY      ":1"
+#define VT           "vt01"
+static bool testing = false;
+static pthread_t login_thread;
+static pid_t x_server_pid;
+*/
+
+static void stop_x_server() {
+    if (x_server_pid != 0) {
+        kill(x_server_pid, SIGKILL);
+    }
+}
+
+static void sig_handler(int signo) {
+    stop_x_server();
+}
+static void start_x_server(const char *display, const char *vt) {
+    x_server_pid = fork();
+    if (x_server_pid == 0) {
+        char cmd[32];
+        snprintf(cmd, sizeof(cmd), "/usr/bin/X %s %s", display, vt);
+        execl("/bin/bash", "/bin/bash", "-c", cmd, NULL);
+        printf("Failed to start X server");
+        exit(1);
+    } else {
+        // TODO: Wait for X server to start
+        sleep(1);
+    }
+}
+
+
+int initiateSession(char* username, char* userpass){
+    pid_t child_pid;
+    const char *display = DISPLAY;
+    const char *vt = VT;
+    if (!testing) {
+        signal(SIGSEGV, sig_handler);
+        signal(SIGTRAP, sig_handler);
+        start_x_server(display, vt);
+    }
+    setenv(strdup("DISPLAY"), display, true);
+
+//    if (login(strdup(username), strdup(userpass), &child_pid)) {
+    if (login(username, userpass, &child_pid)) {
+    // Wait for child process to finish (wait for logout)
+    int status;
+    waitpid(child_pid, &status, 0); // TODO: Handle errors
+
+
+    logout();
+    stop_x_server();
+    return 1;
+    } else { return 0;}
+//    stop_x_server();
 }

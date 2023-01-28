@@ -50,7 +50,6 @@ using namespace std;
 
 */
 
-// char desktopEnvironmentsSubItems[30][30];
 char** desktopEnvironmentsSubItems;
 int *titleBarItemTree;
 
@@ -150,8 +149,8 @@ void initColor(){
    // int totalManualColors = 8;
 
    // Default Stored Colour blocks | fg==bg
-   for(int i=1; i<=totalASCIIcolors; i++){
-       init_pair(i, asciiColors[i+storedColorsStartIndex-1], asciiColors[i+storedColorsStartIndex-1]);
+   for(int i=1; i<=config.totalASCIIcolors; i++){
+       init_pair(i, config.asciiColors[i+storedColorsStartIndex-1], config.asciiColors[i+storedColorsStartIndex-1]);
    }
 
    // Manual Colour Setup
@@ -166,10 +165,10 @@ void initColor(){
 
    // Initial Colour Randomization
    srand(time(NULL));
-   for(int i=1; i<=totalRandomizedColors; i++){
-       fg = asciiColors[rand() % 8];
-       bg = asciiColors[rand() % 8];
-       init_pair(i+totalASCIIcolors+totalManualColors, fg, bg);
+   for(int i=1; i<=config.totalRandomizedColors; i++){
+       fg = config.asciiColors[rand() % 8];
+       bg = config.asciiColors[rand() % 8];
+       init_pair(i+config.totalASCIIcolors+config.totalManualColors, fg, bg);
    }
 
 
@@ -178,13 +177,13 @@ void initColor(){
 void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
     // Draw Random bitmap
     int randColorID=1;
-    int totalAvailableColour = totalASCIIcolors+totalManualColors+totalRandomizedColors;
+    int totalAvailableColour = config.totalASCIIcolors+config.totalManualColors+config.totalRandomizedColors;
 
     srand(time(NULL));
     for (int i = y; i < h; i++) {
         wmove(win, i, x);
         for (int j = 0; j < w; j++) {
-              randColorID = rand()%totalAvailableColour;
+            randColorID = rand()%totalAvailableColour;
             wattron(win, COLOR_PAIR(randColorID));
             waddch(win, 'A' + rand() % 26);
             wattroff(win, COLOR_PAIR(randColorID));
@@ -272,7 +271,7 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
 void genProfilePicture(int h, int w, int y, int x){
     // Draw Random bitmap
     int randColorID=1;
-    int totalAvailableColour = totalASCIIcolors+totalManualColors+totalRandomizedColors;
+    int totalAvailableColour = config.totalASCIIcolors+config.totalManualColors+config.totalRandomizedColors;
 
     box(accountPicBox, 0, 0);
     srand(time(NULL));
@@ -341,7 +340,7 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char*
 
     do{
         ch = wgetch(messageBox_msg);     /* refresh, accept single keystroke of input */
-        if((ch == KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == 'w') || (ch == 'a') || (ch == 's') || (ch == 'd') || (ch == '4') || (ch == '8') || (ch == '2') || (ch == '6') || (ch == '5') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
+        if((ch == config.KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == 'w') || (ch == 'a') || (ch == 's') || (ch == 'd') || (ch == '4') || (ch == '8') || (ch == '2') || (ch == '6') || (ch == '5') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
 
             wclear(messageBox_msg);
             werase(messageBox_msg);
@@ -395,52 +394,6 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char 
     if(arr!=nullptr){free(arr);arr=nullptr;}
 }
 
-void fill_available_desktop_environments(){
-    FILE *pp;
-    // Should be initiated only once during initial Memory allocation setup
-    int rows=1, cols=0;
-    int i=0, j=0;
-    int k;
-
-    if ((pp = popen(config.availableUserDesktopEnvCMD, "r")) != 0) {
-        char buffer[BUFSIZ];
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-
-            for(k=0;k<sizeof(buffer)/sizeof(buffer[0]);k++){
-                if(buffer[k]=='\7'){
-                    rows++;k++;
-                    if(j>cols){cols=j;}
-                    j=0;
-                }
-                else if(buffer[k]=='\0'){
-                    if(buffer[k-1]!='\7'){rows++;}
-                    if(j>cols){cols=j;}
-                    break;
-                }
-                j++;
-            }
-
-            desktopEnvironmentsSubItems = static_cast<char**>(std::malloc(rows * sizeof(char*)));
-            for (int a = 0; a<rows; a++) {
-                desktopEnvironmentsSubItems[a] = static_cast<char*>(std::malloc(cols * sizeof(char)));
-                desktopEnvironmentsSubItems[a][0] = '\0';
-
-                for(int b=0;b<cols;b++){
-
-                    if(buffer[i]=='\7'||buffer[i]=='\0'){desktopEnvironmentsSubItems[a][b++]='\0';break;}
-                    else{
-                        desktopEnvironmentsSubItems[a][b] = buffer[i];
-                    }
-                    i++;
-                }
-                i++;
-            }
-
-        }
-        pclose(pp);
-    }
-}
-
 int getSelectedSubItemID(int minY, int minX, int highlightedItemIndex, int colorID, char seperator, char* itemArray){
     // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
     if(itemArray!=nullptr || sizeof(itemArray)/sizeof(itemArray[0])>0){
@@ -478,7 +431,7 @@ int getSelectedSubItemID(int minY, int minX, int highlightedItemIndex, int color
             wrefresh(subItemListWindow);
 
             ch = wgetch(subItemListWindow);     /* refresh, accept single keystroke of input */
-                if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
+                if((ch == config.KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
                     // data_handler.freeArray(maxY-2, maxX-2, itemArray);
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
@@ -578,6 +531,7 @@ char* getSelectedSubItemName(int minY, int minX, int highlightedItemIndex, int c
     int currentLineCnt=0;
     // int totalChar=0;
     itemNumber = getSelectedSubItemID(minY, minX, highlightedItemIndex, colorID, seperator, itemArray);
+    if(itemNumber==-1){return nullptr;}
 
     /*int cnt=0;
     int maxLen=0;
@@ -603,7 +557,7 @@ char* getSelectedSubItemName(int minY, int minX, int highlightedItemIndex, int c
 //    currentLineCnt=0;
     itemName = static_cast<char*>(std::malloc(itemLen * sizeof(char)));
     itemName[itemLen]='\0';
-    wrefresh(mainScreenWin);
+//    wrefresh(mainScreenWin);
 
     for(int i=currentLineCntindex; itemArray[i]!='\0' ; i++){
         if(itemArray[i]==seperator){currentLineCnt++;i++;}
@@ -622,70 +576,6 @@ char* getSelectedSubItemName(int minY, int minX, int highlightedItemIndex, int c
     return itemName;
 }
 
-/*
-void subItemListWin(int maxY, int maxX, int minY, int minX, char*** charArray){
-    // Generate New Window dynamically, on exit delete/free the window before breaking out from the function, to free up sys resource
-
-
-    if ((maxY != 0) && (maxX != 0)){
-        int ch='\0';
-        maxY+=2;
-        maxX+=2;
-        noecho();
-
-        do{
-        subItemListWindow = newwin(maxY, maxX, minY, minX);
-        keypad(subItemListWindow, TRUE);
-
-        box(subItemListWindow, 0, 0);
-            //int i=0;
-            for(int i=0; i<(maxY-2); i++){
-            //  while(charArray[0][i][0]!='\0'){
-                if(i==titleBarItemTree[1]){wattron(subItemListWindow, COLOR_PAIR(13));}
-                mvwprintw(subItemListWindow, i+1, 1, charArray[0][i]);
-                if(i==titleBarItemTree[1]){wattroff(subItemListWindow, COLOR_PAIR(13));}
-            }
-
-
-            wrefresh(subItemListWindow);
-
-
-                ch = wgetch(subItemListWindow);     // refresh, accept single keystroke of input 
-                if((ch == KEY_ESCAPE) || (ch==KEY_LEFT) || (ch=='a') || (ch == 'q') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
-                    data_handler.freeArray(maxY-2, maxX-2, charArray);
-                    wclear(subItemListWindow);
-                    werase(subItemListWindow);
-                    wrefresh(subItemListWindow);
-                    break;
-                }
-                else if((ch == '\n') || (ch==KEY_RIGHT) || (ch == 'd') || (ch=='6') || (ch=='5')){
-                    // Execute Message Window
-//                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, charArray[0][titleBarItemTree[1]], subItemsCmd[titleBarItemTree[0]][titleBarItemTree[1]]);
-                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, charArray[0][titleBarItemTree[1]], charArray[1][titleBarItemTree[1]]);
-
-                }
-                else if((ch == '\t') || (ch==KEY_DOWN) || (ch == 's') || (ch=='2')){
-                    wclear(subItemListWindow);
-                    werase(subItemListWindow);
-
-                    if(titleBarItemTree[1]>=(maxY-3)){titleBarItemTree[1]=0;}
-                    else{titleBarItemTree[1]++;}
-                }
-                else if((ch == KEY_BACKSPACE) || (ch==KEY_UP) || (ch == 'w') || (ch=='8')){
-                    wclear(subItemListWindow);
-                    werase(subItemListWindow);
-
-                    if(titleBarItemTree[1]<=0){titleBarItemTree[1]=(maxY-3);}
-                    else{titleBarItemTree[1]--;}
-
-                }
-                else{}
-            }while(1);
-    }
-
-}
-*/
-
 
 int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
 {
@@ -693,25 +583,31 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
     int ch, titlebarCoordX, titlebarCoordY;
     int positionCoordX;
     int spacingX = 3;
-    int titleBarItemCount = sizeof(titleBarItems)/sizeof(titleBarItems[0]);
     noecho();
+
+    int itemIndex;
+    char* title=nullptr;
+    char* itemName=nullptr;
+
+    int inactiveColorID = 9;
+    int currentColorID = 9;
     titleBarItemTree[0]=itemID;
+
     do{
         keypad(titlebar, TRUE);
+
         getmaxyx(titlebar, titlebarCoordY, titlebarCoordX);
         positionCoordX=0;
 
-        if(titleBarItemTree[0]==0){wattron(titlebar, COLOR_PAIR(colorID));}
-        wmove(titlebar, 1, positionCoordX+spacingX);
-        waddstr(titlebar,config.powerBTN_text);
-        if(titleBarItemTree[0]==0){wattroff(titlebar, COLOR_PAIR(colorID));}
+        if(titleBarItemTree[0]==0){currentColorID = colorID;}
+        draw_charArr(titlebar, 1, positionCoordX+spacingX, currentColorID, config.powerBTN_text);
+        currentColorID = inactiveColorID;
 
         positionCoordX+=strlen(config.powerBTN_text);
 
-        if(titleBarItemTree[0]==1){wattron(titlebar, COLOR_PAIR(colorID));}
-        wmove(titlebar, 1, positionCoordX+(spacingX)*2);
-        waddstr(titlebar, config.utilitiesBTN_text);
-        if(titleBarItemTree[0]==1){wattroff(titlebar, COLOR_PAIR(colorID));}
+        if(titleBarItemTree[0]==1){currentColorID = colorID;}
+        draw_charArr(titlebar, 1, positionCoordX+(spacingX)*2, currentColorID, config.utilitiesBTN_text);
+        currentColorID = inactiveColorID;
 
 
 
@@ -731,27 +627,29 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
 
         ///////////////////////////
 
-        if(titleBarItemTree[0]==-1){break;}
+        if(titleBarItemTree[0]<0){break;}
+     //   else if(titleBarItemTree[0]==-2){return 99;}
+
 
         ch = wgetch(titlebar);
-        if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==KEY_ESCAPE) || (ch=='8')){
+        if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==config.KEY_ESCAPE) || (ch=='8')){
             titleBarItemTree[0]=-1;
         }
         else if((ch=='\t') || (ch==KEY_RIGHT) || (ch==' ') || (ch=='d') || (ch=='6')){
-                if(titleBarItemTree[0]>=(titleBarItemCount-1)){titleBarItemTree[0]=0;}
+                if(titleBarItemTree[0]>=(config.titleBarHoverableItemCount-1)){titleBarItemTree[0]=0;}
                 else{titleBarItemTree[0]++;}
         }
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){
-                if(titleBarItemTree[0]<=0){titleBarItemTree[0]=titleBarItemCount-1;}
+                if(titleBarItemTree[0]<=0){titleBarItemTree[0]=config.titleBarHoverableItemCount-1;}
                 else{titleBarItemTree[0]--;}
         }
         else if((ch=='\n') || (ch==KEY_DOWN) || (ch=='s') || (ch=='5') || (ch=='2')){
             if(titleBarItemTree[0]==0){
                 titleBarItemTree[1]=0;
 
-                int itemIndex =  getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.powerList_text);
-                if(itemIndex>=0){
-                    char* title = getSelectedSubItemNameByID('\7', config.powerList_text, title, itemIndex);
+                itemIndex = getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.powerList_text);
+                if(itemIndex!=-1){
+                    title = getSelectedSubItemNameByID('\7', config.powerList_text, title, itemIndex);
 
                     if(itemIndex==0){// Sleep
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, title, config.sleepCMD);
@@ -774,9 +672,9 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             else if(titleBarItemTree[0]==1){
                 titleBarItemTree[1]=0;
 
-                int itemIndex =  getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.utilitiesList_text);
-                if(itemIndex>=0){
-                    char* title = getSelectedSubItemNameByID('\7', config.utilitiesList_text, title, itemIndex);
+                itemIndex =  getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.utilitiesList_text);
+                if(itemIndex!=-1){
+                    title = getSelectedSubItemNameByID('\7', config.utilitiesList_text, title, itemIndex);
 
                     if(itemIndex==0){// Show Calender
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, title, config.calenderCMD);
@@ -790,8 +688,10 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
                     else if(itemIndex==3){// Refresh Windows
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, title, title);
                     }
-                    else if(itemIndex==3){// Exit Application
-                        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, title, title);
+                    else if(itemIndex==4){// Exit Application
+                        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Exit", "Exiting Display Manager :/");
+
+                        titleBarItemTree[0]=-2;
                     }
                     free(title);
                 }
@@ -801,28 +701,30 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             else if(titleBarItemTree[0]==2){
                 titleBarItemTree[1]=0;
 
-                char* itemName =  getSelectedSubItemName(titlebarCoordY, spacingX, 0, 13, '\7', config.availableUserDesktopEnv, itemName);
-                char* title = strdup("Selected Environment");
-                messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
-//                free(itemName);free(title);
+                itemName =  getSelectedSubItemName(titlebarCoordY, spacingX, 0, 13, '\7', config.availableUserDesktopEnv, itemName);
+                title = strdup("Selected Environment");
+                if(itemName != nullptr){
+                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
 
 
+                    if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(1));}
+                    wmove(titlebar, 1, titlebarCoordX-(strlen(config.currentDesktopENV_text)+strlen(config.desktopENVBTN_text)+3+spacingX));
+                    waddstr(titlebar, config.desktopENVBTN_text);
+                    waddstr(titlebar, " : ");
+                    waddstr(titlebar, config.currentDesktopENV_text);
+                    if(titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(1));}
 
-                if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(1));}
-                wmove(titlebar, 1, titlebarCoordX-(strlen(config.currentDesktopENV_text)+strlen(config.desktopENVBTN_text)+3+spacingX));
-                waddstr(titlebar, config.desktopENVBTN_text);
-                waddstr(titlebar, " : ");
-                waddstr(titlebar, config.currentDesktopENV_text);
-                if(titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(1));}
 
-
-                free(config.currentDesktopENV_text);
-                config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, itemName);
+                    free(config.currentDesktopENV_text);
+                    config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, itemName);
+                }
                 free(itemName);free(title);
             }
         }
 
     }while(1);
+
+    if(titleBarItemTree[0]==-2){return 99;}
 
     return 0;
 
@@ -907,16 +809,9 @@ void filluserFullName(char* username){
 //        userFullName = nullptr;
     }
     // free(userFullName);
-//    char* cmd;
-    // char cmd[250] = "getent passwd ";
-    // strcat(cmd, username);
-    // strcat(cmd, " | grep -v '/nologin' | cut -d: -f5 | tr -s '\n' ' '");
     char* cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
     //draw_charArr(mainScreenWin, (winMaxY*0.75)-2, 0 , 13, cmd);
     userFullName = cmd_executor.fetchExecOutput(userFullName, cmd);
-    /*wattron(mainScreenWin, COLOR_PAIR(13));
-    mvwaddch(mainScreenWin,(winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2)-1,  ' ');
-    wattroff(mainScreenWin, COLOR_PAIR(13));*/
     free(cmd);
     if(userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(userFullName)/2), 13, userFullName);
@@ -924,61 +819,6 @@ void filluserFullName(char* username){
     }
     else{free(userFullName);}
 //    wrefresh(mainScreenWin);
-//    draw_charArr(mainScreenWin, (winMaxY-2)-1, winMaxX-(strlen(userFullName)+2), 12, userFullName);
-}
-#define DISPLAY      ":1"
-#define VT           "vt01"
-static bool testing = false;
-static pthread_t login_thread;
-static pid_t x_server_pid;
-
-
-static void stop_x_server() {
-    if (x_server_pid != 0) {
-        kill(x_server_pid, SIGKILL);
-    }
-}
-
-static void sig_handler(int signo) {
-    stop_x_server();
-}
-static void start_x_server(const char *display, const char *vt) {
-    x_server_pid = fork();
-    if (x_server_pid == 0) {
-        char cmd[32];
-        snprintf(cmd, sizeof(cmd), "/usr/bin/X %s %s", display, vt);
-        execl("/bin/bash", "/bin/bash", "-c", cmd, NULL);
-        printf("Failed to start X server");
-        exit(1);
-    } else {
-        // TODO: Wait for X server to start
-        sleep(1);
-    }
-}
-
-
-void initiateSession(){
-    pid_t child_pid;
-    const char *display = DISPLAY;
-    const char *vt = VT;
-    if (!testing) {
-        signal(SIGSEGV, sig_handler);
-        signal(SIGTRAP, sig_handler);
-        start_x_server(display, vt);
-    }
-    setenv(strdup("DISPLAY"), display, true);
-
-//    if (login(strdup(username), strdup(userpass), &child_pid)) {
-    if (login(username, userpass, &child_pid)) {
-    // Wait for child process to finish (wait for logout)
-    int status;
-    waitpid(child_pid, &status, 0); // TODO: Handle errors
-
-
-    logout();
-//    stop_x_server();
-    } else { messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginFailed_text);}
-    stop_x_server();
 }
 
 int authenticateButton(){
@@ -994,7 +834,7 @@ int authenticateButton(){
 
     do{
         ch = wgetch(authBox);
-        if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==KEY_ESCAPE) || (ch=='8')){retCode = 1;break;}
+        if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==config.KEY_ESCAPE) || (ch=='8')){retCode = 1;break;}
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
@@ -1011,7 +851,14 @@ int authenticateButton(){
                 //int PAMAuthStatus = chkPAMAuthStatus(username, userpass);
                 //if(PAMAuthStatus==PAM_SUCCESS){
                     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
-                    initiateSession();
+
+                    int session_status = initiateSession(username, userpass);
+                    if(session_status==1){
+                        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, "Session Status", "Session Exited Successfully");
+                    }
+                    else if(session_status==0){
+                        messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Session Status", "Session Initialization Failed");
+                    }
                     //auth(desktop, username, userpass);
 //                    cmd_executor.exec("su sys41x4 -c 'export DISPLAY=:0; startx'");
 //                       cmd_executor.exec("");
@@ -1067,10 +914,10 @@ int login_passField(WINDOW *win, int y, int x){
     do{
          wmove(win, y, x);
 
-        if(userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
+        if(config.userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
             // visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
             // maskStr2(visible_userpass, strlen(userpass), '*');
-            halkadm_security.mask_authInput(0, userpassVisibilityConf, userpass, visible_userpass);
+            halkadm_security.mask_authInput(0, config.userpassVisibilityConf, userpass, visible_userpass);
             wprintw(win, visible_userpass);
             userpassChrCount=strlen(userpass);
         }
@@ -1078,14 +925,12 @@ int login_passField(WINDOW *win, int y, int x){
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if ((ch == '\n') || (ch == '\t')){ // If Enter is pressed
             if(strlen(userpass)>0){
-                // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
                 gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
             }
             break;
         }
         else if((userpassChrCount==0) && (ch == KEY_BACKSPACE)){}
         else if(((userpassChrCount>=0) && (userpassChrCount<config.maxUserpassLen)) || ((userpassChrCount == config.maxUserpassLen) && (ch == KEY_BACKSPACE))){
-            // gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
             if(ch == KEY_BACKSPACE){ // If backspace is pressed
                 userpassChrCount-=1;
@@ -1116,8 +961,8 @@ int login_userField(WINDOW *win, int y, int x){
     do{
         wmove(win, y, x);
 
-        if(usernameVisibilityConf[0]!=2 && strlen(username)>0){
-            halkadm_security.mask_authInput(0, usernameVisibilityConf, username, visible_username);
+        if(config.usernameVisibilityConf[0]!=2 && strlen(username)>0){
+            halkadm_security.mask_authInput(0, config.usernameVisibilityConf, username, visible_username);
             wprintw(win, visible_username);
             usernameChrCount=strlen(username);
         }
@@ -1216,6 +1061,7 @@ void freeMemory(){
         free(desktopEnvironmentsSubItems[i]);
     }
     free(desktopEnvironmentsSubItems);*/
+    config.deallocate();
 
 }
 
@@ -1291,7 +1137,7 @@ void initWindow(){
     initColor();
 
 
-    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(package)+2), 13, config.package);
+    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(config.package)+2), 13, config.package);
 //    draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(SESSION_KEY)+2), 13, SESSION_KEY);
     drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 1, 13, config.getSystemBasicInfoCMD);
     drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 1, 13, config.getSystemUnameCMD);
@@ -1344,7 +1190,7 @@ int main(int argc, char **argv)
     genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
     // Draw Auth Map
     gen_randColorMap(authBox, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
-    do{
+    while(1){
         // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
         if(id==0){
@@ -1360,9 +1206,10 @@ int main(int argc, char **argv)
         else if(id==3){
             id = draw_titlebar(titleBar_subwin, 13, 0);
         }
-    }while(1);
+        else if(id == 99){break;}
+    }
 
-    getch();
+//    getch();
     endwin();
     freeMemory();
     return 0;

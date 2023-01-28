@@ -1,33 +1,85 @@
 #include "config.h"
 #include "../lib/dataHandling.h"
-// #include "../lib/dataHandling.cpp"
-/*void load_default_softwareInfo(){
-    // Default Software Info
-    config.package = "halkaDM:nano|testing";
 
-};
 
-void load_default_lang(){
-    // Language Variable Config
-    config.loginBTN_text = " LOGIN ";
-    config.logoutBTN_text = " LOGOUT ";
-    config.shutdownBTN_text = "Shutdown";
-    config.restartBTN_text = "Restart";
-    config.sleepBTN_text = "Sleep";
-    config.calenderBTN_text = "Calender";
-    config.cpuStatusBTN_text = "CPU Status";
-    config.networkStatusBTN_text = "Network Status";
-    config.refreshBTN_text = "Refresh";
-    config.exitBTN_text = "Exit";
-    config.powerBTN_text = "Power";
-    config.utilitiesBTN_text = "Utilities";
-    config.desktopENVBTN_text = "ENV";
-    config.defaultDesktopENV_text = "Default";
-    config.usernameFieldID_text = "USER";
-    config.userpassFieldID_text = "PASS";
+void CONFIG::deallocate(){
 
-};*/
+    free(config.package);
 
+    free(config.capslock);
+    free(config.err_alloc);
+    free(config.err_bounds);
+    free(config.err_chdir);
+    free(config.err_console_dev);
+    free(config.err_dgn_oob);
+    free(config.err_domain);
+    free(config.err_hostname);
+    free(config.err_mlock);
+    free(config.err_null);
+    free(config.err_pam);
+    free(config.err_pam_abort);
+    free(config.err_pam_acct_expired);
+    free(config.err_pam_auth);
+    free(config.err_pam_authinfo_unavail);
+    free(config.err_pam_authok_reqd);
+    free(config.err_pam_buf);
+    free(config.err_pam_cred_err);
+    free(config.err_pam_cred_expired);
+    free(config.err_pam_cred_insufficient);
+    free(config.err_pam_cred_unavail);
+    free(config.err_pam_maxtries);
+    free(config.err_pam_perm_denied);
+    free(config.err_pam_session);
+    free(config.err_pam_sys);
+    free(config.err_pam_user_unknown);
+    free(config.err_path);
+    free(config.err_perm_dir);
+    free(config.err_perm_group);
+    free(config.err_perm_user);
+    free(config.err_pwnam);
+    free(config.err_user_gid);
+    free(config.err_user_init);
+    free(config.err_user_uid);
+    free(config.err_xsessions_dir);
+    free(config.err_xsessions_open);
+
+    free(config.service_name);
+    free(config.loginBTN_text);
+    free(config.logoutBTN_text);
+    free(config.powerList_text);
+    free(config.utilitiesList_text);
+    free(config.powerBTN_text);
+    free(config.utilitiesBTN_text);
+    free(config.desktopENVBTN_text);
+    free(config.currentDesktopENV_text);
+    free(config.usernameFieldID_text);
+    free(config.userpassFieldID_text);
+
+    free(config.loginFailed_text);
+    free(config.loginSuccess_text);
+    free(config.logoutFailed_text);
+    free(config.logoutSuccess_text);
+    free(config.emptyCredPassed);
+    free(config.incorrectCred);
+
+    free(config.uuidCMD);
+    free(config.usrGroupCMD);
+    free(config.getUserFullnameCMD);
+    free(config.usrHomeDirCMD);
+    free(config.usrShellCMD);
+    free(config.getSystemUnameCMD);
+    free(config.currentUserDesktopEnvCMD);
+    free(config.availableUserDesktopEnvCMD);
+    free(config.setUserDesktopEnvCMD);
+    free(config.getSystemBasicInfoCMD);
+    free(config.shutdownCMD);
+    free(config.sleepCMD);
+    free(config.restartCMD);
+    free(config.dateTimeCMD);
+    free(config.calenderCMD);
+    free(config.cpuStatusCMD);
+    free(config.networkStatusCMD);
+}
 
 void load_default_softwareInfo(){
     // Default Software Info
@@ -74,7 +126,7 @@ config.err_xsessions_dir = strdup("failed to find sessions folder");
 config.err_xsessions_open = strdup("failed to open sessions folder");
 
     // Language Variable Config
-    config.service_name = strdup("halkaDM");
+    config.service_name = strdup("display-manager");
     config.loginBTN_text = data_handler.cpArray(config.loginBTN_text, " LOGIN ");
     config.logoutBTN_text = data_handler.cpArray(config.logoutBTN_text, " LOGOUT ");
     /*config.shutdownBTN_text = data_handler.cpArray(config.shutdownBTN_text, "Shutdown");
@@ -92,6 +144,7 @@ config.err_xsessions_open = strdup("failed to open sessions folder");
     config.utilitiesBTN_text = data_handler.cpArray(config.utilitiesBTN_text, "Utilities");
     config.desktopENVBTN_text = data_handler.cpArray(config.desktopENVBTN_text, "ENV");
     config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, "Default");
+    config.currentUserDesktopEnvComProtocol =  data_handler.cpArray(config.currentUserDesktopEnvComProtocol, "Default");
     config.usernameFieldID_text = data_handler.cpArray(config.usernameFieldID_text, "USER");
     config.userpassFieldID_text = data_handler.cpArray(config.userpassFieldID_text, "PASS");
 
@@ -111,6 +164,7 @@ void load_default_keyValues(){
         COLOR_CYAN
     };
     config.totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);*/
+    config.availableUserDesktopEnvComProtocol = strdup("xsessions\7wayland-sessions\7shell\7");
     config.totalManualColors = 8;
     config.totalRandomizedColors = 10;
     // config.SESSION_KEY = nullptr;
