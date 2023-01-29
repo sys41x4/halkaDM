@@ -853,6 +853,7 @@ int authenticateButton(){
                     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
 
                     int session_status = initiateSession(username, userpass);
+                    //wrefresh(mainScreenWin);
                     if(session_status==1){
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, "Session Status", "Session Exited Successfully");
                     }
@@ -917,7 +918,7 @@ int login_passField(WINDOW *win, int y, int x){
         if(config.userpassVisibilityConf[0]!=2 && strlen(userpass)>0){
             // visible_userpass = mask_authInput(0, userpassVisibilityConf, userpass);
             // maskStr2(visible_userpass, strlen(userpass), '*');
-            halkadm_security.mask_authInput(0, config.userpassVisibilityConf, userpass, visible_userpass);
+            halkadm_security.mask_authInput(0, config.userpassVisibilityConf, config.visibleAuthStrLen, userpass, visible_userpass);
             wprintw(win, visible_userpass);
             userpassChrCount=strlen(userpass);
         }
@@ -962,7 +963,7 @@ int login_userField(WINDOW *win, int y, int x){
         wmove(win, y, x);
 
         if(config.usernameVisibilityConf[0]!=2 && strlen(username)>0){
-            halkadm_security.mask_authInput(0, config.usernameVisibilityConf, username, visible_username);
+            halkadm_security.mask_authInput(0, config.usernameVisibilityConf, config.visibleAuthStrLen, username, visible_username);
             wprintw(win, visible_username);
             usernameChrCount=strlen(username);
         }

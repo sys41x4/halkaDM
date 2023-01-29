@@ -108,7 +108,7 @@ static void start_x_server(const char *display, const char *vt) {
 
 
 int initiateSession(char* username, char* userpass){
-    pid_t child_pid;
+/*    pid_t child_pid;
     const char *display = DISPLAY;
     const char *vt = VT;
     if (!testing) {
@@ -117,16 +117,25 @@ int initiateSession(char* username, char* userpass){
         start_x_server(display, vt);
     }
     setenv(strdup("DISPLAY"), display, true);
-
+*/
 //    if (login(strdup(username), strdup(userpass), &child_pid)) {
-    if (login(username, userpass, &child_pid)) {
+    if (login(username, userpass)) {
     // Wait for child process to finish (wait for logout)
-    int status;
-    waitpid(child_pid, &status, 0); // TODO: Handle errors
+//    int status;
+//    waitpid(child_pid, &status, 0); // TODO: Handle errors
+        // add utmp audit
 
+/*        struct utmp entry;
+        add_utmp_entry(&entry, pw->pw_name, pid);
 
-    logout();
-    stop_x_server();
+    // wait for the session to stop
+        int status;
+        waitpid(pid, &status, 0);
+        remove_utmp_entry(&entry);
+        reset_terminal(pw);
+*/
+//    logout();
+    // stop_x_server();
     return 1;
     } else { return 0;}
 //    stop_x_server();

@@ -1,6 +1,14 @@
 #include "config.h"
 #include "../lib/dataHandling.h"
+#include "../lib/inputs.h"
 
+#ifndef DEBUG
+	#define INI_LANG DATADIR "/lang/%s.ini"
+	#define INI_CONFIG "/etc/halkaDM/halkaDM.micro/config.ini"
+#else
+	#define INI_LANG "../res/lang/%s.ini"
+	#define INI_CONFIG "../res/config.ini"
+#endif
 
 void CONFIG::deallocate(){
 
@@ -126,7 +134,7 @@ config.err_xsessions_dir = strdup("failed to find sessions folder");
 config.err_xsessions_open = strdup("failed to open sessions folder");
 
     // Language Variable Config
-    config.service_name = strdup("display-manager");
+    config.service_name = strdup("halkaDM");
     config.loginBTN_text = data_handler.cpArray(config.loginBTN_text, " LOGIN ");
     config.logoutBTN_text = data_handler.cpArray(config.logoutBTN_text, " LOGOUT ");
     /*config.shutdownBTN_text = data_handler.cpArray(config.shutdownBTN_text, "Shutdown");
@@ -167,6 +175,19 @@ void load_default_keyValues(){
     config.availableUserDesktopEnvComProtocol = strdup("xsessions\7wayland-sessions\7shell\7");
     config.totalManualColors = 8;
     config.totalRandomizedColors = 10;
+    config.tty = 2;
+    config.path = strdup("/usr/local/sbin:/usr/local/bin:/usr/bin");
+    config.term_reset_cmd = strdup("/usr/bin/tput reset");
+    config.wayland_cmd = strdup(DATADIR "/wsetup.sh");
+    config.waylandsessions = strdup("/usr/share/wayland-sessions");
+    config.x_cmd = strdup("/usr/bin/X");
+    config.xinitrc = strdup("~/.xinitrc");
+    config.x_cmd_setup = strdup(DATADIR "/xsetup.sh");
+    config.xauth_cmd = strdup("/usr/bin/xauth");
+    config.xsessions = strdup("/usr/share/xsessions");
+    config.mcookie_cmd = strdup("/usr/bin/mcookie");
+
+
     // config.SESSION_KEY = nullptr;
     // config.SESSION_KEY_LENGTH = 32;
     config.maxTitleBarItemTreeDepth = 2;

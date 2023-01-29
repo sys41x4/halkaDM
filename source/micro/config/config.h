@@ -56,6 +56,17 @@ char* err_xsessions_dir;
 char* err_xsessions_open;
 
     char* service_name;
+    int tty;
+    char* path;
+    char* term_reset_cmd;
+    char* wayland_cmd;
+    char* x_cmd_setup;
+    char* xinitrc;
+    char* x_cmd;
+    char* xauth_cmd;
+    char* xsessions;
+    char* waylandsessions;
+    char* mcookie_cmd;
 
     // Language Variable Config
     char* loginBTN_text;

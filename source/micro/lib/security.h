@@ -9,7 +9,7 @@
 
 class HALKADM_SECURITY{
 public:
-    void mask_authInput(int authType, int *maskingConfig, char* str, char* visibleStrOut);
+    void mask_authInput(int authType, int *maskingConfig, int visibleStrOutMaxLen, char* str, char* visibleStrOut);
 };
 
 #endif
