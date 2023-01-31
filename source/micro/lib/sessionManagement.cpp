@@ -118,6 +118,17 @@ int initiateSession(char* username, char* userpass){
     }
     setenv(strdup("DISPLAY"), display, true);
 */
+    char* cmd;
+    if(strcmp(user.XDG_SESSION_NAME, "Default")){
+
+        cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvCMD, "$[", "]$", "ENV", user.XDG_SESSION_NAME);
+        cmd = data_handler.replaceStr(cmd, cmd, "$[", "]$", "USER", user.username);
+        cmd_executor.exec(cmd);
+        free(cmd);
+    }
+    cmd = data_handler.replaceStr(cmd, config.getDefaultUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
+    user.desktop_cmd = cmd_executor.fetchExecOutput(user.desktop_cmd, cmd);
+    free(cmd);
 //    if (login(strdup(username), strdup(userpass), &child_pid)) {
     if (login(username, userpass)) {
     // Wait for child process to finish (wait for logout)

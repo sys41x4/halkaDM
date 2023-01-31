@@ -158,6 +158,7 @@ char* err_xsessions_open;
     char* usrShellCMD;
     char* getSystemUnameCMD;
     char* setUserDesktopEnvCMD;
+    char* getDefaultUserDesktopEnvCMD;
     char* currentUserDesktopEnvCMD;
     char* availableUserDesktopEnvCMD;
     char* getSystemBasicInfoCMD;

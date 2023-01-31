@@ -137,22 +137,13 @@ config.err_xsessions_open = strdup("failed to open sessions folder");
     config.service_name = strdup("halkaDM");
     config.loginBTN_text = data_handler.cpArray(config.loginBTN_text, " LOGIN ");
     config.logoutBTN_text = data_handler.cpArray(config.logoutBTN_text, " LOGOUT ");
-    /*config.shutdownBTN_text = data_handler.cpArray(config.shutdownBTN_text, "Shutdown");
-    config.restartBTN_text = data_handler.cpArray(config.restartBTN_text, "Restart");
-    config.sleepBTN_text = data_handler.cpArray(config.sleepBTN_text, "Sleep");*/
-    /*config.powerList_text = data_handler.cpArray(config.powerList_text, "Sleep\7Restart\7Shutdown\7");
-    config.calenderBTN_text = data_handler.cpArray(config.calenderBTN_text, "Calender");
-    config.cpuStatusBTN_text = data_handler.cpArray(config.cpuStatusBTN_text, "CPU Status");
-    config.networkStatusBTN_text = data_handler.cpArray(config.networkStatusBTN_text, "Network Status");
-    config.refreshBTN_text = data_handler.cpArray(config.refreshBTN_text, "Refresh");
-    config.exitBTN_text = data_handler.cpArray(config.exitBTN_text, "Exit");*/
     config.powerList_text = data_handler.cpArray(config.powerList_text, "Sleep\7Restart\7Shutdown\7");
     config.utilitiesList_text = data_handler.cpArray(config.utilitiesList_text, "Calender\7CPU Status\7Network Status\7Refresh\7Exit\7");
     config.powerBTN_text = data_handler.cpArray(config.powerBTN_text, "Power");
     config.utilitiesBTN_text = data_handler.cpArray(config.utilitiesBTN_text, "Utilities");
     config.desktopENVBTN_text = data_handler.cpArray(config.desktopENVBTN_text, "ENV");
     config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, "Default");
-    config.currentUserDesktopEnvComProtocol =  data_handler.cpArray(config.currentUserDesktopEnvComProtocol, "Default");
+    config.currentUserDesktopEnvComProtocol =  data_handler.cpArray(config.currentUserDesktopEnvComProtocol, "shell\7xinitrc\7Xorg\7wayland\7Default\7");
     config.usernameFieldID_text = data_handler.cpArray(config.usernameFieldID_text, "USER");
     config.userpassFieldID_text = data_handler.cpArray(config.userpassFieldID_text, "PASS");
 
@@ -191,6 +182,7 @@ void load_default_keyValues(){
     // config.SESSION_KEY = nullptr;
     // config.SESSION_KEY_LENGTH = 32;
     config.maxTitleBarItemTreeDepth = 2;
+    config.titleBarHoverableItemCount = 4;
     // char** titleBarSubItems;
     // char** titleBarSubItemsCMD;
     // config.usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
@@ -223,8 +215,11 @@ void load_default_CMD(){
     config.getSystemUnameCMD = data_handler.cpArray(config.getSystemUnameCMD, "uname -n -o");
     config.currentUserDesktopEnvCMD = data_handler.cpArray(config.currentUserDesktopEnvCMD, "sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
     config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
-    // config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev");
-    config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
+    config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
+    config.getDefaultUserDesktopEnvCMD = data_handler.cpArray(config.getDefaultUserDesktopEnvCMD, "head -n 1 /home/$[USER]$/.xsessionrc | tr -s '\n' ' '");
+    // config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;'");
+    // config.saveUserDesktopEnvCMD = data_handler.cpArray(config.saveUserDesktopEnvCMD, "echo $[xsessionCMD]$ > /home/$[USER]$/.xsessionrc");
+    // config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
     config.getSystemBasicInfoCMD = data_handler.cpArray(config.getSystemBasicInfoCMD, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
     config.shutdownCMD = data_handler.cpArray(config.shutdownCMD, "echo Shutting Down System && sudo /usr/sbin/shutdown -h now");
     config.sleepCMD = data_handler.cpArray(config.sleepCMD, "echo System going to Sleep && sudo systemctl suspend");

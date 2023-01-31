@@ -315,8 +315,8 @@ bool login(const char *username, const char *password){
 
 
     // Add XDG environment variables
-    env_xdg_session(XDG_SESSION_TYPE);
-    env_xdg(tty_id, desktop_name);
+    env_xdg_session(user.XDG_SESSION_TYPE);
+    env_xdg(tty_id, user.desktop_name);
 
 
     const char *data[2] = { username, password };
@@ -404,8 +404,8 @@ bool login(const char *username, const char *password){
         // set env (this clears the environment)
         init_env(pw);
         // Re-add XDG environment variables
-        env_xdg_session(XDG_SESSION_TYPE);
-        env_xdg(tty_id, desktop_name);
+        env_xdg_session(user.XDG_SESSION_TYPE);
+        env_xdg(tty_id, user.desktop_name);
 
         // add pam variable
         char** env = pam_getenvlist(pam_handle);
@@ -422,10 +422,10 @@ bool login(const char *username, const char *password){
 //        char* cmd = strdup("startx");
         //execl(pw->pw_shell, pw->pw_shell, "-c", cmd, NULL);
 
-        switch(XDG_SESSION_TYPE){ // Must be fixed
+        switch(user.XDG_SESSION_TYPE){ // Must be fixed
             case DS_WAYLAND:
             {
-                wayland(pw, desktop_cmd);
+                wayland(pw, user.desktop_cmd);
                 break;
             }
             case DS_SHELL:
@@ -436,7 +436,7 @@ bool login(const char *username, const char *password){
             case DS_XINITRC:
             case DS_XORG:
             {
-                xorg(pw, vt, desktop_cmd);
+                xorg(pw, vt, user.desktop_cmd);
                 break;
             }
         }

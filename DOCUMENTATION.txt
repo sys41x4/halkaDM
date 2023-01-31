@@ -62,7 +62,7 @@ As the application is running in tty2 and if you got stuck in other tty's
 then you can switch to tty2 with CTRL+ALT+F2 and use the application
 
 [ Hardware ]
-Currently it is being testing in Ubuntu & Debian 11 bullseye & with icewm
+Currently it is being testing in Ubuntu & Debian 11 bullseye & with jwm/icewm/fluxbox WM
     Distributor ID: Ubuntu
     Description:    Ubuntu 20.04.4 LTS
     Release:        20.04
