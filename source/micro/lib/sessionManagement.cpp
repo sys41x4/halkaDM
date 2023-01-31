@@ -1,6 +1,8 @@
 #include "CMDexecutor.h"
 #include "sessionManagement.h"
 
+#include "inputs.h"
+#include "dataHandling.h"
 #include "pam.h"
 #include "draw.h"
 #include <xcb/xcb.h>
@@ -119,16 +121,82 @@ int initiateSession(char* username, char* userpass){
     setenv(strdup("DISPLAY"), display, true);
 */
     char* cmd;
+
+    int trackID=-1;
+    if(user.XDG_SESSION_TYPE==DS_DEFAULT){
+//       trackID=user.XDG_SESSION_TYPE;
+//       cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvTypeCMD, "$[", "]$", "xsessiontype", user.XDG_SESSION_TYPE_NAME);
+       cmd = data_handler.replaceStr(cmd, config.getUserDesktopEnvTypeCMD, "$[", "]$", "USER", user.username);
+       user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(user.XDG_SESSION_TYPE_NAME, cmd);
+       free(cmd);
+
+/*        cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvTypeCMD, "$[", "]$", "xsessiontype", user.XDG_SESSION_TYPE_NAME);
+        cmd = data_handler.replaceStr(cmd, cmd, "$[", "]$", "USER", user.username);
+        cmd_executor.exec(cmd);
+        free(cmd);
+*/
+       user.XDG_SESSION_TYPE = data_handler.getItemID('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE_NAME);
+       trackID=user.XDG_SESSION_TYPE;
+       if(user.XDG_SESSION_TYPE==-1 || user.XDG_SESSION_TYPE==DS_DEFAULT){
+           user.XDG_SESSION_TYPE=DS_XORG;
+           user.XDG_SESSION_TYPE_NAME=data_handler.getItemName('\7', config.currentUserDesktopEnvComProtocol, DS_XORG, user.XDG_SESSION_TYPE_NAME);
+           trackID=-1;
+       }
+//       user.XDG_SESSION_TYPE_NAME=data_handler.getItemName('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE, user.XDG_SESSION_TYPE_NAME);
+//       trackID=user.XDG_SESSION_TYPE;
+    }
+
+    if(user.XDG_SESSION_TYPE!=DS_DEFAULT && trackID==-1){
+/*        if(trackID==-1){
+           cmd = data_handler.replaceStr(cmd, config.getUserDesktopEnvTypeCMD, "$[", "]$", "USER", user.username);
+           user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(user.XDG_SESSION_TYPE_NAME, cmd);
+           free(cmd);
+        }
+
+        else if(trackID==-2){*/
+            cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvTypeCMD, "$[", "]$", "xsessiontype", user.XDG_SESSION_TYPE_NAME);
+            cmd = data_handler.replaceStr(cmd, cmd, "$[", "]$", "USER", user.username);
+            cmd_executor.exec(cmd);
+            free(cmd);
+//        }
+    }
+
+    trackID=-1;
+
     if(strcmp(user.XDG_SESSION_NAME, "Default")){
 
+/*
+        // Read From File If it is present in the user's home directory
+
+        cmd = data_handler.replaceStr(cmd, config.getUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
+        user.desktop_cmd = cmd_executor.fetchExecOutput(user.desktop_cmd, cmd);
+        free(cmd);
+
+        if(strcmp(user.XDG_SESSION_NAME, "Default")==0){
+            // There must be a default WM installed which means there must be a failsafe WM installed to handle any issues with primary WM installed, whose name should be fetched from /etc/halkaDM/.xsessionrc.default
+            free(user.XDG_SESSION_NAME);
+            user.XDG_SESSION_NAME=nullptr;
+            user.XDG_SESSION_NAME = strdup("/usr/bin/jwm");
+
+        }
+
+    }
+    else{*/
         cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvCMD, "$[", "]$", "ENV", user.XDG_SESSION_NAME);
         cmd = data_handler.replaceStr(cmd, cmd, "$[", "]$", "USER", user.username);
         cmd_executor.exec(cmd);
         free(cmd);
     }
-    cmd = data_handler.replaceStr(cmd, config.getDefaultUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
+
+//    user.XDG_SESSION_TYPE = data_handler.getItemID('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE_NAME);
+    // If user.XDG_SESSION_TYPE_NAME doesn't match from the file or is set to default then the default XDG_SESSION_TYPE whill be selected which is DS_XORG
+//    if(user.XDG_SESSION_TYPE==-1 || user.XDG_SESSION_TYPE==DS_DEFAULT){user.XDG_SESSION_TYPE=DS_XORG;}
+
+    free(user.desktop_cmd);user.desktop_cmd=nullptr;
+    cmd = data_handler.replaceStr(cmd, config.getUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
     user.desktop_cmd = cmd_executor.fetchExecOutput(user.desktop_cmd, cmd);
     free(cmd);
+//    user.XDG_SESSION_NAME = strdup("Default");
 //    if (login(strdup(username), strdup(userpass), &child_pid)) {
     if (login(username, userpass)) {
     // Wait for child process to finish (wait for logout)
@@ -147,7 +215,12 @@ int initiateSession(char* username, char* userpass){
 */
 //    logout();
     // stop_x_server();
-    return 1;
+
+        free(user.XDG_SESSION_NAME);free(user.XDG_SESSION_TYPE_NAME);
+        user.XDG_SESSION_NAME=nullptr;user.XDG_SESSION_TYPE_NAME=nullptr;
+        user.XDG_SESSION_NAME=strdup("Default");user.XDG_SESSION_TYPE_NAME=strdup("Default");
+
+        return 1;
     } else { return 0;}
 //    stop_x_server();
 }

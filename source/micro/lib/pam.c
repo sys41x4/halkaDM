@@ -360,7 +360,14 @@ bool login(const char *username, const char *password){
 
     // get passwd structure
     struct passwd *pw = getpwnam(username);
-    //endpwent();
+    endpwent();
+
+    if (pw == NULL)
+    {
+        //dgn_throw(DGN_PWNAM);
+        pam_end(pam_handle, result);
+        return 0;
+    }
 
     // set user shell
     if (pw->pw_shell[0] == '\0')
@@ -377,7 +384,7 @@ bool login(const char *username, const char *password){
         endusershell();
     }
 
-    init_env(pw);
+    // init_env(pw);
 
 
     // start desktop environment
@@ -462,6 +469,9 @@ bool login(const char *username, const char *password){
 
     // On Ending Session Logout
     logout();
+
+
+
 
 /*    if (*child_pid == 0) {
         result = initgroups(pw->pw_name, pw->pw_gid);

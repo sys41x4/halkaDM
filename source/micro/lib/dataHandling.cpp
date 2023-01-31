@@ -98,6 +98,46 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, char startBound[2], char endB
     return arrTo;
 }
 
+int DATA::getItemID(char seperator, char* arr, char* arrTocmp){
+    int arrTocmpLen=strlen(arrTocmp);
+    int id=0, j=0;
+    for(int i=0;arr[i]!='\0';i++){
+        if(arr[i]==seperator){id++;j=0;i++;}
+
+        if(arr[i]==arrTocmp[j]){j++;if(arr[i+1]==seperator && j==arrTocmpLen){return id;}}
+//        if(arr[i+1]==seperator && j==arrTocmpLen){return id;}
+    }
+    return -1;
+}
+
+char* DATA::getItemName(char seperator, char* arr, int itemID, char* item){
+
+    int itemLen=0, trackID=itemID;
+
+    for(int i=0;arr[i]!='\0';i++){
+        if(trackID==0 && arr[i]!=seperator){itemLen++;}
+        if(arr[i]==seperator || arr[i+1]=='\0'){trackID--;}
+        else if(trackID<0){trackID=0;break;}
+    }
+
+    if(trackID==0){
+        free(item);
+        item = static_cast<char*>(std::malloc(itemLen * sizeof(char)));
+        item[0]='\0';item[itemLen]='\0';
+        itemLen=0;
+
+        for(int i=0;arr[i]!='\0';i++){
+            if(itemID==0 && arr[i]!=seperator){item[itemLen]=arr[i];itemLen++;}
+            if(itemID==0 && arr[i]==seperator){item[itemLen]='\0';}
+            if(arr[i]==seperator || arr[i+1]=='\0'){itemID--;}
+            else if(trackID<0){trackID=0;break;}
+        }
+        if(item[0]=='\0'){free(item);item=nullptr;return item;}
+        return item;
+    }
+    else{free(item);item=nullptr;return item;}
+    return item;
+}
 
 int DATA::getCharFreq(char character, char* arr){
     int count=0;

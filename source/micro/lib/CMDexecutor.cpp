@@ -28,7 +28,7 @@ char* CMD_EXECUTOR::fetchExecOutput(char* arr, const char* cmd){
 //              elementCount = strlen(buffer);
 //            arr = fillArray(elementCount, arr);
             arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[elementCount] = '\0';
+            arr[0] = '\0';arr[elementCount] = '\0';
 //            for(int i=0; i<elementCount; i++){arr[i]=buffer[i];} // Calculate the length of the char array
             for(int i=0; buffer[i]=='\0'; i++){arr[i]=buffer[i];}
             //arr[elementCount] = '\0';
@@ -55,7 +55,7 @@ char* CMD_EXECUTOR::fetchExecOutput(char* arr, char* cmd){
             while(buffer[elementCount]!='\0'){elementCount++;}
 //            arr = fillArray(elementCount, arr);
             arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
+            arr[0] = '\0';arr[elementCount]='\0';
             for(int i=0; i<elementCount; i++){arr[i]=buffer[i];} // Calculate the length of the char array
             // waddstr(mainScreenWin, buffer);
             // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);

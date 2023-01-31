@@ -1,10 +1,11 @@
 #ifndef HALKADM_INPUTS_H
 #define HALKADM_INPUTS_H
 
-#define DS_SHELL 0
-#define DS_XINITRC 1
-#define DS_XORG 2
-#define DS_WAYLAND 3
+#define DS_DEFAULT 0
+#define DS_SHELL 1
+#define DS_XINITRC 2
+#define DS_XORG 3
+#define DS_WAYLAND 4
 
 #define DATADIR "/etc/halkaDM/halkaDM.micro"
 
@@ -17,7 +18,7 @@ public:
     char* visible_userpass=nullptr;
     char* userFullName=nullptr;
 
-    int XDG_SESSION_TYPE = 2;
+    int XDG_SESSION_TYPE = DS_DEFAULT;
     char* XDG_SESSION_TYPE_NAME=strdup("Default");
 
     char* XDG_SESSION_NAME=strdup("Default");

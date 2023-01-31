@@ -143,7 +143,7 @@ config.err_xsessions_open = strdup("failed to open sessions folder");
     config.utilitiesBTN_text = data_handler.cpArray(config.utilitiesBTN_text, "Utilities");
     config.desktopENVBTN_text = data_handler.cpArray(config.desktopENVBTN_text, "ENV");
     config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, "Default");
-    config.currentUserDesktopEnvComProtocol =  data_handler.cpArray(config.currentUserDesktopEnvComProtocol, "shell\7xinitrc\7Xorg\7wayland\7Default\7");
+    config.currentUserDesktopEnvComProtocol =  data_handler.cpArray(config.currentUserDesktopEnvComProtocol, "Default\7shell\7xinitrc\7Xorg\7wayland\7");
     config.usernameFieldID_text = data_handler.cpArray(config.usernameFieldID_text, "USER");
     config.userpassFieldID_text = data_handler.cpArray(config.userpassFieldID_text, "PASS");
 
@@ -163,7 +163,7 @@ void load_default_keyValues(){
         COLOR_CYAN
     };
     config.totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);*/
-    config.availableUserDesktopEnvComProtocol = strdup("xsessions\7wayland-sessions\7shell\7");
+   // config.availableUserDesktopEnvComProtocol = strdup("xsessions\7wayland-sessions\7shell\7");
     config.totalManualColors = 8;
     config.totalRandomizedColors = 10;
     config.tty = 2;
@@ -207,20 +207,22 @@ void load_default_CMD(){
     // CMD Varables; // Specifically for Debian
     // Variable Identifier that is to be replaced [Format : $[<variable>]$]
     //                                            [ Requires 4 variable for position identification $,[,],$
-    config.uuidCMD = data_handler.cpArray(config.uuidCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f3 | tr -s '\n' ' '");
-    config.usrGroupCMD = data_handler.cpArray(config.usrGroupCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f4 | tr -s '\n' ' '");
-    config.getUserFullnameCMD = data_handler.cpArray(config.getUserFullnameCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f5 | tr -s '\n' ' '");
+    config.uuidCMD = data_handler.cpArray(config.uuidCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f3 | tr -d '\n'");
+    config.usrGroupCMD = data_handler.cpArray(config.usrGroupCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f4 | tr -d '\n'");
+    config.getUserFullnameCMD = data_handler.cpArray(config.getUserFullnameCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f5 | tr -d '\n'");
     config.usrHomeDirCMD = data_handler.cpArray(config.usrHomeDirCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f6 | tr -s '\n' '/'");
-    config.usrShellCMD = data_handler.cpArray(config.usrShellCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -s '\n' ' '");
+    config.usrShellCMD = data_handler.cpArray(config.usrShellCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -d '\n'");
     config.getSystemUnameCMD = data_handler.cpArray(config.getSystemUnameCMD, "uname -n -o");
     config.currentUserDesktopEnvCMD = data_handler.cpArray(config.currentUserDesktopEnvCMD, "sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
     config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
     config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
-    config.getDefaultUserDesktopEnvCMD = data_handler.cpArray(config.getDefaultUserDesktopEnvCMD, "head -n 1 /home/$[USER]$/.xsessionrc | tr -s '\n' ' '");
+    config.getUserDesktopEnvCMD = data_handler.cpArray(config.getUserDesktopEnvCMD, "head -n 1 /home/$[USER]$/.xsessionrc 2>/dev/null | tr -d '\n'");
+    config.setUserDesktopEnvTypeCMD = data_handler.cpArray(config.setUserDesktopEnvTypeCMD, "echo $[xsessiontype]$ > /home/$[USER]$/.xsessiontype");
+    config.getUserDesktopEnvTypeCMD = data_handler.cpArray(config.getUserDesktopEnvTypeCMD, "head -n 1 /home/$[USER]$/.xsessiontype 2>/dev/null | tr -d '\n'");
     // config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;'");
     // config.saveUserDesktopEnvCMD = data_handler.cpArray(config.saveUserDesktopEnvCMD, "echo $[xsessionCMD]$ > /home/$[USER]$/.xsessionrc");
     // config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
-    config.getSystemBasicInfoCMD = data_handler.cpArray(config.getSystemBasicInfoCMD, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -s '\n' ' '");
+    config.getSystemBasicInfoCMD = data_handler.cpArray(config.getSystemBasicInfoCMD, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -d '\n'");
     config.shutdownCMD = data_handler.cpArray(config.shutdownCMD, "echo Shutting Down System && sudo /usr/sbin/shutdown -h now");
     config.sleepCMD = data_handler.cpArray(config.sleepCMD, "echo System going to Sleep && sudo systemctl suspend");
     config.restartCMD = data_handler.cpArray(config.restartCMD, "echo Restarting System && sudo shutdown -r now");

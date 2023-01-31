@@ -340,7 +340,7 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char*
 
     do{
         ch = wgetch(messageBox_msg);     /* refresh, accept single keystroke of input */
-        if((ch == config.KEY_ESCAPE) || (ch == '\n') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == 'w') || (ch == 'a') || (ch == 's') || (ch == 'd') || (ch == '4') || (ch == '8') || (ch == '2') || (ch == '6') || (ch == '5') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
+        if((ch == config.KEY_ESCAPE) || (ch == '\n') || (ch == '\t') || (ch == 'q') || (ch == KEY_BACKSPACE) || (ch == 'w') || (ch == 'a') || (ch == 's') || (ch == 'd') || (ch == '4') || (ch == '8') || (ch == '2') || (ch == '6') || (ch == '5') || (ch == KEY_HOME) || (ch == KEY_EXIT)){ // If Enter is pressed
 
             wclear(messageBox_msg);
             werase(messageBox_msg);
@@ -706,8 +706,9 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             else if(titleBarItemTree[0]==2){
                 titleBarItemTree[1]=0;
 
-                itemIndex =  getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.currentUserDesktopEnvComProtocol);
+                itemIndex = getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.currentUserDesktopEnvComProtocol);
                 title = strdup("XDG Session Type");
+
                 if(itemIndex!=-1){
                     if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(1));}
                     wmove(titlebar, 1, titlebarCoordX-(strlen(user.XDG_SESSION_TYPE_NAME)+3+strlen(user.XDG_SESSION_NAME)+spacingX));
@@ -840,7 +841,7 @@ void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
 void filluserFullName(char* username){
     if(user.userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(user.userFullName)/2), 1, user.userFullName);
-        free(user.userFullName);
+        free(user.userFullName);user.userFullName=nullptr;
 //        user.userFullName = nullptr;
     }
     // free(user.userFullName);
@@ -895,6 +896,7 @@ int authenticateButton(){
                     else if(session_status==0){
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Session Status", "Session Initialization Failed");
                     }
+                    wrefresh(mainScreenWin);
                     //auth(desktop, username, userpass);
 //                    cmd_executor.exec("su sys41x4 -c 'export DISPLAY=:0; startx'");
 //                       cmd_executor.exec("");

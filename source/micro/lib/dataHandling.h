@@ -15,6 +15,9 @@ public:
     char* replaceStr(char* arrTo, char* arrFrom, const char* startBound, const char* endBound, const char* replacementOf, const char* replaceBy);
     char* replaceStr(char* arrTo, char* arrFrom, char startBound[2], char endBound[2], const char* replacementOf, const char* replaceBy);
 
+    int getItemID(char seperator, char* arr, char* arrTocmp);
+    char* getItemName(char seperator, char* arr, int itemID, char* item);
+
     char* flatKeyValue(char* arrTo, char seperator, const char* keyArr, const char* valueArr);
     char* getFlatKey(char* arrTo, char seperator, const char* flatKeyValueArr);
     char* getFlatValue(char* arrTo, char seperator, const char* flatKeyValueArr);
