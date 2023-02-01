@@ -151,6 +151,7 @@ char* err_xsessions_open;
     char* incorrectCred;
 
     // CMD Varables;
+    char* getAvailableUsernameCMD;
     char* uuidCMD;
     char* usrGroupCMD;
     char* getUserFullnameCMD;

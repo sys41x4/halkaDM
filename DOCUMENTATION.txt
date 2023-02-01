@@ -19,6 +19,7 @@ libpam0g-dev
 ncal
 sysstat
 tcpdump
+accountsservice
 
 ----------------------------------------------------
 Currently Only Desktop Environtments are supported located at
@@ -33,7 +34,7 @@ Currently tested only for Debian Based Distribution
 -- Install software & library dependencies before further process--
 
 [Create Executable]
-gcc ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb
+g++ ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb -lcrypto
 
 [ Setup ] {use the below setup process untill makefile and documentation are officially created}
 
@@ -62,7 +63,17 @@ As the application is running in tty2 and if you got stuck in other tty's
 then you can switch to tty2 with CTRL+ALT+F2 and use the application
 
 [ Hardware ]
-Currently it is being testing in Ubuntu & Debian 11 bullseye & with jwm/icewm/fluxbox WM
+Currently it is being testing in Ubuntu & Debian 11 bullseye & with 
+X11/Xorg/xinitrc:
+    jwm
+    icewm
+    fluxbox
+    sway
+
+wayland:
+    currently under process    
+
+
     Distributor ID: Ubuntu
     Description:    Ubuntu 20.04.4 LTS
     Release:        20.04

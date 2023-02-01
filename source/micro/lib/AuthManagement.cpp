@@ -1,9 +1,11 @@
 #include "CMDexecutor.h"
 #include "AuthManagement.h"
-#include "../lib/dataHandling.h"
+#include "dataHandling.h"
 #include "../config/config.h"
+#include "CMDexecutor.h"
 #include <security/pam_appl.h>
 #include <unistd.h>
+
 
 int AUTH_MANAGEMENT::authCheck(char* usrHomeDir, char* username, char* userpass){
     // On Auth Success Create Session File and source file for sourcing
@@ -35,6 +37,19 @@ int AUTH_MANAGEMENT::authCheck(char* usrHomeDir, char* username, char* userpass)
     else{return 0;}
 }
 
+
+
+int AUTH_MANAGEMENT::usernameCheck(char* username){
+
+    /*return 1 : If username matches
+      return 0 : If username doesn't match*/
+    char* availableUsername;
+    availableUsername = cmd_executor.fetchExecOutput(availableUsername, config.getAvailableUsernameCMD);
+    int status = data_handler.getItemID('\7', availableUsername, username);
+    free(availableUsername);
+    if(status!=-1){return 1;}
+    return 0;
+}
 
 int AUTH_MANAGEMENT::chkCharAllowence(char character){
     if(character>=32 && character<=126){

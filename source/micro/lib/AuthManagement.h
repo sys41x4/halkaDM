@@ -13,7 +13,7 @@ public:
     int chkCharAllowence(char character);
 
     int authCheck(char* usrHomeDir, char* username, char* userpass);
-
+    int usernameCheck(char* username);
 //    struct pam_response *reply;
 
 //    int PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr);

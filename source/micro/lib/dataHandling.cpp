@@ -1,5 +1,9 @@
 #include "dataHandling.h"
 
+/*int DATA::itemAvailable(const char* arr, const char* item){
+    
+}*/
+
 char* DATA::replaceStr(char* arrTo, char* arrFrom, const char* startBound, const char* endBound, const char* replacementOf, const char* replaceBy){
 
     // StartBound and endBound Should Contain char array of size 2

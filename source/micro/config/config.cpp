@@ -207,6 +207,7 @@ void load_default_CMD(){
     // CMD Varables; // Specifically for Debian
     // Variable Identifier that is to be replaced [Format : $[<variable>]$]
     //                                            [ Requires 4 variable for position identification $,[,],$
+    config.getAvailableUsernameCMD = data_handler.cpArray(config.getAvailableUsernameCMD, "awk -F: '$7 !~ /\\/nologin/ && $7 !~ /\\/bin\\/false/ {print $1}' /etc/passwd | tr -s '\n' '\7'");
     config.uuidCMD = data_handler.cpArray(config.uuidCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f3 | tr -d '\n'");
     config.usrGroupCMD = data_handler.cpArray(config.usrGroupCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f4 | tr -d '\n'");
     config.getUserFullnameCMD = data_handler.cpArray(config.getUserFullnameCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f5 | tr -d '\n'");
@@ -214,8 +215,11 @@ void load_default_CMD(){
     config.usrShellCMD = data_handler.cpArray(config.usrShellCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -d '\n'");
     config.getSystemUnameCMD = data_handler.cpArray(config.getSystemUnameCMD, "uname -n -o");
     config.currentUserDesktopEnvCMD = data_handler.cpArray(config.currentUserDesktopEnvCMD, "sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
-    config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
-    config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
+    //config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "{ls /usr/share/xsessions & ls /usr/share/wayland-sessions} | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+    //config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+    config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+    //config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
+    config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat $[Xprotocol]$/$[ENV]$.* 2>/dev/null | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
     config.getUserDesktopEnvCMD = data_handler.cpArray(config.getUserDesktopEnvCMD, "head -n 1 /home/$[USER]$/.xsessionrc 2>/dev/null | tr -d '\n'");
     config.setUserDesktopEnvTypeCMD = data_handler.cpArray(config.setUserDesktopEnvTypeCMD, "echo $[xsessiontype]$ > /home/$[USER]$/.xsessiontype");
     config.getUserDesktopEnvTypeCMD = data_handler.cpArray(config.getUserDesktopEnvTypeCMD, "head -n 1 /home/$[USER]$/.xsessiontype 2>/dev/null | tr -d '\n'");

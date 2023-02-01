@@ -1,5 +1,43 @@
+//#include <iostream> //for std::cout
 #include "cryptography.h"
+#include <openssl/md5.h>
+//#include <string>
+//#include "md5.h"
+//using std::cout; using std::endl;
+//#include "md5NEW.h"
+//#include <iomanip> 
+// #include <cmath>
 
+char* HALKADM_CRYPTO::getMD5hash(const char* input, char* hashOut) {
+//  unsigned char md5_result[MD5_DIGEST_LENGTH];
+  unsigned char *md5_result;
+ //free(hashOut);
+  char result[MD5_DIGEST_LENGTH * 2 + 1];
+//  result = static_cast<char*>(std::malloc(MD5_DIGEST_LENGTH * sizeof(char)));
+
+  md5_result = MD5((const unsigned char*)input, strlen(input), NULL);
+
+  for(int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    sprintf(result + (i * 2), "%02x", (unsigned int)md5_result[i]);
+  }
+  hashOut = strdup(result);//free(result);
+  return hashOut;
+}
+/*void HALKADM_CRYPTO::getMD5hash(const char* input, char* hashOut) {
+//  unsigned char md5_result[MD5_DIGEST_LENGTH];
+  unsigned char *md5_result;
+ //free(hashOut);
+  char result[MD5_DIGEST_LENGTH * 2 + 1];
+//  result = static_cast<char*>(std::malloc(MD5_DIGEST_LENGTH * sizeof(char)));
+
+  md5_result = MD5((const unsigned char*)input, strlen(input), NULL);
+
+  for(int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    sprintf(result + (i * 2), "%02x", (unsigned int)md5_result[i]);
+  }
+  hashOut = strdup(result);//free(result);
+
+}*/
 void HALKADM_CRYPTO::maskStr(int strLen, char character, char *arr){
     //static char str[50];
     // memset(arr, character, sizeof(arr[0])*strLen);
@@ -82,4 +120,4 @@ void HALKADM_CRYPTO::generateRandomStr(int randomizeLen, int maxStrLen, const ch
 
 //    return str;
 };
-HALKADM_CRYPTO halkadm_crypto;
+// HALKADM_CRYPTO halkadm_crypto;

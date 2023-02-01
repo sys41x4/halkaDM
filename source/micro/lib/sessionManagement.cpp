@@ -120,8 +120,8 @@ int initiateSession(char* username, char* userpass){
     }
     setenv(strdup("DISPLAY"), display, true);
 */
-    char* cmd;
-
+    if(user.usernameVerified){
+    char* cmd=nullptr;
     int trackID=-1;
     if(user.XDG_SESSION_TYPE==DS_DEFAULT){
 //       trackID=user.XDG_SESSION_TYPE;
@@ -182,7 +182,15 @@ int initiateSession(char* username, char* userpass){
 
     }
     else{*/
-        cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvCMD, "$[", "]$", "ENV", user.XDG_SESSION_NAME);
+        if(user.XDG_SESSION_TYPE==DS_XINITRC || user.XDG_SESSION_TYPE==DS_XORG){
+            cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.xsessions);
+                    //free(cmd);
+        }
+        else if(user.XDG_SESSION_TYPE==DS_WAYLAND){
+            cmd = data_handler.replaceStr(cmd, config.setUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.waylandsessions);
+                    //free(cmd);
+        }
+        cmd = data_handler.replaceStr(cmd, cmd, "$[", "]$", "ENV", user.XDG_SESSION_NAME);
         cmd = data_handler.replaceStr(cmd, cmd, "$[", "]$", "USER", user.username);
         cmd_executor.exec(cmd);
         free(cmd);
@@ -196,6 +204,7 @@ int initiateSession(char* username, char* userpass){
     cmd = data_handler.replaceStr(cmd, config.getUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
     user.desktop_cmd = cmd_executor.fetchExecOutput(user.desktop_cmd, cmd);
     free(cmd);
+    
 //    user.XDG_SESSION_NAME = strdup("Default");
 //    if (login(strdup(username), strdup(userpass), &child_pid)) {
     if (login(username, userpass)) {
@@ -222,5 +231,8 @@ int initiateSession(char* username, char* userpass){
 
         return 1;
     } else { return 0;}
+
+    }
+    return 0;
 //    stop_x_server();
 }

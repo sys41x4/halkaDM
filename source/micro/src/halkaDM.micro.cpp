@@ -33,7 +33,8 @@
 #include "../lib/pam.h"
 #include "../lib/pam.c"
 #include "../lib/inputs.h"
-// #include <openssl/evp.h>
+//#include <openssl/evp.h>
+#include <openssl/md5.h>
 
 using namespace std;
 
@@ -584,7 +585,7 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
     int positionCoordX;
     int spacingX = 3;
     noecho();
-
+    char* cmd;
     int itemIndex;
     char* title=nullptr;
     char* itemName=nullptr;
@@ -728,6 +729,18 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
             else if(titleBarItemTree[0]==3){
                 titleBarItemTree[1]=0;
 
+
+                if(user.XDG_SESSION_TYPE==DS_XINITRC || user.XDG_SESSION_TYPE==DS_XORG){
+                    cmd = data_handler.replaceStr(cmd, config.availableUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.xsessions);
+                    //free(cmd);
+                }
+                else if(user.XDG_SESSION_TYPE==DS_WAYLAND){
+                    cmd = data_handler.replaceStr(cmd, config.availableUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.waylandsessions);
+                    //free(cmd);
+                }
+
+                if(user.XDG_SESSION_TYPE!=DS_SHELL || user.XDG_SESSION_TYPE!=DS_DEFAULT){
+                config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(config.availableUserDesktopEnv, cmd);free(cmd);
                 itemName =  getSelectedSubItemName(titlebarCoordY, spacingX, 0, 13, '\7', config.availableUserDesktopEnv, itemName);
                 title = strdup("Selected Environment");
                 if(itemName!=nullptr){
@@ -755,6 +768,7 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
                     user.XDG_SESSION_NAME = strdup(itemName);
                 }
                 free(itemName);free(title);
+                }
             }
         }
 
@@ -767,21 +781,39 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int itemID=-1)
 }
 
 void updateRequestedUSRENV(){
-    FILE *pp;
-    cbreak();
+    if(user.usernameVerified){
 
-    char* cmd;
-    cmd = data_handler.replaceStr(cmd, config.currentUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
+        char* cmd;
+        if(user.XDG_SESSION_TYPE==DS_DEFAULT){
+           cmd = data_handler.replaceStr(cmd, config.getUserDesktopEnvTypeCMD, "$[", "]$", "USER", user.username);
+           user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(user.XDG_SESSION_TYPE_NAME, cmd);
+           free(cmd);cmd=nullptr;
 
-    if ((pp = popen(cmd, "r")) != 0) {
-        char buffer[BUFSIZ];
-        //free(user.XDG_SESSION_NAME);
-        while (fgets(buffer, sizeof(buffer), pp) != 0) {
-            for(int i=0; buffer[i+1]!='\0'; i++){user.XDG_SESSION_NAME[i] = buffer[i];}
+           user.XDG_SESSION_TYPE = data_handler.getItemID('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE_NAME);
+           //trackID=user.XDG_SESSION_TYPE;
+           if(user.XDG_SESSION_TYPE==-1 || user.XDG_SESSION_TYPE==DS_DEFAULT){
+               user.XDG_SESSION_TYPE=DS_XORG;
+               user.XDG_SESSION_TYPE_NAME=data_handler.getItemName('\7', config.currentUserDesktopEnvComProtocol, DS_XORG, user.XDG_SESSION_TYPE_NAME);
+           //trackID=-1;
+           }
         }
-        pclose(pp);
+
+
+        FILE *pp;
+        cbreak();
+
+        cmd = data_handler.replaceStr(cmd, config.currentUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
+        //user.XDG_SESSION_NAME =  cmd_executor.fetchExecOutput(user.XDG_SESSION_NAME, cmd);
+        if ((pp = popen(cmd, "r")) != 0) {
+            char buffer[BUFSIZ];
+            //free(user.XDG_SESSION_NAME);
+            while (fgets(buffer, sizeof(buffer), pp) != 0) {
+               for(int i=0; buffer[i+1]!='\0'; i++){user.XDG_SESSION_NAME[i] = buffer[i];}
+            }
+            pclose(pp);
+        }
+        free(cmd);
     }
-    free(cmd);
 }
 
 void authChrVisibilityPattern(WINDOW *win, int y, int x, int* arr){
@@ -845,15 +877,18 @@ void filluserFullName(char* username){
 //        user.userFullName = nullptr;
     }
     // free(user.userFullName);
-    char* cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
+
+    if(user.usernameVerified){
+        char* cmd = data_handler.replaceStr(cmd,  config.getUserFullnameCMD, "$[", "]$", "USER", username);
     //draw_charArr(mainScreenWin, (winMaxY*0.75)-2, 0 , 13, cmd);
-    user.userFullName = cmd_executor.fetchExecOutput(user.userFullName, cmd);
-    free(cmd);
+        user.userFullName = cmd_executor.fetchExecOutput(user.userFullName, cmd);
+        free(cmd);
+    }
     if(user.userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(user.userFullName)/2), 13, user.userFullName);
         wrefresh(mainScreenWin);
     }
-    else{free(user.userFullName);}
+//    else{free(user.userFullName);}
 //    wrefresh(mainScreenWin);
 }
 
@@ -871,14 +906,18 @@ int authenticateButton(){
     do{
         ch = wgetch(authBox);
         if((ch=='w') || (ch=='q') || (ch==KEY_UP) || (ch==config.KEY_ESCAPE) || (ch=='8')){retCode = 1;break;}
-        else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){retCode = 3;break;}
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
+        else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){
+              retCode = 3;break;
+//            if(user.usernameVerified){retCode = 3;break;}
+//            else{retCode = 0;break;}
+        }
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
 
             if(strlen(user.username)<=0 || strlen(user.userpass)<=0){
                 messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, '\6', config.emptyCredPassed);
             }
-            else if(chkPAMAuthStatus(user.username, user.userpass)==PAM_SUCCESS && auth_management.authCheck(config.usrHomeDir, user.username, user.userpass)==1){
+            else if(user.usernameVerified && chkPAMAuthStatus(user.username, user.userpass)==PAM_SUCCESS && auth_management.authCheck(config.usrHomeDir, user.username, user.userpass)==1){
 //            else if(auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
 //            else if(chkPAMAuthStatus(username, userpass)==PAM_SUCCESS){
                 //session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
@@ -1009,12 +1048,21 @@ int login_userField(WINDOW *win, int y, int x){
         ch = wgetch(win);     /* refresh, accept single keystroke of input */
         if((ch == '\n') || (ch == '\t')){ // If Enter is pressed
             if(strlen(user.username)>0){
-                // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
-                gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
-                filluserFullName(user.username);
+                user.usernameVerified = auth_management.usernameCheck(user.username);
+                if(user.usernameVerified){
+
+/*                user.usernameHash = halkadm_crypto.getMD5hash(user.username, user.usernameHash);
+                if(user.usernameHash!=nullptr){
+                    char* title = strdup("Username MD5 Hash");
+                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, user.usernameHash);
+                }
+*/
+                    gen_randColorMap(loginColourMatrixWin, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
+                    filluserFullName(user.username);
                 //draw_charArr(mainScreenWin, (winMaxY/8)-2, (winMaxX/2)-(strlen(user.userFullName)/2), 13, user.userFullName);
-                updateRequestedUSRENV();
-                draw_titlebar(titleBar_subwin, 13, -1);
+                    updateRequestedUSRENV();
+                    draw_titlebar(titleBar_subwin, 13, -1);
+                }
             }
             break;
         }
@@ -1104,7 +1152,6 @@ void freeMemory(){
 }
 
 void allocateMemory(){
-
     // Create SESSION_KEY | SIZE 33
 //    SESSION_KEY = static_cast<char*>(std::malloc(SESSION_KEY_LENGTH * sizeof(char)));
     // createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
@@ -1135,6 +1182,8 @@ void allocateMemory(){
     // Allocate & Fill Space For Environment Names
     config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(config.availableUserDesktopEnv, config.availableUserDesktopEnvCMD);
     // fill_available_desktop_environments();
+
+
 }
 
 

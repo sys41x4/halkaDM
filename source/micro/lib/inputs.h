@@ -12,10 +12,17 @@
 class USER{
 public:
     char* authType;
+
     char* username=nullptr;
     char* userpass=nullptr;
+
+    int usernameVerified=0;
+
+    char* usernameHash=nullptr;
+
     char* visible_username=nullptr;
     char* visible_userpass=nullptr;
+
     char* userFullName=nullptr;
 
     int XDG_SESSION_TYPE = DS_DEFAULT;
