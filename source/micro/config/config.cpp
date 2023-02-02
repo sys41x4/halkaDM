@@ -177,7 +177,7 @@ void load_default_keyValues(){
     config.xauth_cmd = strdup("/usr/bin/xauth");
     config.xsessions = strdup("/usr/share/xsessions");
     config.mcookie_cmd = strdup("/usr/bin/mcookie");
-
+    config.console_dev = strdup("/dev/console");
 
     // config.SESSION_KEY = nullptr;
     // config.SESSION_KEY_LENGTH = 32;

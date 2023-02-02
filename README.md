@@ -108,6 +108,7 @@ ncal
 sysstat
 tcpdump
 accountsservice
+openssl
 
 ----------------------------------------------------
 Currently Only Desktop Environtments are supported located at

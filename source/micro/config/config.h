@@ -67,6 +67,7 @@ char* err_xsessions_open;
     char* xsessions;
     char* waylandsessions;
     char* mcookie_cmd;
+    char* console_dev;
 
     // Language Variable Config
     char* loginBTN_text;

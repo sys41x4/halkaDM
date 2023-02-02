@@ -280,7 +280,7 @@ void wayland(
 	struct passwd* pwd,
 	const char* desktop_cmd)
 {
-
+//        setenv("WAYLAND_DISPLAY", user.desktop_name, 1);
 	char cmd[1024];
 	snprintf(cmd, 1024, "%s %s", config.wayland_cmd, desktop_cmd);
 	execl(pwd->pw_shell, pwd->pw_shell, "-c", cmd, NULL);

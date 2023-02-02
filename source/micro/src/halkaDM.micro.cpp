@@ -12,6 +12,8 @@
 #include "../lib/sessionManagement.cpp"
 #include "../lib/AuthManagement.h"
 #include "../lib/AuthManagement.cpp"
+#include "../lib/utils.h"
+#include "../lib/utils.cpp"
 // #include "../lib/login.h"
 // #include "../lib/login.c"
 #include <locale.h>
@@ -1160,6 +1162,8 @@ void allocateMemory(){
     // AutoSeeded_RNG rng; // cryptographically secure random number generator
     // calculate_hash(rng);
 
+    // define max visible Username/Userpass Length
+    config.visibleAuthStrLen = (loginBoxMaxX*0.75)+5;
 
     // Allocate Username Space
     user.username = static_cast<char*>(std::malloc(config.maxUsernameLen * sizeof(char)));
@@ -1190,11 +1194,12 @@ void allocateMemory(){
 void initWindow(){
     // Allocate Memory Space
 
-    allocateMemory();
+//    allocateMemory();
 
     // initscr(); // Initialize Curses Screen Base
 
     getmaxyx(stdscr, winMaxY, winMaxX);
+
 
 
     // Account Pic coordinate and oeiention settings
@@ -1218,6 +1223,7 @@ void initWindow(){
 
     getmaxyx(authBox, loginBoxMaxY, loginBoxMaxX);
 
+    allocateMemory();
 
     // Setup Colours
     // start_color();
@@ -1277,6 +1283,8 @@ int main(int argc, char **argv)
     genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
     // Draw Auth Map
     gen_randColorMap(authBox, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
+
+    switch_tty();
     while(1){
         // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
