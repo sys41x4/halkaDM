@@ -12,24 +12,14 @@ int AUTH_MANAGEMENT::authCheck(char* usrHomeDir, char* username, char* userpass)
     // Create New Session Key
 
     if(strlen(username)>0 && strlen(userpass)>0){
-        //char* cmd = nullptr;
-        //char cmd[250] = "getent passwd ";
-        //strcat(cmd, username);
-        //strcat(cmd, " | grep -v '/nologin' | cut -d: -f6 | tr -s '\n' '/'");
 
-        char* cmd;
-        cmd = data_handler.replaceStr(cmd, config.usrHomeDirCMD, "$[", "]$", "USER", username);
+        char* cmd=nullptr;
+        cmd = data_handler.replaceStr(config.usrHomeDirCMD, "$[", "]$", "USER", username);
 
-        // usrHomeDir = storeExecCMD(usrHomeDir, cmd);
-        //cmd = data_handler.replaceStr(cmd, config.usrHomeDirCMD, "$[", "]$", "USER", username);
         config.usrHomeDir = cmd_executor.fetchExecOutput(usrHomeDir, cmd);
 
-        //for(int i=0; i<sizeof(cmd)/sizeof(cmd[0]); i++){cmd[i]='\0';}
         free(cmd);
-        // Check if any home directory exist for the user & if it is valid
         if(config.usrHomeDir==nullptr){
-            //drawCMDStr(mainScreenWin, 20, 0, 1, 0, 0, 13, "NULL");
-//            free(config.usrHomeDir);
             return 0; // Auth Failed
         }
         else{return 1;} // Auth Success
@@ -43,10 +33,10 @@ int AUTH_MANAGEMENT::usernameCheck(char* username){
 
     /*return 1 : If username matches
       return 0 : If username doesn't match*/
-    char* availableUsername;
+    char* availableUsername=nullptr;
     availableUsername = cmd_executor.fetchExecOutput(availableUsername, config.getAvailableUsernameCMD);
     int status = data_handler.getItemID('\7', availableUsername, username);
-    free(availableUsername);
+    free(availableUsername);//availableUsername=nullptr;delete availableUsername;
     if(status!=-1){return 1;}
     return 0;
 }
@@ -97,8 +87,6 @@ int chkPAMAuthStatus(char* user, char* password)
   {
     //std::cout << "pam_start returned " << retval << std::endl;
     // exit(retval);
-    // draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Error Starting PAM Service");
-    // wrefresh(mainScreenWin);
     return retval;
   }
 
@@ -116,15 +104,11 @@ int chkPAMAuthStatus(char* user, char* password)
     if (retval == PAM_AUTH_ERR)
     {
 //      std::cout << "Authentication failure." << std::endl;
-      // draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Authentication Failure");
-      // wrefresh(mainScreenWin);
       return retval;
     }
     else
     {
      // std::cout << "pam_authenticate returned " << retval << std::endl;
-     // draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "pam_authenticate returned");
-     // wrefresh(mainScreenWin);
      return retval;
     }
     // exit(retval);
@@ -132,19 +116,14 @@ int chkPAMAuthStatus(char* user, char* password)
   }
 
   // std::cout << "Authenticated." << std::endl;
-  //draw_charArr(mainScreenWin, winMaxY-2, 0, 13, "Authenticated");
-  //wrefresh(mainScreenWin);
 
   retval = pam_end(local_auth_handle, retval);
 
   if (retval != PAM_SUCCESS)
   {
 //    std::cout << "pam_end returned " << retval << std::endl;
-    // draw_charArr(mainScreenWin, winMaxY-3, 0, 13, "pam_end returned");
-    // wrefresh(mainScreenWin);
-    //exit(retval);
     return retval;
   }
-
+  free(username);//username=nullptr;delete username;
   return retval;
 }

@@ -18,6 +18,6 @@ public:
     char* getMD5hash(const char* input, char* hashOut);
 };
 
-HALKADM_CRYPTO halkadm_crypto;
+//HALKADM_CRYPTO halkadm_crypto;
 
 #endif

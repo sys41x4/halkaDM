@@ -1,5 +1,3 @@
-//#include "configator.h"
-//#include "dragonfail.h"
 #include "inputs.h"
 #include "../config/config.h"
 #include "utils.h"

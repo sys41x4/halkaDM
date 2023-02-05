@@ -1,158 +1,228 @@
-#include "config.h"
+//#include "h"
 #include "../lib/dataHandling.h"
 #include "../lib/inputs.h"
+#include "../lib/cpptoml.h"
+#include <iostream>
 
 #ifndef DEBUG
-	#define INI_LANG DATADIR "/lang/%s.ini"
-	#define INI_CONFIG "/etc/halkaDM/halkaDM.micro/config.ini"
+//	#define INI_LANG DATADIR "/lang/%s.ini"
+        #define INI_LANG DATADIR "/lang/en_US.ini"
+	#define INI_CONFIG "/etc/halkaDM/halkaDM.micro/ini"
+        #define INI_CMD_CONFIG "/etc/halkaDM/halkaDM.micro/config_CMD.toml"
 #else
-	#define INI_LANG "../res/lang/%s.ini"
-	#define INI_CONFIG "../res/config.ini"
+//	#define INI_LANG "../res/lang/%s.ini"
+        #define INI_LANG "../res/lang/en_US.ini"
+	#define INI_CONFIG "../res/ini"
+        #define INI_CMD_CONFIG "../res/config_CMD.toml"
 #endif
+
+
+void CONFIG::load_default_softwareInfo(){
+    // Default Software Info
+    package = strdup("halkaDM:nano|testing");
+    service_name = strdup("halkaDM");
+    distro = DEBIAN_DISTRO;
+};
+
+void CONFIG::allocate(){
+
+    int tmp=0;
+    try {
+        auto configFile = cpptoml::parse_file(INI_LANG);
+
+    // Language Variable Config
+
+
+        loginBTN_text = strdup(configFile->get_as<std::string>("loginBTN_text")->c_str());
+        logoutBTN_text = strdup(configFile->get_as<std::string>("logoutBTN_text")->c_str());
+        powerBTN_text = strdup(configFile->get_as<std::string>("powerBTN_text")->c_str());
+        utilitiesBTN_text = strdup(configFile->get_as<std::string>("utilitiesBTN_text")->c_str());
+        default_text = strdup(configFile->get_as<std::string>("default_text")->c_str());
+        usernameFieldID_text = strdup(configFile->get_as<std::string>("usernameFieldID_text")->c_str());
+        userpassFieldID_text = strdup(configFile->get_as<std::string>("userpassFieldID_text")->c_str());
+        currentDesktopENV_text = default_text;
+        availableUserDesktopEnv =  default_text;
+
+
+        tmp=configFile->get_as<std::string>("sleepBTN_text")->length();
+        tmp+=configFile->get_as<std::string>("restartBTN_text")->length();
+        tmp+=configFile->get_as<std::string>("shutdownBTN_text")->length();
+        tmp+=5;
+        powerList_text = static_cast<char*>(std::malloc(tmp * sizeof(char)));
+        snprintf(powerList_text, tmp, "%s\7%s\7%s\7", configFile->get_as<std::string>("sleepBTN_text")->c_str(), 
+        configFile->get_as<std::string>("restartBTN_text")->c_str(), configFile->get_as<std::string>("shutdownBTN_text")->c_str());
+
+        tmp=configFile->get_as<std::string>("calenderBTN_text")->length();
+        tmp+=configFile->get_as<std::string>("cpuStatusBTN_text")->length();
+        tmp+=configFile->get_as<std::string>("networkStatusBTN_text")->length();
+        tmp+=configFile->get_as<std::string>("refreshBTN_text")->length();
+        tmp+=configFile->get_as<std::string>("exitBTN_text")->length();
+        tmp+=7;
+        utilitiesList_text = static_cast<char*>(std::malloc(tmp * sizeof(char)));
+        snprintf(utilitiesList_text, tmp, "%s\7%s\7%s\7%s\7%s\7", configFile->get_as<std::string>("calenderBTN_text")->c_str(), 
+        configFile->get_as<std::string>("cpuStatusBTN_text")->c_str(), configFile->get_as<std::string>("networkStatusBTN_text")->c_str(), 
+        configFile->get_as<std::string>("refreshBTN_text")->c_str(), configFile->get_as<std::string>("exitBTN_text")->c_str());
+
+        tmp=strlen(default_text)+30;
+        currentUserDesktopEnvComProtocol = static_cast<char*>(std::malloc(tmp * sizeof(char)));
+        snprintf(currentUserDesktopEnvComProtocol, tmp, "%s\7shell\7xinitrc\7Xorg\7wayland\7", configFile->get_as<std::string>("default_text")->c_str());
+
+        tmp=0;
+        configFile.reset();
+
+    }
+    catch (const cpptoml::parse_exception& e) {
+       load_default_lang();
+    }
+
+
+
+
+  //  delete configFile;
+}
 
 void CONFIG::deallocate(){
 
-    free(config.package);
+    free(package);
 
-    free(config.capslock);
-    free(config.err_alloc);
-    free(config.err_bounds);
-    free(config.err_chdir);
-    free(config.err_console_dev);
-    free(config.err_dgn_oob);
-    free(config.err_domain);
-    free(config.err_hostname);
-    free(config.err_mlock);
-    free(config.err_null);
-    free(config.err_pam);
-    free(config.err_pam_abort);
-    free(config.err_pam_acct_expired);
-    free(config.err_pam_auth);
-    free(config.err_pam_authinfo_unavail);
-    free(config.err_pam_authok_reqd);
-    free(config.err_pam_buf);
-    free(config.err_pam_cred_err);
-    free(config.err_pam_cred_expired);
-    free(config.err_pam_cred_insufficient);
-    free(config.err_pam_cred_unavail);
-    free(config.err_pam_maxtries);
-    free(config.err_pam_perm_denied);
-    free(config.err_pam_session);
-    free(config.err_pam_sys);
-    free(config.err_pam_user_unknown);
-    free(config.err_path);
-    free(config.err_perm_dir);
-    free(config.err_perm_group);
-    free(config.err_perm_user);
-    free(config.err_pwnam);
-    free(config.err_user_gid);
-    free(config.err_user_init);
-    free(config.err_user_uid);
-    free(config.err_xsessions_dir);
-    free(config.err_xsessions_open);
+//    free(capslock);
+    free(err_alloc);
+    free(err_bounds);
+    free(err_chdir);
+    free(err_console_dev);
+    free(err_dgn_oob);
+    free(err_domain);
+    free(err_hostname);
+    free(err_mlock);
+    free(err_null);
+    free(err_pam);
+    free(err_pam_abort);
+    free(err_pam_acct_expired);
+    free(err_pam_auth);
+    free(err_pam_authinfo_unavail);
+    free(err_pam_authok_reqd);
+    free(err_pam_buf);
+    free(err_pam_cred_err);
+    free(err_pam_cred_expired);
+    free(err_pam_cred_insufficient);
+    free(err_pam_cred_unavail);
+    free(err_pam_maxtries);
+    free(err_pam_perm_denied);
+    free(err_pam_session);
+    free(err_pam_sys);
+    free(err_pam_user_unknown);
+    free(err_path);
+    free(err_perm_dir);
+    free(err_perm_group);
+    free(err_perm_user);
+    free(err_pwnam);
+    free(err_user_gid);
+    free(err_user_init);
+    free(err_user_uid);
+    free(err_xsessions_dir);
+    free(err_xsessions_open);
 
-    free(config.service_name);
-    free(config.loginBTN_text);
-    free(config.logoutBTN_text);
-    free(config.powerList_text);
-    free(config.utilitiesList_text);
-    free(config.powerBTN_text);
-    free(config.utilitiesBTN_text);
-    free(config.desktopENVBTN_text);
-    free(config.currentDesktopENV_text);
-    free(config.usernameFieldID_text);
-    free(config.userpassFieldID_text);
+    free(service_name);
+    free(loginBTN_text);
+    free(logoutBTN_text);
+    free(powerList_text);
+    free(utilitiesList_text);
+    free(powerBTN_text);
+    free(utilitiesBTN_text);
+    free(desktopENVBTN_text);
+    free(currentDesktopENV_text);
+    free(usernameFieldID_text);
+    free(userpassFieldID_text);
 
-    free(config.loginFailed_text);
-    free(config.loginSuccess_text);
-    free(config.logoutFailed_text);
-    free(config.logoutSuccess_text);
-    free(config.emptyCredPassed);
-    free(config.incorrectCred);
+    free(loginFailed_text);
+    free(loginSuccess_text);
+    free(logoutFailed_text);
+    free(logoutSuccess_text);
+    free(emptyCredPassed);
+    free(incorrectCred);
 
-    free(config.uuidCMD);
-    free(config.usrGroupCMD);
-    free(config.getUserFullnameCMD);
-    free(config.usrHomeDirCMD);
-    free(config.usrShellCMD);
-    free(config.getSystemUnameCMD);
-    free(config.currentUserDesktopEnvCMD);
-    free(config.availableUserDesktopEnvCMD);
-    free(config.setUserDesktopEnvCMD);
-    free(config.getSystemBasicInfoCMD);
-    free(config.shutdownCMD);
-    free(config.sleepCMD);
-    free(config.restartCMD);
-    free(config.dateTimeCMD);
-    free(config.calenderCMD);
-    free(config.cpuStatusCMD);
-    free(config.networkStatusCMD);
+    free(uuidCMD);
+    free(usrGroupCMD);
+    free(getUserFullnameCMD);
+    free(usrHomeDirCMD);
+    free(usrShellCMD);
+    free(getSystemUnameCMD);
+    free(currentUserDesktopEnvCMD);
+    free(availableUserDesktopEnvCMD);
+    free(setUserDesktopEnvCMD);
+    free(getSystemBasicInfoCMD);
+    free(shutdownCMD);
+    free(sleepCMD);
+    free(restartCMD);
+    free(dateTimeCMD);
+    free(calenderCMD);
+    free(cpuStatusCMD);
+    free(networkStatusCMD);
 }
 
-void load_default_softwareInfo(){
-    // Default Software Info
-    config.package = data_handler.cpArray(config.package, "halkaDM:nano|testing");
 
-};
+void CONFIG::error_default_lang(){
+    capslock = strdup("capslock");
+    err_alloc = strdup("failed memory allocation");
+    err_bounds = strdup("out-of-bounds index");
+    err_chdir = strdup("failed to open home folder");
+    err_console_dev = strdup("failed to access console");
+    err_dgn_oob = strdup("log message");
+    err_domain = strdup("invalid domain");
+    err_hostname = strdup("failed to get hostname");
+    err_mlock = strdup("failed to lock password memory");
+    err_null = strdup("null pointer");
+    err_pam = strdup("pam transaction failed");
+    err_pam_abort = strdup("pam transaction aborted");
+    err_pam_acct_expired = strdup("account expired");
+    err_pam_auth = strdup("authentication error");
+    err_pam_authinfo_unavail = strdup("failed to get user info");
+    err_pam_authok_reqd = strdup("token expired");
+    err_pam_buf = strdup("memory buffer error");
+    err_pam_cred_err = strdup("failed to set credentials");
+    err_pam_cred_expired = strdup("credentials expired");
+    err_pam_cred_insufficient = strdup("insufficient credentials");
+    err_pam_cred_unavail = strdup("failed to get credentials");
+    err_pam_maxtries = strdup("reached maximum tries limit");
+    err_pam_perm_denied = strdup("permission denied");
+    err_pam_session = strdup("session error");
+    err_pam_sys = strdup("system error");
+    err_pam_user_unknown = strdup("unknown user");
+    err_path = strdup("failed to set path");
+    err_perm_dir = strdup("failed to change current directory");
+    err_perm_group = strdup("failed to downgrade group permissions");
+    err_perm_user = strdup("failed to downgrade user permissions");
+    err_pwnam = strdup("failed to get user info");
+    err_user_gid = strdup("failed to set user GID");
+    err_user_init = strdup("failed to initialize user");
+    err_user_uid = strdup("failed to set user UID");
+    err_xsessions_dir = strdup("failed to find sessions folder");
+    err_xsessions_open = strdup("failed to open sessions folder");
+}
 
-void load_default_lang(){
-config.capslock = strdup("capslock");
-config.err_alloc = strdup("failed memory allocation");
-config.err_bounds = strdup("out-of-bounds index");
-config.err_chdir = strdup("failed to open home folder");
-config.err_console_dev = strdup("failed to access console");
-config.err_dgn_oob = strdup("log message");
-config.err_domain = strdup("invalid domain");
-config.err_hostname = strdup("failed to get hostname");
-config.err_mlock = strdup("failed to lock password memory");
-config.err_null = strdup("null pointer");
-config.err_pam = strdup("pam transaction failed");
-config.err_pam_abort = strdup("pam transaction aborted");
-config.err_pam_acct_expired = strdup("account expired");
-config.err_pam_auth = strdup("authentication error");
-config.err_pam_authinfo_unavail = strdup("failed to get user info");
-config.err_pam_authok_reqd = strdup("token expired");
-config.err_pam_buf = strdup("memory buffer error");
-config.err_pam_cred_err = strdup("failed to set credentials");
-config.err_pam_cred_expired = strdup("credentials expired");
-config.err_pam_cred_insufficient = strdup("insufficient credentials");
-config.err_pam_cred_unavail = strdup("failed to get credentials");
-config.err_pam_maxtries = strdup("reached maximum tries limit");
-config.err_pam_perm_denied = strdup("permission denied");
-config.err_pam_session = strdup("session error");
-config.err_pam_sys = strdup("system error");
-config.err_pam_user_unknown = strdup("unknown user");
-config.err_path = strdup("failed to set path");
-config.err_perm_dir = strdup("failed to change current directory");
-config.err_perm_group = strdup("failed to downgrade group permissions");
-config.err_perm_user = strdup("failed to downgrade user permissions");
-config.err_pwnam = strdup("failed to get user info");
-config.err_user_gid = strdup("failed to set user GID");
-config.err_user_init = strdup("failed to initialize user");
-config.err_user_uid = strdup("failed to set user UID");
-config.err_xsessions_dir = strdup("failed to find sessions folder");
-config.err_xsessions_open = strdup("failed to open sessions folder");
+void CONFIG::load_default_lang(){
 
     // Language Variable Config
-    config.service_name = strdup("halkaDM");
-    config.loginBTN_text = data_handler.cpArray(config.loginBTN_text, " LOGIN ");
-    config.logoutBTN_text = data_handler.cpArray(config.logoutBTN_text, " LOGOUT ");
-    config.powerList_text = data_handler.cpArray(config.powerList_text, "Sleep\7Restart\7Shutdown\7");
-    config.utilitiesList_text = data_handler.cpArray(config.utilitiesList_text, "Calender\7CPU Status\7Network Status\7Refresh\7Exit\7");
-    config.powerBTN_text = data_handler.cpArray(config.powerBTN_text, "Power");
-    config.utilitiesBTN_text = data_handler.cpArray(config.utilitiesBTN_text, "Utilities");
-    config.desktopENVBTN_text = data_handler.cpArray(config.desktopENVBTN_text, "ENV");
-    config.currentDesktopENV_text = data_handler.cpArray(config.currentDesktopENV_text, "Default");
-    config.currentUserDesktopEnvComProtocol =  data_handler.cpArray(config.currentUserDesktopEnvComProtocol, "Default\7shell\7xinitrc\7Xorg\7wayland\7");
-    config.usernameFieldID_text = data_handler.cpArray(config.usernameFieldID_text, "USER");
-    config.userpassFieldID_text = data_handler.cpArray(config.userpassFieldID_text, "PASS");
+    default_text = strdup("Default");
+    loginBTN_text = strdup(" LOGIN ");
+    logoutBTN_text = strdup(" LOGOUT ");
+    powerList_text = strdup("Sleep\7Restart\7Shutdown\7");
+    utilitiesList_text = strdup("Calender\7CPU Status\7Network Status\7Refresh\7Exit\7");
+    powerBTN_text = strdup("Power");
+    utilitiesBTN_text = strdup("Utilities");
+    desktopENVBTN_text = strdup("ENV");
+    availableUserDesktopEnv = default_text;
+    currentDesktopENV_text = default_text;
+    currentUserDesktopEnvComProtocol =  strdup("Default\7shell\7xinitrc\7Xorg\7wayland\7");
+    usernameFieldID_text = strdup("USER");
+    userpassFieldID_text = strdup("PASS");
 
 };
 
-void load_default_keyValues(){
+void CONFIG::load_default_keyValues(){
     // Default KeyValues
-    /*config.KEY_ESCAPE = '\x1b';
-    config.asciiColors[] = {
+    /*KEY_ESCAPE = '\x1b';
+    asciiColors[] = {
         COLOR_BLACK,
         COLOR_GREEN,
         COLOR_RED,
@@ -162,79 +232,82 @@ void load_default_keyValues(){
         COLOR_BLUE,
         COLOR_CYAN
     };
-    config.totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);*/
-   // config.availableUserDesktopEnvComProtocol = strdup("xsessions\7wayland-sessions\7shell\7");
-    config.totalManualColors = 8;
-    config.totalRandomizedColors = 10;
-    config.tty = 2;
-    config.path = strdup("/usr/local/sbin:/usr/local/bin:/usr/bin");
-    config.term_reset_cmd = strdup("/usr/bin/tput reset");
-    config.wayland_cmd = strdup(DATADIR "/wsetup.sh");
-    config.waylandsessions = strdup("/usr/share/wayland-sessions");
-    config.x_cmd = strdup("/usr/bin/X");
-    config.xinitrc = strdup("~/.xinitrc");
-    config.x_cmd_setup = strdup(DATADIR "/xsetup.sh");
-    config.xauth_cmd = strdup("/usr/bin/xauth");
-    config.xsessions = strdup("/usr/share/xsessions");
-    config.mcookie_cmd = strdup("/usr/bin/mcookie");
-    config.console_dev = strdup("/dev/console");
+    totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);*/
+    // availableUserDesktopEnvComProtocol = strdup("xsessions\7wayland-sessions\7shell\7");
+    totalManualColors = 8;
+    totalRandomizedColors = 10;
+    tty = 2;
+    path = strdup("/usr/local/sbin:/usr/local/bin:/usr/bin");
+    term_reset_cmd = strdup("/usr/bin/tput reset");
+    wayland_cmd = strdup(DATADIR "/wsetup.sh");
+    waylandsessions = strdup("/usr/share/wayland-sessions");
+    x_cmd = strdup("/usr/bin/X");
+    xinitrc = strdup("~/.xinitrc");
+    x_cmd_setup = strdup(DATADIR "/xsetup.sh");
+    xauth_cmd = strdup("/usr/bin/xauth");
+    xsessions = strdup("/usr/share/xsessions");
+    mcookie_cmd = strdup("/usr/bin/mcookie");
+    console_dev = strdup("/dev/console");
 
-    // config.SESSION_KEY = nullptr;
-    // config.SESSION_KEY_LENGTH = 32;
-    config.maxTitleBarItemTreeDepth = 2;
-    config.titleBarHoverableItemCount = 4;
+    // SESSION_KEY = nullptr;
+    // SESSION_KEY_LENGTH = 32;
+    maxTitleBarItemTreeDepth = 2;
+    titleBarHoverableItemCount = 4;
     // char** titleBarSubItems;
     // char** titleBarSubItemsCMD;
-    // config.usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
-    // config.userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
-    config.maxUsernameLen = 255;
-    config.maxUserpassLen = 255;
-    config.visibleAuthStrLen = 50;
+    // usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
+    // userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
+    maxUsernameLen = 255;
+    maxUserpassLen = 255;
+    visibleAuthStrLen = 50;
 };
 
-void load_default_alertText(){
+void CONFIG::load_default_alertText(){
     // Alert Text
-    config.loginFailed_text =  data_handler.flatKeyValue(config.loginFailed_text, '\6', "LOGIN Failed", "Access Rejected");
-    config.loginSuccess_text = data_handler.flatKeyValue(config.loginSuccess_text, '\6', "LOGIN Success", "Access Granted");
-    config.logoutFailed_text = data_handler.flatKeyValue(config.logoutFailed_text, '\6', "LOGOUT Failed", "Access Rejected");
-    config.logoutSuccess_text = data_handler.flatKeyValue(config.logoutSuccess_text, '\6', "LOGOUT Success", "Good Bye :)");
-    config.emptyCredPassed = data_handler.flatKeyValue(config.emptyCredPassed, '\6', "LOGIN Failed", "Empty Credentials Passed");
-    config.incorrectCred = data_handler.flatKeyValue(config.incorrectCred, '\6', "LOGIN Failed", "Incorrect Credentials");
+    data_handler.flatKeyValue(loginFailed_text, '\6', "LOGIN Failed", "Access Rejected");
+    data_handler.flatKeyValue(loginSuccess_text, '\6', "LOGIN Success", "Access Granted");
+    data_handler.flatKeyValue(logoutFailed_text, '\6', "LOGOUT Failed", "Access Rejected");
+    data_handler.flatKeyValue(logoutSuccess_text, '\6', "LOGOUT Success", "Good Bye :)");
+    data_handler.flatKeyValue(emptyCredPassed, '\6', "LOGIN Failed", "Empty Credentials Passed");
+    data_handler.flatKeyValue(incorrectCred, '\6', "LOGIN Failed", "Incorrect Credentials");
 };
 
 
-void load_default_CMD(){
+void CONFIG::load_default_CMD(){
     // CMD Varables; // Specifically for Debian
     // Variable Identifier that is to be replaced [Format : $[<variable>]$]
     //                                            [ Requires 4 variable for position identification $,[,],$
-    config.getAvailableUsernameCMD = data_handler.cpArray(config.getAvailableUsernameCMD, "awk -F: '$7 !~ /\\/nologin/ && $7 !~ /\\/bin\\/false/ {print $1}' /etc/passwd | tr -s '\n' '\7'");
-    config.uuidCMD = data_handler.cpArray(config.uuidCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f3 | tr -d '\n'");
-    config.usrGroupCMD = data_handler.cpArray(config.usrGroupCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f4 | tr -d '\n'");
-    config.getUserFullnameCMD = data_handler.cpArray(config.getUserFullnameCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f5 | tr -d '\n'");
-    config.usrHomeDirCMD = data_handler.cpArray(config.usrHomeDirCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f6 | tr -s '\n' '/'");
-    config.usrShellCMD = data_handler.cpArray(config.usrShellCMD, "getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -d '\n'");
-    config.getSystemUnameCMD = data_handler.cpArray(config.getSystemUnameCMD, "uname -n -o");
-    config.currentUserDesktopEnvCMD = data_handler.cpArray(config.currentUserDesktopEnvCMD, "sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
-    //config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "{ls /usr/share/xsessions & ls /usr/share/wayland-sessions} | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
-    //config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
-    config.availableUserDesktopEnvCMD = data_handler.cpArray(config.availableUserDesktopEnvCMD, "ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
-    //config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
-    config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat $[Xprotocol]$/$[ENV]$.* 2>/dev/null | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
-    config.getUserDesktopEnvCMD = data_handler.cpArray(config.getUserDesktopEnvCMD, "head -n 1 /home/$[USER]$/.xsessionrc 2>/dev/null | tr -d '\n'");
-    config.setUserDesktopEnvTypeCMD = data_handler.cpArray(config.setUserDesktopEnvTypeCMD, "echo $[xsessiontype]$ > /home/$[USER]$/.xsessiontype");
-    config.getUserDesktopEnvTypeCMD = data_handler.cpArray(config.getUserDesktopEnvTypeCMD, "head -n 1 /home/$[USER]$/.xsessiontype 2>/dev/null | tr -d '\n'");
-    // config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;'");
-    // config.saveUserDesktopEnvCMD = data_handler.cpArray(config.saveUserDesktopEnvCMD, "echo $[xsessionCMD]$ > /home/$[USER]$/.xsessionrc");
-    // config.setUserDesktopEnvCMD = data_handler.cpArray(config.setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
-    config.getSystemBasicInfoCMD = data_handler.cpArray(config.getSystemBasicInfoCMD, "cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -d '\n'");
-    config.shutdownCMD = data_handler.cpArray(config.shutdownCMD, "echo Shutting Down System && sudo /usr/sbin/shutdown -h now");
-    config.sleepCMD = data_handler.cpArray(config.sleepCMD, "echo System going to Sleep && sudo systemctl suspend");
-    config.restartCMD = data_handler.cpArray(config.restartCMD, "echo Restarting System && sudo shutdown -r now");
-    config.dateTimeCMD = data_handler.cpArray(config.dateTimeCMD, "/usr/bin/date | tr -s '\n' ' '");
-    config.calenderCMD = data_handler.cpArray(config.calenderCMD, "/usr/bin/cal");
-    config.cpuStatusCMD = data_handler.cpArray(config.cpuStatusCMD, "/usr/bin/mpstat -P ALL");
-    config.networkStatusCMD = data_handler.cpArray(config.networkStatusCMD, "tcpdump --list-interfaces");
+    if(distro==DEBIAN_DISTRO){
+        getAvailableUsernameCMD = strdup("awk -F: '$7 !~ /\\/nologin/ && $7 !~ /\\/bin\\/false/ {print $1}' /etc/passwd | tr -s '\n' '\7'");
+        uuidCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f3 | tr -d '\n'");
+        usrGroupCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f4 | tr -d '\n'");
+        getUserFullnameCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f5 | tr -d '\n'");
+        usrHomeDirCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f6 | tr -s '\n' '/'");
+        usrShellCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -d '\n'");
+        getSystemUnameCMD = strdup("uname -n -o");
+        currentUserDesktopEnvCMD = strdup("sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
+    //availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "{ls /usr/share/xsessions & ls /usr/share/wayland-sessions} | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+    //availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+    // availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+        availableUserDesktopEnvCMD = strdup("ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
+    //setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
+        setUserDesktopEnvCMD = strdup("cat $[Xprotocol]$/$[ENV]$.* 2>/dev/null | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
+        getUserDesktopEnvCMD = strdup("head -n 1 /home/$[USER]$/.xsessionrc 2>/dev/null | tr -d '\n'");
+        setUserDesktopEnvTypeCMD = strdup("echo $[xsessiontype]$ > /home/$[USER]$/.xsessiontype");
+        getUserDesktopEnvTypeCMD = strdup("head -n 1 /home/$[USER]$/.xsessiontype 2>/dev/null | tr -d '\n'");
+    // setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;'");
+    // saveUserDesktopEnvCMD = data_handler.cpArray(saveUserDesktopEnvCMD, "echo $[xsessionCMD]$ > /home/$[USER]$/.xsessionrc");
+    // setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
+        getSystemBasicInfoCMD = strdup("cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -d '\n'");
+        shutdownCMD = strdup("echo Shutting Down System && sudo /usr/sbin/shutdown -h now");
+        sleepCMD = strdup("echo System going to Sleep && sudo systemctl suspend");
+        restartCMD = strdup("echo Restarting System && sudo shutdown -r now");
+        dateTimeCMD = strdup("/usr/bin/date | tr -s '\n' ' '");
+        calenderCMD = strdup("/usr/bin/cal");
+        cpuStatusCMD = strdup("/usr/bin/mpstat -P ALL");
+        networkStatusCMD = strdup("tcpdump --list-interfaces");
 
-    config.refresh = 0;
-    config.exit = 0;
+    }
+    refresh = 0;
+    exit = 0;
 };

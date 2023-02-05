@@ -1,16 +1,9 @@
 #include "dataHandling.h"
 
-/*int DATA::itemAvailable(const char* arr, const char* item){
-    
-}*/
 
 char* DATA::replaceStr(char* arrTo, char* arrFrom, const char* startBound, const char* endBound, const char* replacementOf, const char* replaceBy){
 
     // StartBound and endBound Should Contain char array of size 2
-    //if(arrTo==nullptr || )
-    //free(&arrTo);
-    // int replacementOfLen = strlen(replacementOf);
-    // int replaceByLen = strlen(replaceBy);
     int replacementOfLen = 0;
     int replaceByLen = 0;
     int fullArrayLen=0;
@@ -48,7 +41,6 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, const char* startBound, const
          else{arrTo[j]=arrFrom[i];}
          j++;
     }
-    //arrTo[newArrayLen] = '\0';
 
     return arrTo;
 }
@@ -57,10 +49,6 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, const char* startBound, const
 char* DATA::replaceStr(char* arrTo, char* arrFrom, char startBound[2], char endBound[2], const char* replacementOf, const char* replaceBy){
 
     // StartBound and endBound Should Contain char array of size 2
-    //if(arrTo==nullptr || )
-    //free(&arrTo);
-    // int replacementOfLen = strlen(replacementOf);
-    // int replaceByLen = strlen(replaceBy);
     int replacementOfLen = 0;
     int replaceByLen = 0;
     int fullArrayLen=0;
@@ -102,6 +90,15 @@ char* DATA::replaceStr(char* arrTo, char* arrFrom, char startBound[2], char endB
     return arrTo;
 }
 
+char* DATA::replaceStr(const char* arrFrom, const char* startBound, const char* endBound, const char* replacementOf, const char* replaceBy){
+    return replaceStr(nullptr, strdup(arrFrom), startBound, endBound, replacementOf, replaceBy);
+}
+
+char* DATA::replaceStr(char* arrTo, const char* arrFrom, const char* startBound, const char* endBound, const char* replacementOf, const char* replaceBy){
+    arrTo = replaceStr(arrTo, strdup(arrFrom), startBound, endBound, replacementOf, replaceBy);
+    return arrTo;
+}
+
 int DATA::getItemID(char seperator, char* arr, char* arrTocmp){
     int arrTocmpLen=strlen(arrTocmp);
     int id=0, j=0;
@@ -109,7 +106,6 @@ int DATA::getItemID(char seperator, char* arr, char* arrTocmp){
         if(arr[i]==seperator){id++;j=0;i++;}
 
         if(arr[i]==arrTocmp[j]){j++;if(arr[i+1]==seperator && j==arrTocmpLen){return id;}}
-//        if(arr[i+1]==seperator && j==arrTocmpLen){return id;}
     }
     return -1;
 }
@@ -159,32 +155,17 @@ int DATA::maxFlatItemLen(char character, char* arr){
     return maxLen;
 }
 
-char* DATA::flatKeyValue(char* arrTo, char seperator, const char* keyArr, const char* valueArr){
+char* DATA::flatKeyValue(char* &arrTo, char seperator, const char* keyArr, const char* valueArr){
 
-    /*int i;
-    for(i=0; i)*/
-    int keylen=0, valuelen=0;// = strlen(arrFrom);
+    if(arrTo!=nullptr){
+        free(arrTo);arrTo=nullptr;
+    }
+    int keylen=0, valuelen=0;
     while(keyArr[keylen]!='\0'){keylen++;}
     while(valueArr[valuelen]!='\0'){valuelen++;}
-    /*for(int i=0; i<rlen; i++){
-        for(int j=0; arrFrom[i][j]!='\0'; j++){
-            clen++;
 
-        }
-        clen++;
-    }*/
     arrTo = static_cast<char*>(std::malloc(keylen+valuelen+2 * sizeof(char)));
-    // arrTo[0] = '\0';
-    /*clen=0;
-    for(int i=0; i<rlen; i++){
-        for(int j=0; arrFrom[i][j]!='\0'; j++){
-            arrTo[clen]=arrFrom[i][j];
-            clen++;
 
-        }
-        arrTo[clen]='\7';
-        clen++;
-    }*/
     for(int i=0; i<=keylen; i++){arrTo[i] = keyArr[i];}
     arrTo[keylen+1]=seperator;
     for(int i=0; i<=valuelen; i++){arrTo[i+keylen+2] = valueArr[i];}
@@ -192,7 +173,10 @@ char* DATA::flatKeyValue(char* arrTo, char seperator, const char* keyArr, const 
     return arrTo;
 }
 
-char* DATA::getFlatValue(char* arrTo, char seperator, const char* flatKeyValueArr){
+char* DATA::getFlatValue(char* &arrTo, char seperator, const char* flatKeyValueArr){
+    if(arrTo!=nullptr){
+        free(arrTo);arrTo=nullptr;
+    }
     int keylen=0, valuelen=0;
     while(flatKeyValueArr[keylen]!=seperator){keylen++;}
     while(flatKeyValueArr[keylen+valuelen+1]!='\0'){valuelen++;}
@@ -202,7 +186,11 @@ char* DATA::getFlatValue(char* arrTo, char seperator, const char* flatKeyValueAr
     return arrTo;
 }
 
-char* DATA::getFlatKey(char* arrTo, char seperator, const char* flatKeyValueArr){
+char* DATA::getFlatKey(char* &arrTo, char seperator, const char* flatKeyValueArr){
+    if(arrTo!=nullptr){
+        free(arrTo);arrTo=nullptr;
+    }
+
     int keylen=0;
     while(flatKeyValueArr[keylen]!=seperator){keylen++;}
     arrTo = static_cast<char*>(std::malloc(keylen+1 * sizeof(char)));
@@ -212,12 +200,9 @@ char* DATA::getFlatKey(char* arrTo, char seperator, const char* flatKeyValueArr)
 
 char* DATA::cpArray(char* arrTo, const char* arrFrom){
 
-    /*int i;
-    for(i=0; i)*/
-    int len=0;// = strlen(arrFrom);
+    int len=0;
     while(arrFrom[len]!='\0'){len++;}
     arrTo = static_cast<char*>(std::malloc(len * sizeof(char)));
-    // arrTo[0] = '\0';
     for(int i=0; i<len; i++){arrTo[i] = arrFrom[i];}
     return arrTo;
 }
@@ -261,9 +246,6 @@ void DATA::freeArray(int r, char** arr){
 
 void DATA::freeArray(int r, int c, char*** arr){
     for (int i = 0; i < r; i++) {
-        //for(int j=0; j<c; j++){
-          //  free(arr[i][j]);
-        //}
         free(arr[i]);
     }
     free(arr);

@@ -8,6 +8,14 @@
 #define DS_WAYLAND 4
 
 #define DATADIR "/etc/halkaDM/halkaDM.micro"
+#include "../config/config.h"
+#include "dataHandling.h"
+#include "CMDexecutor.h"
+#include "cryptography.h"
+#include "security.h"
+#include "AuthManagement.h"
+#include "sessionManagement.h"
+#include "draw.h"
 
 class USER{
 public:
@@ -33,9 +41,23 @@ public:
     char* desktop_name = strdup("DESKTOP1"); // Must be parsed from config file later on;
     char* desktop_cmd = strdup("jwm");
 
+    bool allocated=0;
+    bool deallocated=0;
+
+    void allocate();
+    void deallocate();
 
 };
 
 USER user;
+
+CONFIG config;
+DATA data_handler;
+CMD_EXECUTOR cmd_executor;
+HALKADM_CRYPTO halkadm_crypto;
+HALKADM_SECURITY halkadm_security;
+DRAW draw;
+SESSION_MANAGEMENT session_management;
+AUTH_MANAGEMENT auth_management;
 
 #endif

@@ -11,10 +11,9 @@ class CMD_EXECUTOR{
 public:
     void exec(const char* cmd);
     void exec(char* cmd);
-    char* fetchExecOutput(char* arr, const char* cmd);
+    char* fetchExecOutput(const char* cmd);
+    char* fetchExecOutput(char* &arr, const char* cmd);
     char* fetchExecOutput(char* arr, char* cmd);
 };
-
-CMD_EXECUTOR cmd_executor;
 
 #endif
