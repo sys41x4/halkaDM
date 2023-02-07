@@ -8,7 +8,8 @@
 #include <ctime>
 #include <cstring>
 #include <random>
-
+#include "inputs.h"
+#include "../config/config.h"
 
 class DRAW{
 public:
@@ -18,4 +19,13 @@ public:
 
 };
 
+/*    WINDOW *mainScreenWin;
+    WINDOW *subItemListWindow;
+    WINDOW *loginColourMatrixWin;
+    WINDOW *authBox;
+    WINDOW *accountPicBox;
+    WINDOW *titleBar_subwin;
+    WINDOW *messageBoxBorderWindow;
+    WINDOW *messageBox_msg;
+*/
 #endif

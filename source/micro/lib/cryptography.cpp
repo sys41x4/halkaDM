@@ -1,6 +1,20 @@
 #include "cryptography.h"
+#include <openssl/md5.h>
 
-void HALKADM_CRYPTO::maskStr(int strLen, char character, char *arr){
+char* HALKADM_CRYPTO::getMD5hash(const char* input, char* hashOut) {
+  unsigned char *md5_result;
+  char result[MD5_DIGEST_LENGTH * 2 + 1];
+
+  md5_result = MD5((const unsigned char*)input, strlen(input), NULL);
+
+  for(int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    sprintf(result + (i * 2), "%02x", (unsigned int)md5_result[i]);
+  }
+  hashOut = strdup(result);
+  return hashOut;
+}
+
+void HALKADM_CRYPTO::maskStr(int strLen, char character, char* &arr){
     //static char str[50];
     // memset(arr, character, sizeof(arr[0])*strLen);
     int i;
@@ -77,9 +91,6 @@ void HALKADM_CRYPTO::generateRandomStr(int randomizeLen, int maxStrLen, const ch
             visibleStrOut[i] = '\0';
         }
     }
-    // str[strLen]='\0';
     visibleStrOut[i++]='\0';
 
-//    return str;
 };
-HALKADM_CRYPTO halkadm_crypto;

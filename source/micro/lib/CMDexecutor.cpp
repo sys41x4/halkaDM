@@ -3,8 +3,6 @@
 void CMD_EXECUTOR::exec(const char* cmd){
     FILE *pp;
     if ((pp = popen(cmd, "r")) != 0) {
-        // char buffer[BUFSIZ];
-        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
         pclose(pp);
     }
 }
@@ -12,28 +10,49 @@ void CMD_EXECUTOR::exec(const char* cmd){
 void CMD_EXECUTOR::exec(char* cmd){
     FILE *pp;
     if ((pp = popen(cmd, "r")) != 0) {
-        // char buffer[BUFSIZ];
-        // while (fgets(buffer, sizeof(buffer), pp) != 0) {}
         pclose(pp);
     }
 }
 
-char* CMD_EXECUTOR::fetchExecOutput(char* arr, const char* cmd){
+char* CMD_EXECUTOR::fetchExecOutput(char* &arr, const char* cmd){
+
+    if(arr!=nullptr){
+        std::free(arr);arr=nullptr;
+    }
+
+    FILE *pp;
+    if ((pp = popen(cmd, "r")) != 0) {
+        char buffer[BUFSIZ];
+        while (fgets(buffer, sizeof(buffer), pp) != 0) {
+            int elementCount=0;
+            while(buffer[elementCount+2]!='\0'){elementCount++;}
+            arr = static_cast<char*>(std::malloc(elementCount+1 * sizeof(char)));
+            arr[0] = '\0';arr[elementCount] = '\0';
+            for(int i=0; buffer[i]=='\0'; i++){arr[i]=buffer[i];}
+            arr[elementCount] = '\0';
+        }
+        pclose(pp);
+        return arr;
+    }
+    else{
+        return nullptr;
+    }
+    return arr;
+}
+
+
+/*char* CMD_EXECUTOR::fetchExecOutput(char* arr, char* cmd){
     FILE *pp;
     if ((pp = popen(cmd, "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
             int elementCount=0;
             while(buffer[elementCount]!='\0'){elementCount++;}
-//            arr = fillArray(elementCount, arr);
-            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
+            arr = static_cast<char*>(std::malloc(elementCount+1 * sizeof(char)));
+            //arr[0] = '\0';arr[elementCount]='\0';
             for(int i=0; i<elementCount; i++){arr[i]=buffer[i];} // Calculate the length of the char array
-            // waddstr(mainScreenWin, buffer);
-            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
-
+            arr[elementCount] = '\0';
         }
-  //      else{arr=nullptr;}
         pclose(pp);
         return arr;
     }
@@ -41,30 +60,27 @@ char* CMD_EXECUTOR::fetchExecOutput(char* arr, const char* cmd){
         return nullptr;
     }
 }
+*/
 
+char* CMD_EXECUTOR::fetchExecOutput(const char* cmd){
+    char* arr=nullptr;
 
-char* CMD_EXECUTOR::fetchExecOutput(char* arr, char* cmd){
     FILE *pp;
     if ((pp = popen(cmd, "r")) != 0) {
         char buffer[BUFSIZ];
         while (fgets(buffer, sizeof(buffer), pp) != 0) {
             int elementCount=0;
             while(buffer[elementCount]!='\0'){elementCount++;}
-//            arr = fillArray(elementCount, arr);
-            arr = static_cast<char*>(std::malloc(elementCount * sizeof(char)));
-            arr[0] = '\0';
-            for(int i=0; i<elementCount; i++){arr[i]=buffer[i];} // Calculate the length of the char array
-            // waddstr(mainScreenWin, buffer);
-            // drawCMDStr(mainScreenWin, winMaxY-5, winMaxX-(strlen(arr)+2), 1, 0, 0, 13, arr);
-
+            arr = static_cast<char*>(std::malloc(elementCount+1 * sizeof(char)));
+            //arr[0] = '\0';arr[elementCount] = '\0';
+            for(int i=0; i<elementCount; i++){arr[i]=buffer[i];}
+            arr[elementCount] = '\0';
         }
-  //      else{arr=nullptr;}
         pclose(pp);
         return arr;
     }
     else{
         return nullptr;
     }
+    return arr;
 }
-
-// CMD_EXECUTOR cmd_executor;

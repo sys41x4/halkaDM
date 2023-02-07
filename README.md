@@ -89,6 +89,96 @@ Branches :
 
 ---
 
+```
+[TESTING DETAILS]
+
+--[Software Dependencies]--
+
+date [/usr/bin/date]
+calender [/usr/bin/cal]
+cpu status [/usr/bin/mpstat]
+network status [/usr/sbin/tcpdump]
+available desktop environment [/usr/share/xsessions]
+jpg->ASCII ART [/usr/bin/jp2a]
+
+--[sudo apt install]--
+libncurses5-dev libncursesw5-dev
+libpam0g-dev
+ncal
+sysstat
+tcpdump
+accountsservice
+openssl
+
+----------------------------------------------------
+Currently Only Desktop Environtments are supported located at
+1. X-Sessions : /usr/share/xsessions/
+2. Wayland-Sessions : /usr/share/wayland-sessions/
+
+----------------------------------------------------
+[Testing]
+
+Currently tested only for Debian Based Distribution
+
+-- Install software & library dependencies before further process--
+
+[Create Executable]
+g++ ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb -lcrypto
+
+[ Setup ] {use the below setup process untill makefile and documentation are officially created}
+
+install:
+cd source/micro/
+sudo install -dZ /etc/halkaDM/halkaDM.micro
+sudo install -DZ ../../../bin/micro/halkaDM.micro -t /usr/bin
+sudo install -DZ res/xsetup.sh -t /etc/halkaDM/halkaDM.micro
+sudo install -DZ res/wsetup.sh -t /etc/halkaDM/halkaDM.micro
+sudo install -dZ /etc/halkaDM/halkaDM.micro/lang
+sudo install -DZ res/lang/* -t /etc/halkaDM/halkaDM.micro/lang
+sudo install -DZ res/pam.d/halkaDM.micro -m 644 -t /etc/pam.d
+
+installsystemd:
+sudo install -DZ res/halkaDM.service -m 644 -t /usr/lib/systemd/system
+
+uninstall:
+sudo rm -rf /etc/halkaDM/halkaDM.micro
+sudo rm -f /usr/bin/halkaDM.micro
+sudo rm -f /usr/lib/systemd/system/halkaDM.service
+sudo rm -f /etc/pam.d/halkaDM.micro
+sudo rm -f /etc/init.d/halkaDM.micro
+
+tty -> 2
+As the application is running in tty2 and if you got stuck in other tty's
+then you can switch to tty2 with CTRL+ALT+F2 and use the application
+
+[ Hardware ]
+Currently it is being testing in Ubuntu & Debian 11 bullseye & with 
+X11/Xorg/xinitrc:
+    jwm
+    icewm
+    fluxbox
+    sway
+
+wayland:
+   currently under process
+
+    currently under process    
+    Distributor ID: Ubuntu
+    Description:    Ubuntu 20.04.4 LTS
+    Release:        20.04
+    Codename:       focal
+
+-------------------------------------------------
+---- Memory Leaks Checked and Analysed with: ----
+htop
+gdb, r2
+valgrind [valgrind ../../../bin/micro/halkaDM.micro --leak-check=full --track-origins=yes 2>halkaDM.micro.err.valgrind]
+g++/ASan [g++ -fsanitize=address -g halkaDM.micro.cpp -o ../../../bin/micro/halkaDM.micro -lcurses -lpam -lxcb -lcrypto]
+
+```
+
+---
+
 <p align="center">
     <img src="https://kounter.tk/badge/sys41x4.github_halkaDM?label=&color=23262a&style=for-the-badge&cntSuffix=%20Halka%20DM%20Repository%20Views" alt="halkaDM GitHub Repo View Count" vertical-align="middle"></img>
 </p>
