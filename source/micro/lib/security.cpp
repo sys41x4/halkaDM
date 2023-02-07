@@ -1,7 +1,7 @@
 #include "security.h"
 #include "cryptography.h"
 
-void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visibleStrOutMaxLen, char* str, char* visibleStrOut){
+void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visibleStrOutMaxLen, const char* str, char* &visibleStrOut){
     /* maskField: "username" | For masking the username for visibility
        maskField: "userpass" | For masking the userpass for visibility*/
     // int maskingConfigLength, strLen;
@@ -21,7 +21,9 @@ void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visi
                 //strcpy(visibleStrOut, str);
                 if(strLen>visibleStrOutMaxLen){
                     int startIndex = strLen-visibleStrOutMaxLen;
-                    for(int i=startIndex; i<strLen; i++){visibleStrOut[i-startIndex]=str[i];}
+                     for(int i=startIndex; i<strLen; i++){visibleStrOut[i-startIndex]=str[i];}
+                     visibleStrOut[strLen]='\0';
+                    //visibleStrOut = strdup(str);
                 }
                 else{strcpy(visibleStrOut, str);}
             }

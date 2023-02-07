@@ -13,7 +13,7 @@ public:
     void exec(char* cmd);
     char* fetchExecOutput(const char* cmd);
     char* fetchExecOutput(char* &arr, const char* cmd);
-    char* fetchExecOutput(char* arr, char* cmd);
+//    char* fetchExecOutput(char* arr, char* cmd);
 };
 
 #endif

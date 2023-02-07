@@ -14,7 +14,7 @@ char* HALKADM_CRYPTO::getMD5hash(const char* input, char* hashOut) {
   return hashOut;
 }
 
-void HALKADM_CRYPTO::maskStr(int strLen, char character, char *arr){
+void HALKADM_CRYPTO::maskStr(int strLen, char character, char* &arr){
     //static char str[50];
     // memset(arr, character, sizeof(arr[0])*strLen);
     int i;

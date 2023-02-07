@@ -93,16 +93,16 @@ static void start_x_server(const char *display, const char *vt) {
 }
 
 
-int initiateSession(char* username, char* userpass){
+int initiateSession(const char* username, const char* userpass){
 
     if(user.usernameVerified){
-    char* cmd=nullptr;
+    char* cmd=nullptr;char* cmd2=nullptr;
     int trackID=-1;
     if(user.XDG_SESSION_TYPE==DS_DEFAULT){
 
-       cmd = data_handler.replaceStr(config.getUserDesktopEnvTypeCMD, "$[", "]$", "USER", user.username);
-       user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(user.XDG_SESSION_TYPE_NAME, cmd);
-       free(cmd);cmd=nullptr;
+       cmd = data_handler.replaceStr(config.getUserDesktopEnvTypeCMD, "$[USER]$", user.username);
+       user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(cmd);
+       std::free(cmd);cmd=nullptr;
 
        user.XDG_SESSION_TYPE = data_handler.getItemID('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE_NAME);
        trackID=user.XDG_SESSION_TYPE;
@@ -114,43 +114,55 @@ int initiateSession(char* username, char* userpass){
     }
 
     if(user.XDG_SESSION_TYPE!=DS_DEFAULT && trackID==-1){
-        cmd = data_handler.replaceStr(config.setUserDesktopEnvTypeCMD, "$[", "]$", "xsessiontype", user.XDG_SESSION_TYPE_NAME);
-        cmd = data_handler.replaceStr(cmd, "$[", "]$", "USER", user.username);
+        cmd = data_handler.replaceStr(config.setUserDesktopEnvTypeCMD, "$[xsessiontype]$", user.XDG_SESSION_TYPE_NAME);
+        cmd2=strdup(cmd);std::free(cmd);
+        cmd = data_handler.replaceStr(cmd2, "$[USER]$", user.username);
+        std::free(cmd2);cmd2=nullptr;
         cmd_executor.exec(cmd);
-        free(cmd);cmd=nullptr;
+        std::free(cmd);cmd=nullptr;
     }
 
     trackID=-1;
 
-    if(strcmp(user.XDG_SESSION_NAME, "Default")){
+    if(strcmp(user.XDG_SESSION_NAME, config.default_text)){
 
         if(user.XDG_SESSION_TYPE==DS_XINITRC || user.XDG_SESSION_TYPE==DS_XORG){
-            cmd = data_handler.replaceStr(config.setUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.xsessions);
+            //cmd = data_handler.replaceStr(config.setUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.xsessions);
+            cmd = data_handler.replaceStr(config.setUserDesktopEnvCMD, "$[Xprotocol]$", config.xsessions);
         }
         else if(user.XDG_SESSION_TYPE==DS_WAYLAND){
-            cmd = data_handler.replaceStr(config.setUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.waylandsessions);
+            cmd = data_handler.replaceStr(config.setUserDesktopEnvCMD, "$[Xprotocol]$", config.waylandsessions);
         }
-        cmd = data_handler.replaceStr(cmd, "$[", "]$", "ENV", user.XDG_SESSION_NAME);
-        cmd = data_handler.replaceStr(cmd, "$[", "]$", "USER", user.username);
+        cmd2=strdup(cmd);std::free(cmd);
+        cmd = data_handler.replaceStr(cmd2, "$[ENV]$", user.XDG_SESSION_NAME);
+        std::free(cmd2);
+        cmd2 = strdup(cmd);std::free(cmd);
+        cmd = data_handler.replaceStr(cmd2, "$[USER]$", user.username);
+        std::free(cmd2);cmd2=nullptr;
         cmd_executor.exec(cmd);
-        free(cmd);cmd=nullptr;
+        std::free(cmd);cmd=nullptr;
     }
 
-//    user.XDG_SESSION_TYPE = data_handler.getItemID('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE_NAME);
-    // If user.XDG_SESSION_TYPE_NAME doesn't match from the file or is set to default then the default XDG_SESSION_TYPE whill be selected which is DS_XORG
-//    if(user.XDG_SESSION_TYPE==-1 || user.XDG_SESSION_TYPE==DS_DEFAULT){user.XDG_SESSION_TYPE=DS_XORG;}
+    std::free(user.desktop_cmd);user.desktop_cmd=nullptr;
+    cmd = data_handler.replaceStr(config.getUserDesktopEnvCMD, "$[USER]$", user.username);
+    user.desktop_cmd = cmd_executor.fetchExecOutput(cmd);
+    std::free(cmd);std::free(cmd2);
 
-    free(user.desktop_cmd);user.desktop_cmd=nullptr;
-    cmd = data_handler.replaceStr(config.getUserDesktopEnvCMD, "$[", "]$", "USER", user.username);
-    user.desktop_cmd = cmd_executor.fetchExecOutput(user.desktop_cmd, cmd);
-    free(cmd);
-
-    if (login(username, userpass)) {
+    // Testing
+/*    std::free(user.XDG_SESSION_NAME);std::free(user.XDG_SESSION_TYPE_NAME);
+    user.XDG_SESSION_NAME=nullptr;user.XDG_SESSION_TYPE_NAME=nullptr;
+    user.XDG_SESSION_NAME=strdup(config.default_text);user.XDG_SESSION_TYPE_NAME=strdup(config.default_text);
+    user.XDG_SESSION_TYPE=DS_DEFAULT;
+    return 1;
+*/
+    bool login_status = login(username, userpass);
+    if (login_status) {
     // Wait for child process to finish (wait for logout)
 
-        free(user.XDG_SESSION_NAME);free(user.XDG_SESSION_TYPE_NAME);
+        std::free(user.XDG_SESSION_NAME);std::free(user.XDG_SESSION_TYPE_NAME);
         //user.XDG_SESSION_NAME=nullptr;user.XDG_SESSION_TYPE_NAME=nullptr;
-        user.XDG_SESSION_NAME=config.default_text;user.XDG_SESSION_TYPE_NAME=config.default_text;
+        user.XDG_SESSION_NAME=strdup(config.default_text);user.XDG_SESSION_TYPE_NAME=strdup(config.default_text);
+        user.XDG_SESSION_TYPE=DS_DEFAULT;
 
         return 1;
     } else { return 0;}

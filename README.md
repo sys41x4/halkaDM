@@ -160,11 +160,21 @@ X11/Xorg/xinitrc:
     sway
 
 wayland:
+   currently under process
+
     currently under process    
     Distributor ID: Ubuntu
     Description:    Ubuntu 20.04.4 LTS
     Release:        20.04
     Codename:       focal
+
+-------------------------------------------------
+---- Memory Leaks Checked and Analysed with: ----
+htop
+gdb, r2
+valgrind [valgrind ../../../bin/micro/halkaDM.micro --leak-check=full --track-origins=yes 2>halkaDM.micro.err.valgrind]
+g++/ASan [g++ -fsanitize=address -g halkaDM.micro.cpp -o ../../../bin/micro/halkaDM.micro -lcurses -lpam -lxcb -lcrypto]
+
 ```
 
 ---

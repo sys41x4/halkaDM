@@ -16,8 +16,13 @@ static pid_t x_server_pid;
 
 #define DEBIAN_DISTRO 0
 
+#define DM_REFRESH '\x2b'
+#define DM_CLEAR '\x3e'
+#define DM_STABLE '\x02'
+#define DM_START '\x01'
+#define DM_EXIT '\xfe'
 
-char KEY_ESCAPE = '\x1b';
+//char KEY_ESCAPE = '\x1b';
 
 class CONFIG{
 public:
@@ -76,6 +81,8 @@ char* err_xsessions_open=nullptr;
     char* waylandsessions=nullptr;
     char* mcookie_cmd=nullptr;
     char* console_dev=nullptr;
+    char dm_display_visual=DM_START;
+
 
     // Language Variable Config
 
@@ -119,14 +126,14 @@ char* err_xsessions_open=nullptr;
     };
     int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
     int totalManualColors = 8;
-    int totalRandomizedColors;
+    int totalRandomizedColors=0;
     // char* newSelectedDesktopEnv = nullptr;
     char* SESSION_KEY = nullptr;
     int SESSION_KEY_LENGTH = 33;
     int maxTitleBarItemTreeDepth = 2;
+    int* titleBarItemTree=nullptr;
+    int* loginColourMatrixConf=nullptr;
     int titleBarHoverableItemCount = 3;
-//    char** titleBarSubItems;
-//    char** titleBarSubItemsCMD;
     int usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
     int userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
     int maxUsernameLen = 32;
@@ -198,7 +205,8 @@ char* err_xsessions_open=nullptr;
     void load_default_alertText();
     void error_default_lang();
 
-    // Config Values allocation & Deallocation
+    // Config Values allocation & Deallocation & nullification
+    void null_values();
     void allocate();
     void deallocate();
 };

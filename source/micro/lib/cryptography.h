@@ -12,7 +12,7 @@ class HALKADM_CRYPTO{
 public:
     // void init();
     // ~HALKADM_CRYPTO(void); // destructor
-    void maskStr(int strLen, char character, char *arr);
+    void maskStr(int strLen, char character, char* &arr);
     void generateRandomStr(int randomizeLen, int maxStrLen, const char *chrType, char *visibleStrOut);
 //    void getMD5hash(const char* input, char* hashOut);
     char* getMD5hash(const char* input, char* hashOut);

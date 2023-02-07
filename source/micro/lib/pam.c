@@ -11,7 +11,7 @@
 
 #include "pam.h"
 
-#define SERVICE_NAME "display-manager"
+//#define SERVICE_NAME "display-manager"
 
 #define err(name)                                   \
     do {                                            \

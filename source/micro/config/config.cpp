@@ -26,6 +26,8 @@ void CONFIG::load_default_softwareInfo(){
 
 void CONFIG::allocate(){
 
+    // if(dm_display_visual==DM_REFRESH){null_values();}
+
     int tmp=0;
     try {
         auto configFile = cpptoml::parse_file(INI_LANG);
@@ -40,8 +42,8 @@ void CONFIG::allocate(){
         default_text = strdup(configFile->get_as<std::string>("default_text")->c_str());
         usernameFieldID_text = strdup(configFile->get_as<std::string>("usernameFieldID_text")->c_str());
         userpassFieldID_text = strdup(configFile->get_as<std::string>("userpassFieldID_text")->c_str());
-        currentDesktopENV_text = default_text;
-        availableUserDesktopEnv =  default_text;
+        currentDesktopENV_text = strdup(default_text);
+        availableUserDesktopEnv =  strdup(default_text);
 
 
         tmp=configFile->get_as<std::string>("sleepBTN_text")->length();
@@ -65,7 +67,7 @@ void CONFIG::allocate(){
 
         tmp=strlen(default_text)+30;
         currentUserDesktopEnvComProtocol = static_cast<char*>(std::malloc(tmp * sizeof(char)));
-        snprintf(currentUserDesktopEnvComProtocol, tmp, "%s\7shell\7xinitrc\7Xorg\7wayland\7", configFile->get_as<std::string>("default_text")->c_str());
+        snprintf(currentUserDesktopEnvComProtocol, tmp, "%s\7shell\7xinitrc\7Xorg\7wayland\7", default_text);
 
         tmp=0;
         configFile.reset();
@@ -75,89 +77,154 @@ void CONFIG::allocate(){
        load_default_lang();
     }
 
+    // Allocate Keys
 
+
+    load_default_CMD();
+    load_default_keyValues();
+    load_default_softwareInfo();
+    error_default_lang();
+    load_default_alertText();
 
 
   //  delete configFile;
 }
 
+
 void CONFIG::deallocate(){
 
-    free(package);
+    std::free(capslock);
+    std::free(err_alloc);
+    std::free(err_bounds);
+    std::free(err_chdir);
+    std::free(err_console_dev);
+    std::free(err_dgn_oob);
+    std::free(err_domain);
+    std::free(err_hostname);
+    std::free(err_mlock);
+    std::free(err_null);
+    std::free(err_pam);
+    std::free(err_pam_abort);
+    std::free(err_pam_acct_expired);
+    std::free(err_pam_auth);
+    std::free(err_pam_authinfo_unavail);
+    std::free(err_pam_authok_reqd);
+    std::free(err_pam_buf);
+    std::free(err_pam_cred_err);
+    std::free(err_pam_cred_expired);
+    std::free(err_pam_cred_insufficient);
+    std::free(err_pam_cred_unavail);
+    std::free(err_pam_maxtries);
+    std::free(err_pam_perm_denied);
+    std::free(err_pam_session);
+    std::free(err_pam_sys);
+    std::free(err_pam_user_unknown);
+    std::free(err_path);
+    std::free(err_perm_dir);
+    std::free(err_perm_group);
+    std::free(err_perm_user);
+    std::free(err_pwnam);
+    std::free(err_user_gid);
+    std::free(err_user_init);
+    std::free(err_user_uid);
+    std::free(err_xsessions_dir);
+    std::free(err_xsessions_open);
 
-//    free(capslock);
-    free(err_alloc);
-    free(err_bounds);
-    free(err_chdir);
-    free(err_console_dev);
-    free(err_dgn_oob);
-    free(err_domain);
-    free(err_hostname);
-    free(err_mlock);
-    free(err_null);
-    free(err_pam);
-    free(err_pam_abort);
-    free(err_pam_acct_expired);
-    free(err_pam_auth);
-    free(err_pam_authinfo_unavail);
-    free(err_pam_authok_reqd);
-    free(err_pam_buf);
-    free(err_pam_cred_err);
-    free(err_pam_cred_expired);
-    free(err_pam_cred_insufficient);
-    free(err_pam_cred_unavail);
-    free(err_pam_maxtries);
-    free(err_pam_perm_denied);
-    free(err_pam_session);
-    free(err_pam_sys);
-    free(err_pam_user_unknown);
-    free(err_path);
-    free(err_perm_dir);
-    free(err_perm_group);
-    free(err_perm_user);
-    free(err_pwnam);
-    free(err_user_gid);
-    free(err_user_init);
-    free(err_user_uid);
-    free(err_xsessions_dir);
-    free(err_xsessions_open);
 
-    free(service_name);
-    free(loginBTN_text);
-    free(logoutBTN_text);
-    free(powerList_text);
-    free(utilitiesList_text);
-    free(powerBTN_text);
-    free(utilitiesBTN_text);
-    free(desktopENVBTN_text);
-    free(currentDesktopENV_text);
-    free(usernameFieldID_text);
-    free(userpassFieldID_text);
+    std::free(service_name);
+    std::free(path);
+    std::free(term_reset_cmd);
+    std::free(wayland_cmd);
+    std::free(x_cmd_setup);
+    std::free(xinitrc);
+    std::free(x_cmd);
+    std::free(xauth_cmd);
+    std::free(xsessions);
+    std::free(waylandsessions);
+    std::free(mcookie_cmd);
+    std::free(console_dev);
 
-    free(loginFailed_text);
-    free(loginSuccess_text);
-    free(logoutFailed_text);
-    free(logoutSuccess_text);
-    free(emptyCredPassed);
-    free(incorrectCred);
+    // Language Variable Config
 
-    free(uuidCMD);
-    free(usrGroupCMD);
-    free(getUserFullnameCMD);
-    free(usrHomeDirCMD);
-    free(usrShellCMD);
-    free(getSystemUnameCMD);
-    free(currentUserDesktopEnvCMD);
-    free(availableUserDesktopEnvCMD);
-    free(setUserDesktopEnvCMD);
-    free(getSystemBasicInfoCMD);
-    free(shutdownCMD);
-    free(sleepCMD);
-    free(restartCMD);
-    free(dateTimeCMD);
-    free(calenderCMD);
-    free(cpuStatusCMD);
-    free(networkStatusCMD);
+    std::free(loginBTN_text);
+    std::free(logoutBTN_text); //
+    std::free(shutdownBTN_text);
+    std::free(restartBTN_text);//
+    std::free(sleepBTN_text);
+    std::free(powerList_text);
+    std::free(utilitiesList_text);//
+    std::free(calenderBTN_text);
+    std::free(cpuStatusBTN_text);
+    std::free(networkStatusBTN_text);//
+    std::free(refreshBTN_text);
+    std::free(exitBTN_text);
+    std::free(powerBTN_text);
+    std::free(utilitiesBTN_text);
+    std::free(desktopENVBTN_text);
+    std::free(currentDesktopENV_text);
+    std::free(usernameFieldID_text);
+    std::free(userpassFieldID_text);
+    std::free(default_text);
+
+    // Software Info
+    std::free(package);
+
+    // Default KeyValues
+    std::free(titleBarItemTree);
+    std::free(loginColourMatrixConf);
+    std::free(SESSION_KEY);
+    std::free(uuid);
+    std::free(usrGroup);
+    std::free(getUserFullname);
+    std::free(usrHomeDir);
+    std::free(usrShell);
+    std::free(getSystemUname);
+    std::free(setUserDesktopEnv);
+    std::free(currentUserDesktopEnvComProtocol);
+    std::free(availableUserDesktopEnvComProtocol);
+    std::free(currentUserDesktopEnv);
+    std::free(availableUserDesktopEnv);
+    std::free(getSystemBasicInfo);
+    std::free(shutdown);
+    std::free(sleep);
+    std::free(restart);
+    std::free(dateTime);
+    std::free(calender);
+    std::free(cpuStatus);
+    std::free(networkStatus);
+
+    // Alert Text
+    std::free(loginFailed_text);
+    std::free(loginSuccess_text);
+    std::free(logoutFailed_text);
+    std::free(logoutSuccess_text);
+    std::free(emptyCredPassed);
+    std::free(incorrectCred);
+
+    // CMD Varables;
+    std::free(getAvailableUsernameCMD);
+    std::free(uuidCMD);
+    std::free(usrGroupCMD);
+    std::free(getUserFullnameCMD);
+    std::free(usrHomeDirCMD);
+    std::free(usrShellCMD);
+    std::free(getSystemUnameCMD);
+    std::free(setUserDesktopEnvCMD);
+    std::free(getUserDesktopEnvCMD);
+    std::free(setUserDesktopEnvTypeCMD);
+    std::free(getUserDesktopEnvTypeCMD);
+    std::free(currentUserDesktopEnvCMD);
+    std::free(availableUserDesktopEnvCMD);
+    std::free(getSystemBasicInfoCMD);
+    std::free(shutdownCMD);
+    std::free(sleepCMD);
+    std::free(restartCMD);
+    std::free(dateTimeCMD);
+    std::free(calenderCMD);
+    std::free(cpuStatusCMD);
+    std::free(networkStatusCMD);
+    if(dm_display_visual==DM_REFRESH){null_values();}
+
 }
 
 
@@ -204,15 +271,15 @@ void CONFIG::load_default_lang(){
 
     // Language Variable Config
     default_text = strdup("Default");
-    loginBTN_text = strdup(" LOGIN ");
-    logoutBTN_text = strdup(" LOGOUT ");
+    loginBTN_text = strdup("LOGIN");
+    logoutBTN_text = strdup("LOGOUT");
     powerList_text = strdup("Sleep\7Restart\7Shutdown\7");
     utilitiesList_text = strdup("Calender\7CPU Status\7Network Status\7Refresh\7Exit\7");
     powerBTN_text = strdup("Power");
     utilitiesBTN_text = strdup("Utilities");
     desktopENVBTN_text = strdup("ENV");
-    availableUserDesktopEnv = default_text;
-    currentDesktopENV_text = default_text;
+    availableUserDesktopEnv = strdup(default_text);
+    currentDesktopENV_text = strdup(default_text);
     currentUserDesktopEnvComProtocol =  strdup("Default\7shell\7xinitrc\7Xorg\7wayland\7");
     usernameFieldID_text = strdup("USER");
     userpassFieldID_text = strdup("PASS");
@@ -253,23 +320,39 @@ void CONFIG::load_default_keyValues(){
     // SESSION_KEY_LENGTH = 32;
     maxTitleBarItemTreeDepth = 2;
     titleBarHoverableItemCount = 4;
+
+    // TitleBar Item Tree Depth | Storage Space Allocation
+    titleBarItemTree = static_cast<int*>(std::malloc(maxTitleBarItemTreeDepth * sizeof(int)));
+
+    // Allocate space for config list for loginColourMatrix
+    loginColourMatrixConf = static_cast<int*>(std::malloc(4 * sizeof(int)));
     // char** titleBarSubItems;
     // char** titleBarSubItemsCMD;
     // usernameVisibilityConf[4] = {0, 0, 0}; // {[-2..1], [0..1], [0..1]}Default username_visibility_config
     // userpassVisibilityConf[4] = {1, 0, 0}; // Default userpass_visibility_config
-    maxUsernameLen = 255;
+    //maxUsernameLen = 255;
+     maxUsernameLen = 50;
     maxUserpassLen = 255;
     visibleAuthStrLen = 50;
 };
 
 void CONFIG::load_default_alertText(){
     // Alert Text
-    data_handler.flatKeyValue(loginFailed_text, '\6', "LOGIN Failed", "Access Rejected");
-    data_handler.flatKeyValue(loginSuccess_text, '\6', "LOGIN Success", "Access Granted");
-    data_handler.flatKeyValue(logoutFailed_text, '\6', "LOGOUT Failed", "Access Rejected");
-    data_handler.flatKeyValue(logoutSuccess_text, '\6', "LOGOUT Success", "Good Bye :)");
-    data_handler.flatKeyValue(emptyCredPassed, '\6', "LOGIN Failed", "Empty Credentials Passed");
-    data_handler.flatKeyValue(incorrectCred, '\6', "LOGIN Failed", "Incorrect Credentials");
+
+    loginFailed_text = data_handler.flatKeyValue('\6', "LOGIN Failed", "Access Rejected");
+    loginSuccess_text = data_handler.flatKeyValue('\6', "LOGIN Success", "Access Granted");
+    logoutFailed_text = data_handler.flatKeyValue('\6', "LOGOUT Failed", "Access Rejected");
+    logoutSuccess_text = data_handler.flatKeyValue('\6', "LOGOUT Success", "Good Bye :)");
+    emptyCredPassed = data_handler.flatKeyValue('\6', "LOGIN Failed", "Empty Credentials Passed");
+    incorrectCred = data_handler.flatKeyValue('\6', "LOGIN Failed", "Incorrect Credentials");
+/*
+    loginFailed_text = strdup("LOGIN Failed\6Access Rejected");
+    loginSuccess_text = strdup("LOGIN Success\6Access Granted");
+    logoutFailed_text = strdup("LOGOUT Failed\6Access Rejected");
+    logoutSuccess_text = strdup("LOGOUT Success\6Good Bye :)");
+    emptyCredPassed = strdup("LOGIN Failed\6Empty Credentials Passed");
+    incorrectCred = strdup("LOGIN Failed\6Incorrect Credentials");
+*/
 };
 
 
@@ -285,7 +368,7 @@ void CONFIG::load_default_CMD(){
         usrHomeDirCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f6 | tr -s '\n' '/'");
         usrShellCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -d '\n'");
         getSystemUnameCMD = strdup("uname -n -o");
-        currentUserDesktopEnvCMD = strdup("sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2");
+        currentUserDesktopEnvCMD = strdup("sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2 | tr -d '\n'");
     //availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "{ls /usr/share/xsessions & ls /usr/share/wayland-sessions} | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
     //availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
     // availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
@@ -311,3 +394,141 @@ void CONFIG::load_default_CMD(){
     refresh = 0;
     exit = 0;
 };
+
+
+void CONFIG::null_values(){
+
+        capslock=nullptr;
+	err_alloc=nullptr;
+	err_bounds=nullptr;
+	err_chdir=nullptr;
+	err_console_dev=nullptr;
+	err_dgn_oob=nullptr;
+	err_domain=nullptr;
+	err_hostname=nullptr;
+	err_mlock=nullptr;
+	err_null=nullptr;
+	err_pam=nullptr;
+	err_pam_abort=nullptr;
+	err_pam_acct_expired=nullptr;
+	err_pam_auth=nullptr;
+	err_pam_authinfo_unavail=nullptr;
+	err_pam_authok_reqd=nullptr;
+	err_pam_buf=nullptr;
+	err_pam_cred_err=nullptr;
+	err_pam_cred_expired=nullptr;
+	err_pam_cred_insufficient=nullptr;
+	err_pam_cred_unavail=nullptr;
+	err_pam_maxtries=nullptr;
+	err_pam_perm_denied=nullptr;
+	err_pam_session=nullptr;
+	err_pam_sys=nullptr;
+	err_pam_user_unknown=nullptr;
+	err_path=nullptr;
+	err_perm_dir=nullptr;
+	err_perm_group=nullptr;
+	err_perm_user=nullptr;
+	err_pwnam=nullptr;
+	err_user_gid=nullptr;
+	err_user_init=nullptr;
+	err_user_uid=nullptr;
+	err_xsessions_dir=nullptr;
+	err_xsessions_open=nullptr;
+
+	service_name=nullptr;
+	tty = 1;
+	path=nullptr;
+	term_reset_cmd=nullptr;
+	wayland_cmd=nullptr;
+	x_cmd_setup=nullptr;
+	xinitrc=nullptr;
+	x_cmd=nullptr;
+	xauth_cmd=nullptr;
+	xsessions=nullptr;
+	waylandsessions=nullptr;
+	mcookie_cmd=nullptr;
+	console_dev=nullptr;
+	dm_display_visual=DM_START;
+
+	// Language Variable Config
+
+	default_text=nullptr;
+	loginBTN_text=nullptr;
+	logoutBTN_text=nullptr;
+	shutdownBTN_text=nullptr;
+	restartBTN_text=nullptr;
+	sleepBTN_text=nullptr;
+	powerList_text=nullptr;
+	utilitiesList_text=nullptr;
+	calenderBTN_text=nullptr;
+	cpuStatusBTN_text=nullptr;
+	networkStatusBTN_text=nullptr;
+	refreshBTN_text=nullptr;
+	exitBTN_text=nullptr;
+	powerBTN_text=nullptr;
+	utilitiesBTN_text=nullptr;
+	desktopENVBTN_text=nullptr;
+	currentDesktopENV_text=nullptr;
+	usernameFieldID_text=nullptr;
+	userpassFieldID_text=nullptr;
+
+	// Software Info
+	package=nullptr;
+	SESSION_KEY = nullptr;
+        titleBarItemTree=nullptr;
+        loginColourMatrixConf=nullptr;
+
+	uuid=nullptr;
+	usrGroup=nullptr;
+	getUserFullname=nullptr;
+	usrHomeDir = nullptr;
+	usrShell=nullptr;
+	getSystemUname=nullptr;
+	setUserDesktopEnv=nullptr;
+	currentUserDesktopEnvComProtocol=nullptr;
+	availableUserDesktopEnvComProtocol=nullptr;
+	currentUserDesktopEnv=nullptr;
+	availableUserDesktopEnv=nullptr;
+	getSystemBasicInfo=nullptr;
+	shutdown=nullptr;
+	sleep=nullptr;
+	restart=nullptr;
+	dateTime=nullptr;
+	calender=nullptr;
+	cpuStatus=nullptr;
+	networkStatus=nullptr;
+
+
+	// Alert Text
+	loginFailed_text=nullptr;
+	loginSuccess_text=nullptr;
+	logoutFailed_text=nullptr;
+	logoutSuccess_text=nullptr;
+	emptyCredPassed=nullptr;
+	incorrectCred=nullptr;
+
+	// CMD Varables;
+	getAvailableUsernameCMD=nullptr;
+	uuidCMD=nullptr;
+	usrGroupCMD=nullptr;
+	getUserFullnameCMD=nullptr;
+	usrHomeDirCMD = nullptr;
+	usrShellCMD=nullptr;
+	getSystemUnameCMD=nullptr;
+	setUserDesktopEnvCMD=nullptr;
+	getUserDesktopEnvCMD=nullptr;
+	//    getDefaultUserDesktopEnvCMD;
+	setUserDesktopEnvTypeCMD=nullptr;
+	getUserDesktopEnvTypeCMD=nullptr;
+	currentUserDesktopEnvCMD=nullptr;
+	availableUserDesktopEnvCMD=nullptr;
+	getSystemBasicInfoCMD=nullptr;
+	shutdownCMD=nullptr;
+	sleepCMD=nullptr;
+	restartCMD=nullptr;
+	dateTimeCMD=nullptr;
+	calenderCMD=nullptr;
+	cpuStatusCMD=nullptr;
+	networkStatusCMD=nullptr;
+
+}

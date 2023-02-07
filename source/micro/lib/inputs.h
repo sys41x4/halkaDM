@@ -17,9 +17,12 @@
 #include "sessionManagement.h"
 #include "draw.h"
 
+
+char KEY_ESCAPE = '\x1b';
+
 class USER{
 public:
-    char* authType;
+    char* authType=nullptr;
 
     char* username=nullptr;
     char* userpass=nullptr;
@@ -34,21 +37,24 @@ public:
     char* userFullName=nullptr;
 
     int XDG_SESSION_TYPE = DS_DEFAULT;
-    char* XDG_SESSION_TYPE_NAME=strdup("Default");
+    char* XDG_SESSION_TYPE_NAME=nullptr;//strdup("Default");
 
-    char* XDG_SESSION_NAME=strdup("Default");
+    char* XDG_SESSION_NAME=nullptr;//strdup("Default");
 
-    char* desktop_name = strdup("DESKTOP1"); // Must be parsed from config file later on;
-    char* desktop_cmd = strdup("jwm");
+    char* desktop_name = nullptr;//strdup("DESKTOP1"); // Must be parsed from config file later on;
+    char* desktop_cmd = nullptr;//strdup("jwm");
 
     bool allocated=0;
     bool deallocated=0;
 
+
+    // Config Values allocation & Deallocation & nullification
+    void reset();
     void allocate();
     void deallocate();
 
 };
-
+/*
 USER user;
 
 CONFIG config;
@@ -59,5 +65,5 @@ HALKADM_SECURITY halkadm_security;
 DRAW draw;
 SESSION_MANAGEMENT session_management;
 AUTH_MANAGEMENT auth_management;
-
+*/
 #endif
