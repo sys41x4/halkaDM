@@ -179,6 +179,7 @@ char* err_xsessions_open=nullptr;
     char* usrShellCMD=nullptr;
     char* getSystemUnameCMD=nullptr;
     char* setUserDesktopEnvCMD=nullptr;
+    char* getUserDesktopEnv=nullptr;
     char* getUserDesktopEnvCMD=nullptr;
 //    char* getDefaultUserDesktopEnvCMD;
     char* setUserDesktopEnvTypeCMD=nullptr;

@@ -50,14 +50,7 @@ bool AUTH_MANAGEMENT::chkCharAllowence(char character){
 }
 
 
-/*int AUTH_MANAGEMENT::PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
-{
-  *resp = reply;
-  return PAM_SUCCESS;
-}*/
-//struct *reply;
-
-int PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
+int PAMfuncConv(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 {
   if (num_msg != 1) {
     return PAM_CONV_ERR;
@@ -75,9 +68,9 @@ int PAMfuncConversation(int num_msg, const struct pam_message **msg, struct pam_
   return PAM_SUCCESS;
 }
 
-int chkPAMAuthStatus(const char* username, const char* password)
+int AUTH_MANAGEMENT::chkPAMAuthStatus(const char* username, const char* password)
 {
-  const struct pam_conv local_conversation = { PAMfuncConversation, const_cast<char *>(password) };
+  const struct pam_conv local_conversation = { PAMfuncConv, const_cast<char *>(password) };
   pam_handle_t *local_auth_handle = NULL;
 
   int retval;

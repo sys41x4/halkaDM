@@ -210,6 +210,7 @@ void CONFIG::deallocate(){
     std::free(usrShellCMD);
     std::free(getSystemUnameCMD);
     std::free(setUserDesktopEnvCMD);
+    std::free(getUserDesktopEnv);
     std::free(getUserDesktopEnvCMD);
     std::free(setUserDesktopEnvTypeCMD);
     std::free(getUserDesktopEnvTypeCMD);
@@ -345,14 +346,6 @@ void CONFIG::load_default_alertText(){
     logoutSuccess_text = data_handler.flatKeyValue('\6', "LOGOUT Success", "Good Bye :)");
     emptyCredPassed = data_handler.flatKeyValue('\6', "LOGIN Failed", "Empty Credentials Passed");
     incorrectCred = data_handler.flatKeyValue('\6', "LOGIN Failed", "Incorrect Credentials");
-/*
-    loginFailed_text = strdup("LOGIN Failed\6Access Rejected");
-    loginSuccess_text = strdup("LOGIN Success\6Access Granted");
-    logoutFailed_text = strdup("LOGOUT Failed\6Access Rejected");
-    logoutSuccess_text = strdup("LOGOUT Success\6Good Bye :)");
-    emptyCredPassed = strdup("LOGIN Failed\6Empty Credentials Passed");
-    incorrectCred = strdup("LOGIN Failed\6Incorrect Credentials");
-*/
 };
 
 
@@ -369,18 +362,21 @@ void CONFIG::load_default_CMD(){
         usrShellCMD = strdup("getent passwd $[USER]$ | grep -v '/nologin' | cut -d ':' -f7 | tr -d '\n'");
         getSystemUnameCMD = strdup("uname -n -o");
         currentUserDesktopEnvCMD = strdup("sudo cat /var/lib/AccountsService/users/$[USER]$ 2>/dev/null | grep 'XSe*' | cut -d '=' -f 2 | tr -d '\n'");
+        // accountServiceData = strdup("gdbus call --system --dest org.freedesktop.Accounts --object-path /org/freedesktop/Accounts/User$[UID]$ --method org.freedesktop.DBus.Properties.Get org.freedesktop.Accounts.User $[PROPERTY]$ | awk -F\' '{print $2}'");
     //availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "{ls /usr/share/xsessions & ls /usr/share/wayland-sessions} | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
     //availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "ls /usr/share/xsessions | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
     // availableUserDesktopEnvCMD = data_handler.cpArray(availableUserDesktopEnvCMD, "ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
         availableUserDesktopEnvCMD = strdup("ls $[Xprotocol]$ 2>/dev/null | rev | cut -d '.' -f 2 | rev | tr -s '\n' '\7'");
-    //setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
-        setUserDesktopEnvCMD = strdup("cat $[Xprotocol]$/$[ENV]$.* 2>/dev/null | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.xsessionrc");
-        getUserDesktopEnvCMD = strdup("head -n 1 /home/$[USER]$/.xsessionrc 2>/dev/null | tr -d '\n'");
+        //setUserDesktopEnvCMD = strdup("cat $[Xprotocol]$/$[ENV]$.* 2>/dev/null | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;' > /home/$[USER]$/.Xsession");
+        setUserDesktopEnvCMD = strdup("echo $[ENV]$ > /home/$[USER]$/.Xsession");
+        // getUserDesktopEnvCMD = strdup("head -n 1 /home/$[USER]$/.Xsession 2>/dev/null | tr -d '\n'");
+        getUserDesktopEnv = strdup("head -n 1 /home/$[USER]$/.Xsession 2>/dev/null | tr -d '\n'");
+        getUserDesktopEnvCMD = strdup("cat $[Xprotocol]$/$[ENV]$.* 2>/dev/null | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;'");
         setUserDesktopEnvTypeCMD = strdup("echo $[xsessiontype]$ > /home/$[USER]$/.xsessiontype");
         getUserDesktopEnvTypeCMD = strdup("head -n 1 /home/$[USER]$/.xsessiontype 2>/dev/null | tr -d '\n'");
     // setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@;'");
-    // saveUserDesktopEnvCMD = data_handler.cpArray(saveUserDesktopEnvCMD, "echo $[xsessionCMD]$ > /home/$[USER]$/.xsessionrc");
-    // setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.xsessionrc");
+    // saveUserDesktopEnvCMD = data_handler.cpArray(saveUserDesktopEnvCMD, "echo $[xsessionCMD]$ > /home/$[USER]$/.Xsession");
+    // setUserDesktopEnvCMD = data_handler.cpArray(setUserDesktopEnvCMD, "cat /usr/share/xsessions/$[ENV]$.* | grep -E -m 1 '^Exec\\s*=' | sed '1s@^Exec\\s*=\\s*@@; 1s@^@exec @' > /home/$[USER]$/.Xsession");
         getSystemBasicInfoCMD = strdup("cat /etc/os-release | grep -w -E 'NAME=|VERSION=' | cut -d '=' -f 2 | cut -d '\"' -f 2 | tr -d '\n'");
         shutdownCMD = strdup("echo Shutting Down System && sudo /usr/sbin/shutdown -h now");
         sleepCMD = strdup("echo System going to Sleep && sudo systemctl suspend");
@@ -516,6 +512,7 @@ void CONFIG::null_values(){
 	usrShellCMD=nullptr;
 	getSystemUnameCMD=nullptr;
 	setUserDesktopEnvCMD=nullptr;
+        getUserDesktopEnv=nullptr;
 	getUserDesktopEnvCMD=nullptr;
 	//    getDefaultUserDesktopEnvCMD;
 	setUserDesktopEnvTypeCMD=nullptr;
