@@ -157,10 +157,14 @@ X11/Xorg/xinitrc:
     jwm
     icewm
     fluxbox
-    sway
+    awesome
 
 wayland:
-   currently under process
+    sway
+
+    ![currently under process]!
+    DE/WM used with Wayland, can be run with Xorg config automatically
+    but may lead to glitches and unstability
 
     currently under process    
     Distributor ID: Ubuntu

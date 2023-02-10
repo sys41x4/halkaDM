@@ -9,7 +9,6 @@ void USER::allocate(){
     XDG_SESSION_TYPE_NAME=strdup(config.default_text);
     XDG_SESSION_NAME=strdup(config.default_text);
     desktop_name = strdup("DESKTOP1"); // Must be parsed from config file later on;
-    desktop_cmd = strdup("jwm");
 
 
     // Allocate Username Space
@@ -72,10 +71,10 @@ void USER::reset(){
     visible_userpass=nullptr;
     userFullName=nullptr;
     XDG_SESSION_TYPE = DS_DEFAULT;
-    XDG_SESSION_TYPE_NAME=nullptr;//strdup("Default");
-    XDG_SESSION_NAME=nullptr;//strdup("Default");
-    desktop_name = nullptr;//strdup("DESKTOP1"); // Must be parsed from config file later on;
-    desktop_cmd = nullptr;//strdup("jwm");
+    XDG_SESSION_TYPE_NAME=nullptr;
+    XDG_SESSION_NAME=nullptr;
+    desktop_name = nullptr;
+    desktop_cmd = nullptr;
     allocated=0;
     deallocated=0;
 }

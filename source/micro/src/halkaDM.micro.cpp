@@ -39,7 +39,6 @@ CMD_EXECUTOR cmd_executor;
 HALKADM_CRYPTO halkadm_crypto;
 HALKADM_SECURITY halkadm_security;
 DRAW draw;
-//DM_PAMAuth dm_PAMAuth;
 SESSION_MANAGEMENT session_management;
 AUTH_MANAGEMENT auth_management;
 
@@ -68,9 +67,6 @@ AUTH_MANAGEMENT auth_management;
 
 */
 
-//int *titleBarItemTree=nullptr;
-//int *loginColourMatrixConf=nullptr;
-
 
 WINDOW *mainScreenWin, *subItemListWindow, *loginColourMatrixWin, *authBox, *accountPicBox, *titleBar_subwin; // User Account Picture Box
 WINDOW *messageBoxBorderWindow, *messageBox_msg;
@@ -83,18 +79,6 @@ int loginBoxMaxX, loginBoxMaxY;
 
 
 
-/*// Import Classes
-USER user;
-
-CONFIG config;
-DATA data_handler;
-CMD_EXECUTOR cmd_executor;
-HALKADM_CRYPTO halkadm_crypto;
-HALKADM_SECURITY halkadm_security;
-DRAW draw;
-SESSION_MANAGEMENT session_management;
-AUTH_MANAGEMENT auth_management;
-*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void draw_charArr(WINDOW *win, int y, int x, int colorID, const char* arr){
@@ -122,13 +106,6 @@ void draw_charArr(WINDOW *win, int y, int x, int colorID, char* arr){
 void freeMemory(){
 
     // This function must be called before exiting the program to clear the system allocated memory space
-
-    // TitleBar Item Tree Depth | Free Allocated Storage Space
-    //std::free(titleBarItemTree);
-
-    // De-allocate space for config list for loginColourMatrix
-    //std::free(loginColourMatrixConf);
-
     user.deallocate();
     config.deallocate();
 
@@ -137,23 +114,7 @@ void freeMemory(){
 void allocateMemory(){
 
     config.visibleAuthStrLen = (loginBoxMaxX-12)-((loginBoxMaxX*0.25)+14);
-//    config.visibleAuthStrLen = 50;
     user.allocate();
-
-//    if(config.dm_display_visual==DM_REFRESH){
-//        titleBarItemTree=nullptr;
-//        loginColourMatrixConf=nullptr;
-//    }
-
-    // TitleBar Item Tree Depth | Storage Space Allocation
-    //titleBarItemTree = static_cast<int*>(std::malloc(config.maxTitleBarItemTreeDepth * sizeof(int)));
-
-    // Allocate space for config list for loginColourMatrix
-    //loginColourMatrixConf = static_cast<int*>(std::malloc(4 * sizeof(int)));
-
-    // Allocate & Fill Space For Environment Names
-    //config.availableUserDesktopEnv = strdup("Default");
-
 
 }
 
@@ -184,13 +145,6 @@ void loginMatrixSetConfig(int y, int x, int h, int w){
     config.loginColourMatrixConf[3] = w;
 }
 
-/*
-void delete_window(WINDOW *win){
-    delwin(win);
-    std::free(win);
-}
-*/
-
 
 void initColor(){
    // must be called after initializing the frames
@@ -212,8 +166,6 @@ void initColor(){
 
    int fg, bg;
    int storedColorsStartIndex = 0;
-   // int totalASCIIcolors = sizeof(asciiColors)/sizeof(asciiColors[0]);
-   // int totalManualColors = 8;
 
    // Default Stored Colour blocks | fg==bg
    for(int i=1; i<=config.totalASCIIcolors; i++){
@@ -259,10 +211,9 @@ void gen_randColorMap(WINDOW *win, int y, int x, int h, int w){
     wrefresh(win);
 }
 
+
 void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int colorID, const char* msg){
-//    FILE *pp;
     cbreak();
-    // int strLen;
     /* if alignX==0 : left align
           alignX==1 : centre align
           alignX==2 : right align
@@ -274,15 +225,11 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
             if(alignX==0){positionX=x;}
             else if(alignX==1){
                 positionX = x-(strlen(msg)/2);
-                // wmove(win, y, x-(strlen(msg)/2));
             }
             else if(alignX==2){
                 positionX = x-strlen(msg);
                 wmove(win, y, x-strlen(msg));
             }
-            /*wattron(win, COLOR_PAIR(colorID));
-            waddstr(win, msg);
-            wattroff(win, COLOR_PAIR(colorID));*/
             draw_charArr(win, y, positionX, colorID, msg);
             wrefresh(win);
         }
@@ -292,30 +239,21 @@ void drawCMDStr(WINDOW *win, int y, int x, int show, int alignX, int is_cmd, int
         FILE *pp;
 
         if ((pp = popen(msg, "r")) != 0) {
-            // if(show>0){
                 char buffer[BUFSIZ];
                 while (fgets(buffer, sizeof(buffer), pp) != 0) {
                     if(show>0){
                         if(alignX==0){positionX = x;}
                         else if(alignX==1){
                             positionX = x-(strlen(buffer)/2);
-                            //positionX = x-(sizeof(buffer)/sizeof(buffer[0]))/2;
-                            //wmove(win, y, x-(strlen(buffer)/2));
                         }
                         else if(alignX==2){
-                            // wmove(win, y, x-strlen(buffer));
-                            // positionX = x-(sizeof(buffer)/sizeof(buffer[0]));
                             positionX = x-strlen(buffer);
                         }
                         draw_charArr(win, y, positionX, colorID, buffer);
-                        /*wattron(win, COLOR_PAIR(colorID));
-                        waddstr(win, buffer);
-                        wattroff(win, COLOR_PAIR(colorID));*/
                         wrefresh(win);
                     }
                 }
                 pclose(pp);
-            //}
         }
     }
 }
@@ -412,32 +350,23 @@ void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, const
         else if(ch == '\t'){
             // login_passField(win, (loginBoxMaxY/2), (loginBoxMaxX*0.25)+14);
         }
-//        else{}
     }while(1);
 }
 
 void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char seperator, char* flatKeyValueArr){
 
-/*    char* msgBoxKey=nullptr;
-    char* msgBoxValue=nullptr;
-
-    msgBoxKey = data_handler.getFlatKey(msgBoxKey, seperator, flatKeyValueArr);
-    msgBoxValue = data_handler.getFlatValue(msgBoxValue, seperator, flatKeyValueArr);*/
     char* msgBoxKey = data_handler.getFlatKey(nullptr, seperator, flatKeyValueArr);
     char* msgBoxValue = data_handler.getFlatValue(nullptr, seperator, flatKeyValueArr);
     messageBoxWindow(h, w, y, x, is_cmd, colorID, msgBoxKey, msgBoxValue);
-    if(msgBoxKey!=nullptr){free(msgBoxKey);}//msgBoxKey=nullptr;}
-    if(msgBoxValue!=nullptr){free(msgBoxValue);}//msgBoxValue=nullptr;}
-    //delete msgBoxKey; delete msgBoxValue;
+    if(msgBoxKey!=nullptr){free(msgBoxKey);}
+    if(msgBoxValue!=nullptr){free(msgBoxValue);}
 
 }
 
 void messageBoxWindow(int h, int w, int y, int x, int is_cmd, int colorID, char seperator, const char* flatKeyValueArr){
     char* arr = strdup(flatKeyValueArr);
-    //free(flatKeyValueArr);
     messageBoxWindow(h, w, y, x, is_cmd, colorID, seperator, arr);
     if(arr!=nullptr){free(arr);}//arr=nullptr;}
-//    delete arr;
 }
 
 int getSelectedSubItemID(int minY, int minX, int highlightedItemIndex, int colorID, char seperator, const char* itemArray){
@@ -449,10 +378,6 @@ int getSelectedSubItemID(int minY, int minX, int highlightedItemIndex, int color
             int maxX = data_handler.maxFlatItemLen(seperator, itemArray) + 1;
             int colorActivated = 0;
             int currentLineCnt;
-
-//            subItemListWindow = newwin(maxY+1, maxX+1, minY, minX);
-//            keypad(subItemListWindow, TRUE);
-//            box(subItemListWindow, 0, 0);
 
             int ch;
 
@@ -488,7 +413,6 @@ int getSelectedSubItemID(int minY, int minX, int highlightedItemIndex, int color
                 }
                 else if((ch == '\n') || (ch==KEY_RIGHT) || (ch == 'd') || (ch=='6') || (ch=='5')){
                     // Execute Message Window
-                    //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, charArray[0][titleBarItemTree[1]], charArray[1][titleBarItemTree[1]]);
 
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
@@ -501,7 +425,6 @@ int getSelectedSubItemID(int minY, int minX, int highlightedItemIndex, int color
                     wclear(subItemListWindow);
                     werase(subItemListWindow);
 
-                    // if(titleBarItemTree[1]>=(maxY-3)){titleBarItemTree[1]=0;}
                     if(highlightedItemIndex>=(maxY-2)){highlightedItemIndex=0;}
                     else{highlightedItemIndex++;}
                 }
@@ -551,18 +474,12 @@ char* getSelectedSubItemNameByID(char seperator, const char* itemArray, char* it
         if(itemArray[i]==seperator){currentLineCnt++;i++;}
 
         if(currentLineCnt==itemNumber){
-            // mvwaddch(mainScreenWin, 0, 1, 'a'+itemLen);wrefresh(mainScreenWin);
             for(int j=0; j<itemLen; j++){itemName[j]=itemArray[i+j];}
 
             break;
         }
     }
     itemName[itemLen]='\0';
-//    std::free(itemArray);
-    // mvwprintw(mainScreenWin, 0, 2, itemName);wrefresh(mainScreenWin);
-    // mvwaddch(mainScreenWin, 0, 0, 'a'+itemNumber);
-    // wrefresh(mainScreenWin);
-    // itemName = strdup("hola");
     return itemName;
 }
 
@@ -570,17 +487,9 @@ char* getSelectedSubItemName(int minY, int minX, int highlightedItemIndex, int c
 
     int itemNumber = 0;
     int currentLineCnt=0;
-    // int totalChar=0;
     itemNumber = getSelectedSubItemID(minY, minX, highlightedItemIndex, colorID, seperator, itemArray);
     if(itemNumber==-1){return nullptr;}
 
-    /*int cnt=0;
-    int maxLen=0;
-    for(int i=0;itemArray[i]!='\0';i++){
-        if(itemArray[i]==seperator || arr[i+1]=='\0'){if(maxLen<cnt){maxLen=cnt;}cnt=0;}
-        else{cnt++;}
-    }*/
-//    int itemLen = data_handler.maxFlatItemLen(seperator, itemArray);
     int itemLen=0;
     int currentLineCntindex=0;
     for(int i=0; itemArray[i]!='\0' ; i++){
@@ -588,27 +497,22 @@ char* getSelectedSubItemName(int minY, int minX, int highlightedItemIndex, int c
 
         if(currentLineCnt==itemNumber){
             currentLineCntindex = i;
-//            while(itemArray[i+itemLen]!=seperator || (itemArray[i+itemLen]!=seperator && itemArray[i+itemLen+1]!='\0')){itemLen++;} // (itemArray[i+j]!=seperator && itemArray[i+j+1]!='\0')
             while(1){if(itemArray[i+itemLen]==seperator || itemArray[i+itemLen]=='\0'){break;}else{itemLen++;}}
-//            for(itemLen=0; itemArray[i+itemLen]!='\0'; itemLen++){if(itemArray[i+itemLen]==seperator || itemArray[i+itemLen]=='\0'){break;}}
             break;
         }
     }
 
-//    currentLineCnt=0;
     itemName = static_cast<char*>(std::malloc(itemLen+1 * sizeof(char)));
     if (itemName == nullptr) {
         return nullptr;
     }
 
     itemName[itemLen]='\0';
-//    wrefresh(mainScreenWin);
 
     for(int i=currentLineCntindex; itemArray[i]!='\0' ; i++){
         if(itemArray[i]==seperator){currentLineCnt++;i++;}
 
         if(currentLineCnt==itemNumber){
-//             mvwaddch(mainScreenWin, 0, 1, 'a'+itemLen);wrefresh(mainScreenWin);
             for(int j=0; j<itemLen; j++){itemName[j]=itemArray[i+j];}
 
             break;
@@ -642,7 +546,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
         getmaxyx(titlebar, titlebarCoordY, titlebarCoordX);
         positionCoordX=0;
 
-//        if(active==0){wattron(titlebar, COLOR_PAIR(colorID));}
         if(active==0 || config.titleBarItemTree[0]==0){currentColorID = colorID;}
         draw_charArr(titlebar, 1, positionCoordX+spacingX, currentColorID, config.powerBTN_text);
         currentColorID = inactiveColorID;
@@ -655,7 +558,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
 
         wmove(titlebar, 1, titlebarCoordX-(strlen(user.XDG_SESSION_TYPE_NAME)+3+strlen(user.XDG_SESSION_NAME)+spacingX));
         if(active==0 || config.titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(colorID));}
-        //wmove(titlebar, 1, titlebarCoordX-(strlen(user.XDG_SESSION_TYPE_NAME)+3+strlen(user.XDG_SESSION_NAME)+spacingX));
         waddstr(titlebar, user.XDG_SESSION_TYPE_NAME);
         if(active==0 || config.titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(colorID));}
 
@@ -666,17 +568,13 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
         waddstr(titlebar, user.XDG_SESSION_NAME);
         if(active==0 || config.titleBarItemTree[0]==3){wattroff(titlebar, COLOR_PAIR(colorID));}
 
-        //wmove(titlebar, 1, titlebarCoordX/2);
-//        show_datetime(titlebar, 1, (titlebarCoordX/2)-16); // Show DateTime
         drawCMDStr(mainScreenWin, 1, (titlebarCoordX/2), 1, 1, 1, 9, config.dateTimeCMD); // Show DateTime
 
 
-//        if(active==0){wattroff(titlebar, COLOR_PAIR(colorID));}
         wrefresh(titlebar);
 
         ///////////////////////////
         if(active==0 || config.titleBarItemTree[0]<0){break;}
-     //   else if(titleBarItemTree[0]==-2){return 99;}
 
 
         ch = wgetch(titlebar);
@@ -711,10 +609,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
                     std::free(title);title=nullptr;
                 }
 
-                //char* title = getSelectedSubItemNameByID('\7', config.powerList_text, title, itemIndex);
-                //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, title);
-                //free(title);
-
 
             }
             else if(config.titleBarItemTree[0]==1){
@@ -734,7 +628,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, title, config.networkStatusCMD);
                     }
                     else if(itemIndex==3){// Refresh Windows
-                        //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 1, 12, title, title);
                         config.dm_display_visual=DM_REFRESH;
                         config.titleBarItemTree[0]=-2;
                     }
@@ -742,7 +635,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Exit", "Exiting Display Manager :/");
                         config.dm_display_visual=DM_EXIT;
                         config.titleBarItemTree[0]=-2;
-                        //std::free(title);title=nullptr;
                     }
                     std::free(title);title=nullptr;
                 }
@@ -753,8 +645,7 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
             else if(config.titleBarItemTree[0]==2){
                 config.titleBarItemTree[1]=0;
 
-//                itemIndex = getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.currentUserDesktopEnvComProtocol);
-                itemIndex = getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', "Default\7shell\7xinitrc\7Xorg\7wayland\7");
+                itemIndex = getSelectedSubItemID(titlebarCoordY, spacingX, 0, 13, '\7', config.currentUserDesktopEnvComProtocol);
                 title = strdup("XDG Session Type");
 
                 if(itemIndex!=-1){
@@ -766,9 +657,9 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
 
                     std::free(user.XDG_SESSION_TYPE_NAME);user.XDG_SESSION_TYPE_NAME=nullptr;
                     itemName = getSelectedSubItemNameByID('\7', config.currentUserDesktopEnvComProtocol, title, itemIndex);
-//                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
                     user.XDG_SESSION_TYPE = itemIndex;
                     user.XDG_SESSION_TYPE_NAME = strdup(itemName);
+                    if(user.XDG_SESSION_NAME!=nullptr){std::free(user.XDG_SESSION_NAME);user.XDG_SESSION_NAME=strdup(config.default_text);}
                     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
                     std::free(itemName);itemName=nullptr;
                 }
@@ -780,35 +671,20 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
 
 
                 if(user.XDG_SESSION_TYPE==DS_XINITRC || user.XDG_SESSION_TYPE==DS_XORG){
-                    //cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.xsessions);
                     cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[Xprotocol]$", config.xsessions);
-                    //free(cmd);
                 }
                 else if(user.XDG_SESSION_TYPE==DS_WAYLAND){
-                    // cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[", "]$", "Xprotocol", config.waylandsessions);
                     cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[Xprotocol]$", config.waylandsessions);
-                    //free(cmd);
                 }
 
                 if(user.XDG_SESSION_TYPE!=DS_SHELL && user.XDG_SESSION_TYPE!=DS_DEFAULT){
                     if(config.availableUserDesktopEnv!=nullptr){free(config.availableUserDesktopEnv);config.availableUserDesktopEnv=nullptr;}
-                    //config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(config.availableUserDesktopEnv, cmd);
                     config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(cmd);
                     std::free(cmd);cmd=nullptr;
                     itemName = getSelectedSubItemName(titlebarCoordY, spacingX, 0, 13, '\7', config.availableUserDesktopEnv, itemName);
                     title = strdup("Selected Environment");
 
                     if(itemName!=nullptr){
-//                    messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
-
-
-/*                    if(titleBarItemTree[0]==2){wattron(titlebar, COLOR_PAIR(1));}
-                    wmove(titlebar, 1, titlebarCoordX-(strlen(user.XDG_SESSION_NAME)+strlen(user.XDG_SESSION_TYPE_NAME)+3+spacingX));
-                    waddstr(titlebar, user.XDG_SESSION_TYPE_NAME);
-                    waddstr(titlebar, " : ");
-                    waddstr(titlebar, user.XDG_SESSION_NAME);
-                    if(titleBarItemTree[0]==2){wattroff(titlebar, COLOR_PAIR(1));}
-*/
 
                         if(config.titleBarItemTree[0]==3){wattron(titlebar, COLOR_PAIR(1));}
                         wmove(titlebar, 1, titlebarCoordX-(strlen(user.XDG_SESSION_TYPE_NAME)+3+strlen(user.XDG_SESSION_NAME)+spacingX));
@@ -820,8 +696,6 @@ int draw_titlebar(WINDOW *titlebar, int colorID, int active, int itemID=-1)
                         std::free(user.XDG_SESSION_NAME);
                         user.XDG_SESSION_NAME = strdup(itemName);
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, title, itemName);
-                    //user.XDG_SESSION_NAME = data_handler.cpArray(user.XDG_SESSION_NAME, itemName);
-                        //user.XDG_SESSION_NAME = strdup(itemName);
                     }
                     std::free(itemName);free(title);itemName=nullptr;title=nullptr;
                 }
@@ -845,77 +719,11 @@ void updateRequestedUSRENV(){
     wclear(titleBar_subwin);
     werase(titleBar_subwin);
     box(titleBar_subwin, 0, 0);
-//    wrefresh(titleBar_subwin);
 
 
-    if(user.usernameVerified){
+    if(user.usernameVerified && user.XDG_SESSION_TYPE==DS_DEFAULT){
 
-        char* cmd=nullptr;
-        if(user.XDG_SESSION_TYPE==DS_DEFAULT){
-           //cmd = data_handler.replaceStr(config.getUserDesktopEnvTypeCMD, "$[", "]$", "USER", user.username);
-           cmd = data_handler.replaceStr(config.getUserDesktopEnvTypeCMD, "$[USER]$", user.username);
-           //user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(user.XDG_SESSION_TYPE_NAME, cmd);
-           if(user.XDG_SESSION_TYPE_NAME!=nullptr){std::free(user.XDG_SESSION_TYPE_NAME);}
-           user.XDG_SESSION_TYPE_NAME = cmd_executor.fetchExecOutput(cmd);
-           if(user.XDG_SESSION_TYPE_NAME==nullptr){user.XDG_SESSION_TYPE_NAME=strdup(config.default_text);}
-           std::free(cmd);cmd=nullptr;
-
-           user.XDG_SESSION_TYPE = data_handler.getItemID('\7', config.currentUserDesktopEnvComProtocol, user.XDG_SESSION_TYPE_NAME);
-           //trackID=user.XDG_SESSION_TYPE;
-           if(user.XDG_SESSION_TYPE==-1 || user.XDG_SESSION_TYPE==DS_DEFAULT){
-               user.XDG_SESSION_TYPE=DS_XORG;
-               user.XDG_SESSION_TYPE_NAME=data_handler.getItemName('\7', config.currentUserDesktopEnvComProtocol, DS_XORG, user.XDG_SESSION_TYPE_NAME);
-           //trackID=-1;
-           }
-        }
-
-
-
-        if(user.XDG_SESSION_TYPE_NAME==nullptr){user.XDG_SESSION_TYPE_NAME=strdup(config.default_text);}
-
-
-        if(strcmp(user.XDG_SESSION_NAME, config.default_text)==0){
-            std::free(user.XDG_SESSION_NAME);
-            cmd = data_handler.replaceStr(config.currentUserDesktopEnvCMD, "$[USER]$", user.username);
-            user.XDG_SESSION_NAME = cmd_executor.fetchExecOutput(cmd);
-            std::free(cmd);cmd=nullptr;
-        }
-        //if(user.XDG_SESSION_NAME==nullptr){user.XDG_SESSION_NAME=strdup(config.default_text);}
-//            if(user.XDG_SESSION_TYPE_NAME==nullptr){user.XDG_SESSION_TYPE_NAME=strdup(config.default_text);}
-
-//////////////////////////////////////////////////////////
-
-
-
-       if(user.XDG_SESSION_NAME==nullptr){
-        // Assuming that the user has minimum 1 Xorg DE/WM installed in the system
-        // and the file located at /home/$[USER]$/.Xsession has it's name mentioned
-
-            cmd = data_handler.replaceStr(config.getUserDesktopEnv, "$[USER]$", user.username);
-            user.XDG_SESSION_NAME = cmd_executor.fetchExecOutput(cmd);
-            std::free(cmd);cmd=nullptr;
-        }
-
-
-
-        if(user.XDG_SESSION_NAME==nullptr){
-        // Assuming that the user has minimum 1 Xorg DE/WM installed in the system
-        // and the first file will be selected from /usr/share/xsessions
-        // Otherwise the session will be initiated with Shell config and will start the user using basic fallback shell
-            cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[Xprotocol]$", config.xsessions);
-            if(config.availableUserDesktopEnv!=nullptr){free(config.availableUserDesktopEnv);config.availableUserDesktopEnv=nullptr;}
-            config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(cmd);
-            std::free(cmd);cmd=nullptr;
-            user.XDG_SESSION_NAME = data_handler.getItemName('\7', config.availableUserDesktopEnv, 0, user.XDG_SESSION_NAME);
-            user.XDG_SESSION_TYPE=DS_XORG;
-            user.XDG_SESSION_TYPE_NAME=data_handler.getItemName('\7', config.currentUserDesktopEnvComProtocol, DS_XORG, user.XDG_SESSION_TYPE_NAME);
-        }
-
-        if(user.XDG_SESSION_NAME==nullptr){
-            user.XDG_SESSION_NAME=strdup(config.default_text);
-            user.XDG_SESSION_TYPE=DS_SHELL;
-            user.XDG_SESSION_TYPE_NAME=data_handler.getItemName('\7', config.currentUserDesktopEnvComProtocol, DS_SHELL, user.XDG_SESSION_TYPE_NAME);
-        }
+            session_management.autoDetectSession(user.username);
     }
 }
 
@@ -977,30 +785,21 @@ void filluserFullName(const char* username){
     if(user.userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(user.userFullName)/2), 1, user.userFullName);
         std::free(user.userFullName);user.userFullName=nullptr;
-//        user.userFullName = nullptr;
     }
-    // std::free(user.userFullName);
 
     if(user.usernameVerified){
-        //char* cmd = nullptr;
-        //cmd = data_handler.replaceStr(cmd, config.getUserFullnameCMD, "$[", "]$", "USER", username);
         char* cmd = data_handler.replaceStr(config.getUserFullnameCMD, "$[USER]$", username);
-    //draw_charArr(mainScreenWin, (winMaxY*0.75)-2, 0 , 13, cmd);
-        //user.userFullName = cmd_executor.fetchExecOutput(user.userFullName, cmd);
         user.userFullName = cmd_executor.fetchExecOutput(cmd);
-        std::free(cmd);//cmd=nullptr;delete cmd;
+        std::free(cmd);
     }
     if(user.userFullName!=nullptr){
         draw_charArr(mainScreenWin, (winMaxY*0.75)-2,(winMaxX/2)-(strlen(user.userFullName)/2), 13, user.userFullName);
         wrefresh(mainScreenWin);
     }
-//    else{free(user.userFullName);}
-//    wrefresh(mainScreenWin);
 }
 
 int authenticateButton(){
 
-//    draw_charArr(authBox, loginBoxMaxY-1, loginBoxMaxX-10, 13, config.loginBTN_text);
     wattron(authBox, COLOR_PAIR(13));
     mvwprintw(authBox, loginBoxMaxY-1, loginBoxMaxX-10, " %s ", config.loginBTN_text);
     wattroff(authBox, COLOR_PAIR(13));
@@ -1018,8 +817,6 @@ int authenticateButton(){
         else if((ch==KEY_BACKSPACE) || (ch==KEY_LEFT) || (ch=='a') || (ch=='4')){retCode = 0;break;}
         else if((ch=='\t') || (ch==KEY_DOWN) || (ch==' ') || (ch=='s') || (ch=='2')){
               retCode = 3;break;
-//            if(user.usernameVerified){retCode = 3;break;}
-//            else{retCode = 0;break;}
         }
         else if((ch=='\n') || (ch==KEY_RIGHT) || (ch=='d') || (ch=='5') || (ch=='6')){
 
@@ -1027,59 +824,44 @@ int authenticateButton(){
                 messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, '\6', config.emptyCredPassed);
             }
             else if(user.usernameVerified && auth_management.chkPAMAuthStatus(user.username, user.userpass)==PAM_SUCCESS && auth_management.authCheck(config.usrHomeDir, user.username, user.userpass)==1){
-//            else if(auth_management.authCheck(config.usrHomeDir, username, userpass)==1){
-//            else if(chkPAMAuthStatus(username, userpass)==PAM_SUCCESS){
-                //session_management.createSessionKey(SESSION_KEY_LENGTH-1, SESSION_KEY);
-                // chkpamAuth(username, userpass);
-              // session_management.createSession(currentDesktopENV, config.usrHomeDir, username);
-                //int PAMAuthStatus = chkPAMAuthStatus(username, userpass);
-                //if(PAMAuthStatus==PAM_SUCCESS){
                     messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 12, '\6', config.loginSuccess_text);
 
-                    //DM_PAMAuth *dm_PAMAuth = new DM_PAMAuth;
-                    bool session_status = initiateSession(user.username, user.userpass);
+                    bool session_status = session_management.initiateSession(user.username, user.userpass);
 
-                    // Free Memory to make space for the DE/WM or other Tasks
-                    //startSession(dm_PAMAuth.username, dm_PAMAuth.password)
-
-
-                    //wrefresh(mainScreenWin);
                     if(session_status==1){
                         DM_PAMAuth *dm_PAMAuth = new DM_PAMAuth;
                         // Add Values to required fields at DM_PAMAuth
                         dm_PAMAuth->allocate();
                         dm_PAMAuth->XDG_SESSION_TYPE = user.XDG_SESSION_TYPE;
                         dm_PAMAuth->tty = config.tty;
-                        if(user.desktop_cmd!=nullptr){dm_PAMAuth->desktop_cmd = strdup(user.desktop_cmd);};
-                        //dm_PAMAuth->desktop_cmd = strdup("jwm");
-                        dm_PAMAuth->desktop_name = strdup(user.desktop_name);
-                        dm_PAMAuth->wayland_cmd = strdup(config.wayland_cmd);
-                        dm_PAMAuth->xauth_cmd = strdup(config.xauth_cmd);
-                        dm_PAMAuth->mcookie_cmd = strdup(config.mcookie_cmd);
-                        dm_PAMAuth->x_cmd = strdup(config.x_cmd);
-                        dm_PAMAuth->x_cmd_setup = strdup(config.x_cmd_setup);
-                        dm_PAMAuth->service_name = strdup(config.service_name);
                         dm_PAMAuth->path = strdup(config.path);
-                        dm_PAMAuth->term_reset_cmd = strdup(config.term_reset_cmd);
+                        dm_PAMAuth->desktop_name = strdup(user.XDG_SESSION_NAME);
+                        dm_PAMAuth->service_name = strdup(config.service_name);
                         dm_PAMAuth->username = strdup(user.username);
                         dm_PAMAuth->password = strdup(user.userpass);
+                        dm_PAMAuth->term_reset_cmd = strdup(config.term_reset_cmd);
+
+                        if(dm_PAMAuth->XDG_SESSION_TYPE!=DS_SHELL){
+                            if(user.desktop_cmd!=nullptr){dm_PAMAuth->desktop_cmd = strdup(user.desktop_cmd);};
+                            dm_PAMAuth->wayland_cmd = strdup(config.wayland_cmd);
+                            dm_PAMAuth->xauth_cmd = strdup(config.xauth_cmd);
+                            dm_PAMAuth->mcookie_cmd = strdup(config.mcookie_cmd);
+                            dm_PAMAuth->x_cmd = strdup(config.x_cmd);
+                            dm_PAMAuth->x_cmd_setup = strdup(config.x_cmd_setup);
+                        }
 
                         config.dm_display_visual=DM_REFRESH;
                         session_status = dm_end();
-                        //messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 11, "Session Status", "Session Exited Successfully");
+
                         // Free Memory to make space for the DE/WM or other Tasks
                         session_status = dm_PAMAuth->login(dm_PAMAuth->username, dm_PAMAuth->password);
                         dm_PAMAuth->deallocate(); // Currently Temporary [must be called inside pam.cpp file
                         delete dm_PAMAuth;
-                        //delete dm_PAMAuth;
                         return 99;
                     }
                     else if(session_status==0){
                         messageBoxWindow(msgBoxMaxH, msgBoxMaxW, msgBoxMaxY, msgBoxMaxX, 0, 10, "Session Status", "Session Initialization Failed");
-                        //dm_PAMAuth->deallocate();
                     }
-                    //delete dm_PAMAuth;
-                    //wrefresh(mainScreenWin);
 
             }
             else{
@@ -1113,10 +895,6 @@ int login_passField(WINDOW *win, int y, int x){
     int userpassChrCount = 0;
     int userpassLengthMax = sizeof(user.userpass)/sizeof(user.userpass[0]);
     int ch;
-    // char* user.visible_userpass;
-    // char user.visible_userpass[50]={'\0'};
-    // int finish=0;
-    // cbreak();
     noecho();
     keypad(win, TRUE);
 
@@ -1124,8 +902,6 @@ int login_passField(WINDOW *win, int y, int x){
          wmove(win, y, x);
 
         if(config.userpassVisibilityConf[0]!=2 && strlen(user.userpass)>0){
-            // user.visible_userpass = mask_authInput(0, userpassVisibilityConf, user.userpass);
-            // maskStr2(user.visible_userpass, strlen(user.userpass), '*');
             halkadm_security.mask_authInput(0, config.userpassVisibilityConf, config.visibleAuthStrLen, user.userpass, user.visible_userpass);
             wprintw(win, user.visible_userpass);
             userpassChrCount=strlen(user.userpass);
@@ -1146,7 +922,6 @@ int login_passField(WINDOW *win, int y, int x){
                 user.userpass[userpassChrCount] = '\0';
                 mvwprintw(win, y, x+userpassChrCount, " ");
             }
-//            else{
             else if(auth_management.chkCharAllowence(ch)==1){
                 user.userpass[userpassChrCount] = ch;
                 userpassChrCount++;
@@ -1163,7 +938,6 @@ int login_userField(WINDOW *win, int y, int x){
     int usernameChrCount = 0;
     int usernameLengthMax = sizeof(user.username)/sizeof(user.username[0]);
     int ch;
-    // char user.visible_username[50]={'\0'};
     noecho();
     keypad(win, TRUE);
 
@@ -1187,7 +961,6 @@ int login_userField(WINDOW *win, int y, int x){
 
                     gen_randColorMap(loginColourMatrixWin, config.loginColourMatrixConf[0], config.loginColourMatrixConf[1], config.loginColourMatrixConf[2], config.loginColourMatrixConf[3]);
                     filluserFullName(user.username);
-//                    draw_charArr(mainScreenWin, (winMaxY/8)-2, (winMaxX/2)-(strlen("test")/2), 13, "test");
                     updateRequestedUSRENV();
                     draw_titlebar(titleBar_subwin, 13, 1, -1);
                 }
@@ -1220,17 +993,7 @@ int login_userField(WINDOW *win, int y, int x){
 void drawAuthBox(int maxY, int maxX, int minY, int minX){
 
     // Draw Window
-    // authBox = subwin(win, winMaxY/8, winMaxX/2, winMaxY*0.75,winMaxX/4);
-    /*loginBoxMinX = winMaxX/4;
-    loginBoxMaxX = winMaxX/2;
-    loginBoxMinY = winMaxY*0.75;
-    loginBoxMaxY = winMaxY/8;*/
-
-    // authBox = newwin(loginBoxMaxY, loginBoxMaxX, loginBoxMinY, loginBoxMinX);
     box(authBox, 0, 0);
-
-    // Draw Auth Map
-    //gen_randColorMap(authBox, loginColourMatrixConf[0], loginColourMatrixConf[1], loginColourMatrixConf[2], loginColourMatrixConf[3]);
 
     // Auth Section //
 
@@ -1246,55 +1009,11 @@ void drawAuthBox(int maxY, int maxX, int minY, int minX){
 }
 
 
-/*void freeMemory(){
-
-    // This function must be called before exiting the program to clear the system allocated memory space
-
-    // TitleBar Item Tree Depth | Free Allocated Storage Space
-    //std::free(titleBarItemTree);
-
-    // De-allocate space for config list for loginColourMatrix
-    //std::free(loginColourMatrixConf);
-
-    user.deallocate();
-    config.deallocate();
-
-}
-
-void allocateMemory(){
-
-    config.visibleAuthStrLen = (loginBoxMaxX-12)-((loginBoxMaxX*0.25)+14);
-//    config.visibleAuthStrLen = 50;
-    user.allocate();
-
-//    if(config.dm_display_visual==DM_REFRESH){
-//        titleBarItemTree=nullptr;
-//        loginColourMatrixConf=nullptr;
-//    }
-
-    // TitleBar Item Tree Depth | Storage Space Allocation
-    //titleBarItemTree = static_cast<int*>(std::malloc(config.maxTitleBarItemTreeDepth * sizeof(int)));
-
-    // Allocate space for config list for loginColourMatrix
-    //loginColourMatrixConf = static_cast<int*>(std::malloc(4 * sizeof(int)));
-
-    // Allocate & Fill Space For Environment Names
-    //config.availableUserDesktopEnv = strdup("Default");
-
-
-}*/
-
 
 void initWindow(){
     // Allocate Memory Space
 
-//    allocateMemory();
-
-    // initscr(); // Initialize Curses Screen Base
-
     getmaxyx(stdscr, winMaxY, winMaxX);
-
-
 
     // Account Pic coordinate and oeiention settings
     accountPicBoxMaxH = winMaxY*0.375;
@@ -1322,23 +1041,18 @@ void initWindow(){
     allocateMemory();
 
     // Setup Colours
-    // start_color();
     initColor();
 
 
     draw_charArr(mainScreenWin, winMaxY-2, winMaxX-(strlen(config.package)+2), 13, config.package);
     drawCMDStr(mainScreenWin, winMaxY/2, winMaxX/2, 1, 1, 1, 13, config.getSystemBasicInfoCMD);
     drawCMDStr(mainScreenWin, (winMaxY/2)+1, winMaxX/2, 1, 1, 1, 13, config.getSystemUnameCMD);
-//    draw_charArr(mainScreenWin, winMaxY-3, winMaxX-(strlen(config.capslock)+2), 13, config.desktopENVBTN_text);
     refresh();
 
     box(titleBar_subwin, 0, 0);
     box(mainScreenWin, 0, 0);
 
     draw_titlebar(titleBar_subwin, 13, 1, -1);
-
-    // List Available Desktop Managers
-//     list_available_desktop_environments(mainScreenWin, winMaxY/2, winMaxX/2);
 
     //// UserName Visibility colorMap
     authChrVisibilityPattern(authBox, (loginBoxMaxY/2)-1, loginBoxMaxX-10, config.usernameVisibilityConf);
@@ -1348,7 +1062,6 @@ void initWindow(){
 
 
     // Set Login Matrix Config
-    //setLoginMatrixWindow(authBox); // The LoginMatrix to be shown in the provided window
     loginColourMatrixWin = authBox; // The LoginMatrix to be shown in the provided window
     loginMatrixSetConfig(1, 1, loginBoxMaxY-1, (loginBoxMaxX*0.25)-2);
 
@@ -1362,27 +1075,6 @@ void initWindow(){
     wrefresh(accountPicBox);
 
 }
-
-/*
-bool dm_end(){
-    // Clear Windows and Resources Allocated by Curses/NCurses
-
-    clear();
-    delwin(messageBox_msg);
-    delwin(messageBoxBorderWindow);
-    delwin(subItemListWindow);
-    delwin(loginColourMatrixWin);
-    delwin(accountPicBox);
-    delwin(authBox);
-    delwin(titleBar_subwin);
-    delwin(mainScreenWin);
-    endwin();
-
-
-    freeMemory();
-    return 0;
-}
-*/
 
 bool dm_start(){
     // load Default config Data
@@ -1399,7 +1091,6 @@ bool dm_start(){
 
     switch_tty();
     while(1){
-        // genProfilePicture(accountPicBoxMaxH-1, accountPicBoxMaxW-4, 1, 2);
 
         if(id==0){
             id = login_userField(authBox, (loginBoxMaxY/2)-1, (loginBoxMaxX*0.25)+14);

@@ -202,17 +202,58 @@ int DATA::getItemID(char seperator, const char* arr, const char* arrTocmp){
     return -1;*/
 }
 
-char* DATA::getItemName(char seperator, char* arr, int itemID, char* item){
+char* DATA::getItemName(char seperator, const char* arr, int itemID){
+    if(arr==nullptr || itemID<0){return nullptr;}
+
+    int currentLineCnt=0;
+    int itemLen=0;
+    int currentLineCntindex=0;
+
+    for(int i=0; arr[i]!='\0' ; i++){
+        if(arr[i]==seperator){currentLineCnt++;i++;}
+
+        if(currentLineCnt==itemID){
+            currentLineCntindex = i;
+            while(1){if(arr[i+itemLen]==seperator || arr[i+itemLen]=='\0'){break;}else{itemLen++;}}
+            break;
+        }
+    }
+
+    if(itemLen<=0){return nullptr;}
+
+    char* itemName = static_cast<char*>(std::malloc((itemLen+1) * sizeof(char)));
+    if (itemName == nullptr) {
+        return nullptr;
+    }
+    itemName[itemLen]='\0';
+
+    for(int i=currentLineCntindex; arr[i]!='\0' ; i++){
+        if(arr[i]==seperator){currentLineCnt++;i++;}
+
+        if(currentLineCnt==itemID){
+            for(int j=0; j<itemLen; j++){itemName[j]=arr[i+j];}
+            break;
+        }
+    }
+    itemName[itemLen]='\0';
+    return itemName;
+}
+
+//char* DATA::getItemName(char seperator, char* arr, int itemID, char* item){
+void DATA::getItemName(char seperator, const char* arr, int itemID, char* item){
 
     if (item != nullptr) {
         //return nullptr;
         std::free(item);item=nullptr;
     }
 
-    if (arr == nullptr) {
-        return nullptr;
+    if (arr != nullptr) {
+        item = getItemName(seperator, arr, itemID);
     }
 
+//    item = getItemName(seperator, arr, itemID);
+
+/*
     int itemLen=0, trackID=itemID;
 
     for(int i=0;arr[i]!='\0';i++){
@@ -232,7 +273,7 @@ char* DATA::getItemName(char seperator, char* arr, int itemID, char* item){
 
         for(int i=0;arr[i]!='\0';i++){
             if(itemID==0 && arr[i]!=seperator){item[itemLen]=arr[i];itemLen++;}
-            if(itemID==0 && arr[i]==seperator){item[itemLen]='\0';}
+            if(itemID==0 && (arr[i]==seperator || arr[i]=='\0')){item[itemLen]='\0';}
             if(arr[i]==seperator || arr[i+1]=='\0'){itemID--;}
             else if(trackID<0){trackID=0;break;}
         }
@@ -242,6 +283,7 @@ char* DATA::getItemName(char seperator, char* arr, int itemID, char* item){
     }
     else{std::free(item);return nullptr;}
     return item;
+*/
 }
 
 int DATA::getCharFreq(char character, char* arr){

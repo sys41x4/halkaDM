@@ -3,7 +3,7 @@
 --------
 
 [branch/dev]
-    ISSUE-0 : leaks | definitely lost: 8,192 bytes in 2 blocks | pam.c/pam.h | and increasing on long run
+    ISSUE-0 : leaks | definitely lost: 8,192 bytes in 2 blocks | pam.cpp/pam.h | and increasing on long run
     ISSUE-1 : /source/micro/halkaDM.micro.cpp suffers from memory allocation issues, for long run.
     ISSUE-2 : /source/micro/halkaDM.micro.test.cpp suffers from libraries fetching and execution issues with "/lib/*.h" and "/lib/*.cpp" files
 

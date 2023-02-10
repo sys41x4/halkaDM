@@ -221,7 +221,6 @@ void DM_PAMAuth::xorg(
 
 	if (pid == 0)
 	{
-                //int x_cmd_len = strlen(x_cmd)+strlen(display_name)+strlen(vt)+4;
 		char x_CMD[1024];
 		snprintf(
 			x_CMD,
@@ -342,6 +341,8 @@ void DM_PAMAuth::deallocate(){
 
 //bool login(const char *username, const char *password, pid_t *pid){
 bool DM_PAMAuth::login(const char *username, const char *password){
+
+    if(username==nullptr || password==nullptr){return 0;}
 
     int result;
     char tty_id [3];
@@ -467,7 +468,9 @@ bool DM_PAMAuth::login(const char *username, const char *password){
         switch(XDG_SESSION_TYPE){ // Must be fixed
             case DS_WAYLAND:
             {
-                wayland(pw, desktop_cmd);
+                // Currently wayland protocol support is in development
+                //wayland(pw, desktop_cmd);
+                xorg(pw, vt, desktop_cmd);
                 break;
             }
             case DS_SHELL:

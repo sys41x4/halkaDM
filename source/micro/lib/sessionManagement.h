@@ -12,8 +12,10 @@ class SESSION_MANAGEMENT{
 public:
 
     void createSessionKey(int len, char* session_key);
-    void createSession(char* currentDesktopENV, char* usrHomeDir, char* username);
-    void startSession();
+    //void createSession(char* currentDesktopENV, char* usrHomeDir, char* username);
+    //void startSession();
+    void autoDetectSession(const char* username);
+    bool initiateSession(const char* username, const char* userpass);
 };
 
 #endif
