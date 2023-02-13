@@ -1,7 +1,7 @@
 #include "security.h"
 #include "cryptography.h"
 
-void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visibleStrOutMaxLen, const char* str, char* &visibleStrOut){
+void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visibleStrOutMaxLen, const char* str, char* visibleStrOut){
     /* maskField: "username" | For masking the username for visibility
        maskField: "userpass" | For masking the userpass for visibility*/
     // int maskingConfigLength, strLen;
@@ -16,29 +16,24 @@ void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visi
 
         if(maskingConfig[1]==0){
             if(maskingConfig[0]==0){
-                // strcpy(maskedOutput, str);
-                // maskedOutput = str;
-                //strcpy(visibleStrOut, str);
                 if(strLen>visibleStrOutMaxLen){
-                    int startIndex = strLen-visibleStrOutMaxLen;
+                     int startIndex = strLen-visibleStrOutMaxLen;
                      for(int i=startIndex; i<strLen; i++){visibleStrOut[i-startIndex]=str[i];}
-                     visibleStrOut[strLen]='\0';
-                    //visibleStrOut = strdup(str);
+                     visibleStrOut[visibleStrOutMaxLen]='\0';
                 }
                 else{strcpy(visibleStrOut, str);}
             }
             else if(maskingConfig[0]==1){
-                // maskedOutput = maskStr(strLen, '*');
-                halkadm_crypto.maskStr(strLen, '*', visibleStrOut);
+                if(strLen<=visibleStrOutMaxLen){
+                    halkadm_crypto.maskStr(strLen, '*', visibleStrOut);
+                }
             }
         }
         else if(maskingConfig[1]==1){
             if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(0, strLen, "Aa0");
                 halkadm_crypto.generateRandomStr(0, strLen, "Aa0", visibleStrOut);
             }
             else if(maskingConfig[0]==1){
-                // maskedOutput = generateRandomStr(0, strLen, "!");
                 halkadm_crypto.generateRandomStr(0, strLen, "!", visibleStrOut);
             }
         }
@@ -47,21 +42,17 @@ void HALKADM_SECURITY::mask_authInput(int authType, int *maskingConfig, int visi
 
         if(maskingConfig[1]==0){
             if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
                 halkadm_crypto.generateRandomStr(1, strLen, "Aa0", visibleStrOut);
             }
             else if(maskingConfig[0]==1){
-                // maskedOutput = maskStr(strLen, '*'); // need review
                 halkadm_crypto.maskStr(strLen, '*', visibleStrOut);
             }
         }
         else if(maskingConfig[1]==1){
             if(maskingConfig[0]==0){
-                // maskedOutput = generateRandomStr(1, strLen, "Aa0");
                 halkadm_crypto.generateRandomStr(1, strLen, "Aa0", visibleStrOut);
             }
             else if(maskingConfig[0]==1){
-                // maskedOutput = generateRandomStr(1, strLen, "!");
                 halkadm_crypto.generateRandomStr(1, strLen, "!", visibleStrOut);
             }
         }

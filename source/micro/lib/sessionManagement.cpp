@@ -54,28 +54,30 @@ void SESSION_MANAGEMENT::autoDetectSession(const char* username){
     /*
        First Detect XDG_SESSION_NAME
        Location Series:
-           [1] /var/lib/AccountsService/users/$[USER]$ ->XSession->Value
-           [2] /home/$[USER]$/.Xsession ->head -n 1->output
-           [2] /usr/share/xsessions ->1st DE/WM File
-           [3] /usr/share/wayland-sessions ->1st DE/WM File [Not Implemented currently]
-           [4] FALLBACK SHELL
+           [1] /home/$[USER]$/.Xsession ->head -n 1->output
+           [2] /var/lib/AccountsService/users/$[USER]$ ->XSession->Value
+           [3] /usr/share/xsessions ->1st DE/WM File
+           [4] /usr/share/wayland-sessions ->1st DE/WM File [Not Implemented currently]
+           [5] FALLBACK SHELL
     */
     bool xsession_files_present=0, wayland_session_files_present=0;
     int XDG_NAME_id=-1;
 
     char* cmd=nullptr;
-    // First it search the DE/WM XSession Name in /var/lib/AccountsService/users/$[USER]$
+
     if(user.XDG_SESSION_NAME!=nullptr){std::free(user.XDG_SESSION_NAME);}
-    cmd = data_handler.replaceStr(config.currentUserDesktopEnvCMD, "$[USER]$", username);
+
+    // Assuming that the user has minimum 1 Xorg DE/WM installed in the system
+    // and the file located at /home/$[USER]$/.Xsession has it's name mentioned
+
+    cmd = data_handler.replaceStr(config.getUserDesktopEnv, "$[USER]$", username);
     user.XDG_SESSION_NAME = cmd_executor.fetchExecOutput(cmd);
     std::free(cmd);cmd=nullptr;
     user.XDG_SESSION_TYPE=DS_DEFAULT;
 
     if(user.XDG_SESSION_NAME==nullptr){
-    // Assuming that the user has minimum 1 Xorg DE/WM installed in the system
-    // and the file located at /home/$[USER]$/.Xsession has it's name mentioned
-
-        cmd = data_handler.replaceStr(config.getUserDesktopEnv, "$[USER]$", username);
+        // If /home/$[USER]$/.Xsession not found then, it search the DE/WM XSession Name in /var/lib/AccountsService/users/$[USER]$
+        cmd = data_handler.replaceStr(config.currentUserDesktopEnvCMD, "$[USER]$", username);
         user.XDG_SESSION_NAME = cmd_executor.fetchExecOutput(cmd);
         std::free(cmd);cmd=nullptr;
         user.XDG_SESSION_TYPE=DS_DEFAULT;
@@ -84,7 +86,7 @@ void SESSION_MANAGEMENT::autoDetectSession(const char* username){
 
 
 
-    // 1st Detect the file in /usr/share/xsessions
+    // Detect the file in /usr/share/xsessions
     cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[Xprotocol]$", config.xsessions);
     if(config.availableUserDesktopEnv!=nullptr){std::free(config.availableUserDesktopEnv);config.availableUserDesktopEnv=nullptr;}
     config.availableUserDesktopEnv = cmd_executor.fetchExecOutput(cmd);
@@ -97,7 +99,7 @@ void SESSION_MANAGEMENT::autoDetectSession(const char* username){
         user.XDG_SESSION_TYPE=DS_XORG;
     }
 
-    //if 1st causes any error then use /usr/share/wayland-sessions
+    //if Detection of file in /usr/share/xsessions causes any error then use /usr/share/wayland-sessions
     if(XDG_NAME_id==-1){
         cmd = data_handler.replaceStr(config.availableUserDesktopEnvCMD, "$[Xprotocol]$", config.waylandsessions);
         if(config.availableUserDesktopEnv!=nullptr){std::free(config.availableUserDesktopEnv);config.availableUserDesktopEnv=nullptr;}
@@ -224,5 +226,4 @@ bool SESSION_MANAGEMENT::initiateSession(const char* username, const char* userp
     return 1;
     }
     return 0;
-//    stop_x_server();
 }

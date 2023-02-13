@@ -92,6 +92,8 @@ Branches :
 ```
 [TESTING DETAILS]
 
+--[halkaDM:micro]--
+
 --[Software Dependencies]--
 
 date [/usr/bin/date]
@@ -123,7 +125,7 @@ Currently tested only for Debian Based Distribution
 -- Install software & library dependencies before further process--
 
 [Create Executable]
-g++ ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lcurses -lpam -lxcb -lcrypto
+g++ ./source/micro/halkaDM.micro.cpp -o ./bin/micro/halkaDM.micro -lncurses -lpam -lxcb -lcrypto
 
 [ Setup ] {use the below setup process untill makefile and documentation are officially created}
 
@@ -158,6 +160,7 @@ X11/Xorg/xinitrc:
     icewm
     fluxbox
     awesome
+    xfce4
 
 wayland:
     sway
@@ -165,8 +168,7 @@ wayland:
     ![currently under process]!
     DE/WM used with Wayland, can be run with Xorg config automatically
     but may lead to glitches and unstability
-
-    currently under process    
+    
     Distributor ID: Ubuntu
     Description:    Ubuntu 20.04.4 LTS
     Release:        20.04
@@ -176,8 +178,8 @@ wayland:
 ---- Memory Leaks Checked and Analysed with: ----
 htop
 gdb, r2
-valgrind [valgrind ../../../bin/micro/halkaDM.micro --leak-check=full --track-origins=yes 2>halkaDM.micro.err.valgrind]
-g++/ASan [g++ -fsanitize=address -g halkaDM.micro.cpp -o ../../../bin/micro/halkaDM.micro -lcurses -lpam -lxcb -lcrypto]
+valgrind [valgrind --tool=memcheck --leak-check=full  --show-leak-kinds=all --track-origins=yes --log-file=halkaDM.micro.valgrind.log ../../../bin/micro/halkaDM.micro]
+g++/ASan [g++ -fsanitize=address -g halkaDM.micro.cpp -o ../../../bin/micro/halkaDM.micro -lncurses -lpam -lxcb -lcrypto]
 
 ```
 
